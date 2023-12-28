@@ -36,7 +36,9 @@ function MobileToolbar({
           }}
         >
           {models.map((model) => (
-            <MenuItem value={model}>{model}</MenuItem>
+            <MenuItem key={model} value={model}>
+              {model}
+            </MenuItem>
           ))}
         </Select>
       </Box>

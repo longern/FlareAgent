@@ -21,6 +21,7 @@ import type {
   ChatCompletionToolMessageParam,
 } from "openai/resources/index.mjs";
 import MobileToolbar from "./MobileToolbar";
+import Sidebar from "./Sidebar";
 
 function messagesReducer(
   messages: ChatCompletionMessageParam[],
@@ -48,6 +49,7 @@ function useMessages() {
 }
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [tools, setTools] = useState<ChatCompletionTool[]>([]);
   const [messages, addMessage] = useMessages();
   const [userInput, setUserInput] = useState<string>("");
@@ -138,11 +140,12 @@ function App() {
 
   return (
     <Stack height="100%">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {!matchesLg && (
         <MobileToolbar
           models={["gpt-3.5-turbo", "gpt-4"]}
           modelValue={model}
-          onMenuClick={() => {}}
+          onMenuClick={() => setSidebarOpen(true)}
           onModelChange={(model) => setModel(model)}
           onCreateThread={() => {}}
         />
@@ -151,11 +154,9 @@ function App() {
         maxWidth="md"
         sx={{
           minHeight: 0,
-          overflow: "auto",
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
-          height: "100%",
           padding: 1,
         }}
       >
