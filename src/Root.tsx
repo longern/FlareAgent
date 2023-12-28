@@ -1,3 +1,4 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Avatar,
   Box,
@@ -9,7 +10,11 @@ import {
   ThemeProvider,
   createTheme,
 } from "@mui/material";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Build as BuildIcon,
+  Person as PersonIcon,
+  SmartToy as SmartToyIcon,
+} from "@mui/icons-material";
 import OpenAI from "openai";
 import type {
   ChatCompletionMessageParam,
@@ -141,12 +146,12 @@ function Root() {
       <CssBaseline />
       {globalStyles}
       <Container
+        maxWidth="md"
         sx={{
           display: "flex",
           flexDirection: "column",
           height: "100%",
           padding: 1,
-          gap: 1,
         }}
       >
         <Stack spacing={2} overflow="auto" direction="column-reverse">
@@ -157,11 +162,17 @@ function Root() {
               spacing={1}
             >
               {message.role === "user" ? (
-                <Avatar>U</Avatar>
+                <Avatar>
+                  <PersonIcon />
+                </Avatar>
               ) : message.role === "assistant" ? (
-                <Avatar>A</Avatar>
+                <Avatar sx={{ backgroundColor: "#19c37d" }}>
+                  <SmartToyIcon />
+                </Avatar>
               ) : message.role === "tool" ? (
-                <Avatar>T</Avatar>
+                <Avatar>
+                  <BuildIcon />
+                </Avatar>
               ) : (
                 <Avatar>?</Avatar>
               )}
@@ -203,7 +214,8 @@ function Root() {
               setUserInput("");
             }
           }}
-          sx={{ flexShrink: 0 }}
+          sx={{ flexShrink: 0, marginTop: "4px" }}
+          InputProps={{ sx: { borderRadius: "14px" } }}
         />
       </Container>
     </ThemeProvider>
