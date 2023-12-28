@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
+  Snackbar,
   Stack,
   TextField,
   Theme,
@@ -51,6 +52,7 @@ function App() {
   const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
   const [model, setModel] = useState<string>("gpt-3.5-turbo");
+  const [error, setError] = useState<string | null>(null);
   const modelRef = useRef<string>(model);
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -125,7 +127,7 @@ function App() {
   useEffect(() => {
     if (!needAssistant) return;
     fetchCompletion({ model: modelRef.current, messages, tools }).catch(
-      () => {}
+      (error) => setError(error.message)
     );
   }, [fetchCompletion, messages, needAssistant, tools]);
 
@@ -181,6 +183,12 @@ function App() {
           InputProps={{ sx: { borderRadius: "14px" } }}
         />
       </Container>
+      <Snackbar
+        color="error"
+        open={error !== null}
+        onClose={() => setError(null)}
+        message={error}
+      />
     </Stack>
   );
 }
