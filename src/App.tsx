@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Avatar,
   Box,
   Container,
   Stack,
@@ -9,19 +8,16 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import {
-  Build as BuildIcon,
-  Person as PersonIcon,
-  SmartToy as SmartToyIcon,
-} from "@mui/icons-material";
 import OpenAI from "openai";
 import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
   ChatCompletionToolMessageParam,
 } from "openai/resources/index.mjs";
+
 import MobileToolbar from "./MobileToolbar";
 import Sidebar from "./Sidebar";
+import MessageList from "./MessageList";
 
 function messagesReducer(
   messages: ChatCompletionMessageParam[],
@@ -54,7 +50,6 @@ function App() {
   const [messages, addMessage] = useMessages();
   const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
   const [model, setModel] = useState<string>("gpt-3.5-turbo");
   const modelRef = useRef<string>(model);
 
@@ -130,7 +125,7 @@ function App() {
   useEffect(() => {
     if (!needAssistant) return;
     fetchCompletion({ model: modelRef.current, messages, tools }).catch(
-      (error) => setError(error)
+      () => {}
     );
   }, [fetchCompletion, messages, needAssistant, tools]);
 
@@ -150,81 +145,30 @@ function App() {
           onCreateThread={() => {}}
         />
       )}
-      <Container
-        maxWidth="md"
-        sx={{
-          minHeight: 0,
-          flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
-          padding: 1,
-        }}
-      >
-        <Stack spacing={2} overflow="auto" direction="column-reverse">
-          {messages.toReversed().map((message, index) => (
-            <Stack
-              key={index}
-              direction={message.role === "user" ? "row-reverse" : "row"}
-              spacing={1}
-            >
-              {message.role === "user" ? (
-                <Avatar>
-                  <PersonIcon />
-                </Avatar>
-              ) : message.role === "assistant" ? (
-                <Avatar sx={{ backgroundColor: "#19c37d" }}>
-                  <SmartToyIcon />
-                </Avatar>
-              ) : message.role === "tool" ? (
-                <Avatar>
-                  <BuildIcon />
-                </Avatar>
-              ) : (
-                <Avatar>?</Avatar>
-              )}
-              <Box
-                key={index}
-                sx={{
-                  minWidth: 0,
-                  overflowWrap: "break-word",
-                  padding: "0.5em 0.8em",
-                  borderRadius: "14px",
-                  backgroundColor:
-                    message.role === "user" ? "#e0e0e0" : "#f5f5f5",
-                }}
-              >
-                <span>{message.content as string}</span>
-                <span>
-                  {message.role === "assistant" &&
-                  message.tool_calls?.length > 0
-                    ? "Calling function: " +
-                      message.tool_calls.map(
-                        (tool_call) => tool_call.function.name
-                      )
-                    : null}
-                </span>
-              </Box>
-              <Box flexShrink={0} width={48} />
-            </Stack>
-          ))}
-          {error && <div>{error.message}</div>}
-        </Stack>
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {messages.length === 0 && (
+      <Box sx={{ minHeight: 0, flexGrow: 1, overflow: "auto" }}>
+        {messages.length === 0 ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <Typography variant="h6" sx={{ color: "text.secondary" }}>
               Start chatting with the assistant!
             </Typography>
-          )}
-        </Box>
+          </Box>
+        ) : (
+          <Container maxWidth="md" sx={{ padding: 1 }}>
+            <MessageList messages={messages} />
+          </Container>
+        )}
+      </Box>
+      <Container maxWidth="md">
         <TextField
           value={userInput}
+          fullWidth
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -233,7 +177,7 @@ function App() {
               setUserInput("");
             }
           }}
-          sx={{ flexShrink: 0, marginTop: "4px" }}
+          sx={{ flexShrink: 0, marginY: "4px" }}
           InputProps={{ sx: { borderRadius: "14px" } }}
         />
       </Container>
