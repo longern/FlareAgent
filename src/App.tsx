@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
+  IconButton,
   Snackbar,
   Stack,
   TextField,
@@ -9,6 +10,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import { Send as SendIcon } from "@mui/icons-material";
 import OpenAI from "openai";
 import type {
   ChatCompletionMessageParam,
@@ -53,6 +55,7 @@ function App() {
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
   const [model, setModel] = useState<string>("gpt-3.5-turbo");
   const [error, setError] = useState<string | null>(null);
+  const userInputRef = useRef<HTMLDivElement | null>(null);
   const modelRef = useRef<string>(model);
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -169,18 +172,40 @@ function App() {
       </Box>
       <Container maxWidth="md">
         <TextField
+          ref={userInputRef}
           value={userInput}
+          multiline
           fullWidth
+          size="small"
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (matchesLg && e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
+              e.preventDefault();
+              if (userInput === "") return;
               addMessage({ role: "user", content: userInput });
               setNeedAssistant(true);
               setUserInput("");
+              userInputRef.current.blur();
             }
           }}
-          sx={{ flexShrink: 0, marginY: "4px" }}
-          InputProps={{ sx: { borderRadius: "14px" } }}
+          sx={{ flexShrink: 0, marginY: 1 }}
+          InputProps={{
+            sx: { borderRadius: "14px" },
+            endAdornment: (
+              <IconButton
+                disabled={userInput === ""}
+                onClick={() => {
+                  addMessage({ role: "user", content: userInput });
+                  setNeedAssistant(true);
+                  setUserInput("");
+                  userInputRef.current.blur();
+                }}
+                sx={{ alignSelf: "flex-end" }}
+              >
+                <SendIcon />
+              </IconButton>
+            ),
+          }}
         />
       </Container>
       <Snackbar
