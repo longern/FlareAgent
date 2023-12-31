@@ -5,6 +5,7 @@ import {
   Person as PersonIcon,
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
+import Markdown from "react-markdown";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
@@ -16,7 +17,9 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
           direction={message.role === "user" ? "row-reverse" : "row"}
           spacing={1}
         >
-          {message.role === "user" ? (
+          {message.role === "system" ? (
+            <Avatar>S</Avatar>
+          ) : message.role === "user" ? (
             <Avatar>
               <PersonIcon />
             </Avatar>
@@ -41,7 +44,17 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
               backgroundColor: message.role === "user" ? "#e0e0e0" : "#f5f5f5",
             }}
           >
-            <span>{message.content as string}</span>
+            <span>
+              {message.role === "assistant" ? (
+                <Markdown>{message.content}</Markdown>
+              ) : message.role === "tool" ? (
+                <Box sx={{ maxHeight: "12rem", overflow: "auto" }}>
+                  {message.content}
+                </Box>
+              ) : (
+                (message.content as string)
+              )}
+            </span>
             <span>
               {message.role === "assistant" && message.tool_calls?.length > 0
                 ? "Calling function: " +
