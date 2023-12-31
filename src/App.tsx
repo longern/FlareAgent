@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
+  Fab,
   IconButton,
   Snackbar,
   Stack,
@@ -10,7 +11,10 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { Send as SendIcon } from "@mui/icons-material";
+import {
+  Send as SendIcon,
+  ArrowDownward as ArrowDownwardIcon,
+} from "@mui/icons-material";
 import OpenAI from "openai";
 import type {
   ChatCompletionMessageParam,
@@ -18,9 +22,25 @@ import type {
   ChatCompletionToolMessageParam,
 } from "openai/resources/index.mjs";
 
+import MessageList from "./MessageList";
 import MobileToolbar from "./MobileToolbar";
 import Sidebar from "./Sidebar";
-import MessageList from "./MessageList";
+import ScrollToBottom from "./ScrollToBottom";
+
+const MessageListPlaceholder = (
+  <Box
+    sx={{
+      height: "100%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <Typography variant="h6" sx={{ color: "text.secondary" }}>
+      Start chatting with the assistant!
+    </Typography>
+  </Box>
+);
 
 function messagesReducer(
   messages: ChatCompletionMessageParam[],
@@ -54,6 +74,7 @@ function App() {
   const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
   const [model, setModel] = useState<string>("gpt-3.5-turbo");
+  const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const userInputRef = useRef<HTMLDivElement | null>(null);
   const modelRef = useRef<string>(model);
@@ -150,24 +171,20 @@ function App() {
           onCreateThread={() => {}}
         />
       )}
-      <Box sx={{ minHeight: 0, flexGrow: 1, overflow: "auto" }}>
+      <Box sx={{ minHeight: 0, flexGrow: 1 }}>
         {messages.length === 0 ? (
-          <Box
-            sx={{
-              height: "100%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="h6" sx={{ color: "text.secondary" }}>
-              Start chatting with the assistant!
-            </Typography>
-          </Box>
+          MessageListPlaceholder
         ) : (
-          <Container maxWidth="md" sx={{ padding: 1 }}>
-            <MessageList messages={messages} />
-          </Container>
+          <ScrollToBottom
+            scrollToBottom={scrollToBottom}
+            component={Box}
+            sx={{ height: "100%", overflow: "auto" }}
+            onScrollToBottomChange={setScrollToBottom}
+          >
+            <Container maxWidth="md" sx={{ padding: 1 }}>
+              <MessageList messages={messages} />
+            </Container>
+          </ScrollToBottom>
         )}
       </Box>
       <Container maxWidth="md">
@@ -214,6 +231,22 @@ function App() {
         onClose={() => setError(null)}
         message={error}
       />
+      {!scrollToBottom && (
+        <Fab
+          color="primary"
+          sx={{
+            position: "absolute",
+            bottom: 80,
+            right: 16,
+            zIndex: 1,
+          }}
+          onClick={() => {
+            setScrollToBottom(true);
+          }}
+        >
+          <ArrowDownwardIcon />
+        </Fab>
+      )}
     </Stack>
   );
 }
