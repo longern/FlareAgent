@@ -16,6 +16,10 @@ const globalStyles = (
       "html, body, #root": {
         height: "100%",
       },
+
+      code: {
+        fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+      },
     }}
   />
 );

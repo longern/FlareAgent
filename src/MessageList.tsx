@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Avatar, Box, Stack } from "@mui/material";
 import {
   Build as BuildIcon,
@@ -6,11 +6,11 @@ import {
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
 import Markdown from "react-markdown";
-import { Prism } from "react-syntax-highlighter";
-import { dark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 function MarkdownHighlighter({ children }: { children: string }) {
+  const Highlighter = lazy(() => import("./Highlighter"));
+
   return (
     <Markdown
       components={{
@@ -18,12 +18,20 @@ function MarkdownHighlighter({ children }: { children: string }) {
           const { children, className, node, ...rest } = props;
           const match = /language-(\w+)/.exec(className || "");
           return match ? (
-            <Prism
-              PreTag="div"
-              children={String(children).replace(/\n$/, "")}
-              language={match[1]}
-              style={dark}
-            />
+            <Suspense
+              fallback={
+                <div style={{ overflow: "auto" }}>
+                  <code {...rest} className={className}>
+                    {children}
+                  </code>
+                </div>
+              }
+            >
+              <Highlighter
+                children={String(children).replace(/\n$/, "")}
+                language={match[1]}
+              />
+            </Suspense>
           ) : (
             <code {...rest} className={className}>
               {children}
