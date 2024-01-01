@@ -11,7 +11,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "react-syntax-highlighter": "^15.5.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -38,7 +39,8 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@cloudflare/workers-types": "^4.20231218.0"
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "@types/react-syntax-highlighter": "^15.5.11"
   },
   "proxy": "http://localhost:8788"
 }

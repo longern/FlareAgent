@@ -6,7 +6,36 @@ import {
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
 import Markdown from "react-markdown";
+import { Prism } from "react-syntax-highlighter";
+import { dark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+
+function MarkdownHighlighter({ children }: { children: string }) {
+  return (
+    <Markdown
+      components={{
+        code(props) {
+          const { children, className, node, ...rest } = props;
+          const match = /language-(\w+)/.exec(className || "");
+          return match ? (
+            <Prism
+              PreTag="div"
+              children={String(children).replace(/\n$/, "")}
+              language={match[1]}
+              style={dark}
+            />
+          ) : (
+            <code {...rest} className={className}>
+              {children}
+            </code>
+          );
+        },
+      }}
+    >
+      {children}
+    </Markdown>
+  );
+}
 
 function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
   return (
@@ -42,24 +71,23 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
               padding: "0.5em 0.8em",
               borderRadius: "14px",
               backgroundColor: message.role === "user" ? "#e0e0e0" : "#f5f5f5",
+              "& p": { margin: 0 },
             }}
           >
-            <Box sx={{ "& p": { margin: 0 } }}>
-              {message.role === "assistant" ? (
-                message.tool_calls?.length > 0 ? (
-                  "Calling function: " +
-                  message.tool_calls.map((tool_call) => tool_call.function.name)
-                ) : (
-                  <Markdown>{message.content}</Markdown>
-                )
-              ) : message.role === "tool" ? (
-                <Box sx={{ maxHeight: "12rem", overflow: "auto" }}>
-                  {message.content}
-                </Box>
+            {message.role === "assistant" ? (
+              message.tool_calls?.length > 0 ? (
+                "Calling function: " +
+                message.tool_calls.map((tool_call) => tool_call.function.name)
               ) : (
-                (message.content as string)
-              )}
-            </Box>
+                <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
+              )
+            ) : message.role === "tool" ? (
+              <Box sx={{ maxHeight: "12rem", overflow: "auto" }}>
+                {message.content}
+              </Box>
+            ) : (
+              (message.content as string)
+            )}
           </Box>
           <Box flexShrink={0} width={48} />
         </Stack>

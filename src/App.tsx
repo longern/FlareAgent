@@ -81,7 +81,7 @@ function App() {
       const response = await openai.chat.completions.create({
         model,
         messages,
-        tools,
+        tools: tools.length === 0 ? undefined : tools,
       });
 
       if (response.choices.length > 0) {
