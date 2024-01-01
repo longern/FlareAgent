@@ -26,6 +26,7 @@ import MessageList from "./MessageList";
 import MobileToolbar from "./MobileToolbar";
 import Sidebar from "./Sidebar";
 import ScrollToBottom from "./ScrollToBottom";
+import { useMessages } from "./messages";
 
 const MessageListPlaceholder = (
   <Box
@@ -42,35 +43,10 @@ const MessageListPlaceholder = (
   </Box>
 );
 
-function messagesReducer(
-  messages: ChatCompletionMessageParam[],
-  action: {
-    type: "add";
-    message: ChatCompletionMessageParam;
-  }
-) {
-  switch (action.type) {
-    case "add":
-      return [...messages, action.message];
-    default:
-      throw new Error();
-  }
-}
-
-function useMessages() {
-  const [messages, dispatch] = React.useReducer(messagesReducer, []);
-
-  const addMessage = useCallback((message: ChatCompletionMessageParam) => {
-    dispatch({ type: "add", message });
-  }, []);
-
-  return [messages, addMessage] as const;
-}
-
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [tools, setTools] = useState<ChatCompletionTool[]>([]);
-  const [messages, addMessage] = useMessages();
+  const { messages, addMessage, clearMessages } = useMessages();
   const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
   const [model, setModel] = useState<string>("gpt-3.5-turbo");
@@ -168,7 +144,7 @@ function App() {
           modelValue={model}
           onMenuClick={() => setSidebarOpen(true)}
           onModelChange={(model) => setModel(model)}
-          onCreateThread={() => {}}
+          onCreateThread={clearMessages}
         />
       )}
       <Box sx={{ minHeight: 0, flexGrow: 1 }}>
@@ -207,9 +183,10 @@ function App() {
           }}
           sx={{ flexShrink: 0, marginY: 1 }}
           InputProps={{
-            sx: { borderRadius: "14px" },
+            sx: { borderRadius: "16px" },
             endAdornment: (
               <IconButton
+                size="small"
                 disabled={userInput === ""}
                 onClick={() => {
                   addMessage({ role: "user", content: userInput });

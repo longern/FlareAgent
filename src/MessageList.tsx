@@ -44,9 +44,14 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
               backgroundColor: message.role === "user" ? "#e0e0e0" : "#f5f5f5",
             }}
           >
-            <span>
+            <Box sx={{ "& p": { margin: 0 } }}>
               {message.role === "assistant" ? (
-                <Markdown>{message.content}</Markdown>
+                message.tool_calls?.length > 0 ? (
+                  "Calling function: " +
+                  message.tool_calls.map((tool_call) => tool_call.function.name)
+                ) : (
+                  <Markdown>{message.content}</Markdown>
+                )
               ) : message.role === "tool" ? (
                 <Box sx={{ maxHeight: "12rem", overflow: "auto" }}>
                   {message.content}
@@ -54,13 +59,7 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
               ) : (
                 (message.content as string)
               )}
-            </span>
-            <span>
-              {message.role === "assistant" && message.tool_calls?.length > 0
-                ? "Calling function: " +
-                  message.tool_calls.map((tool_call) => tool_call.function.name)
-                : null}
-            </span>
+            </Box>
           </Box>
           <Box flexShrink={0} width={48} />
         </Stack>

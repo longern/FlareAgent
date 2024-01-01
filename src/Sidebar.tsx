@@ -46,10 +46,10 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
       open={open}
       anchor="left"
       sx={{
-        width: "300px",
+        width: "320px",
         flexShrink: 0,
         [`& .MuiDrawer-paper`]: {
-          width: "300px",
+          width: "320px",
           boxSizing: "border-box",
         },
       }}
