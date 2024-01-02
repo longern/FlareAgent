@@ -1,5 +1,5 @@
 import React from "react";
-import { IconButton, MenuItem, Select, Toolbar } from "@mui/material";
+import { IconButton, Toolbar } from "@mui/material";
 import {
   AddComment as AddCommentIcon,
   Menu as MenuIcon,
@@ -7,16 +7,12 @@ import {
 import { Box } from "@mui/system";
 
 function MobileToolbar({
-  models,
-  modelValue,
+  modelSelector,
   onMenuClick,
-  onModelChange,
   onCreateThread,
 }: {
-  models: string[];
-  modelValue: string;
+  modelSelector: React.ReactNode;
   onMenuClick: () => void;
-  onModelChange: (model: string) => void;
   onCreateThread: () => void;
 }) {
   return (
@@ -27,22 +23,7 @@ function MobileToolbar({
       <IconButton size="large" aria-label="menu" onClick={onMenuClick}>
         <MenuIcon />
       </IconButton>
-      <Box sx={{ flexGrow: 1, textAlign: "center" }}>
-        <Select
-          variant="standard"
-          value={modelValue}
-          onChange={(e) => {
-            onModelChange(e.target.value);
-          }}
-          inputProps={{ "aria-label": "model" }}
-        >
-          {models.map((model) => (
-            <MenuItem key={model} value={model}>
-              {model}
-            </MenuItem>
-          ))}
-        </Select>
-      </Box>
+      <Box sx={{ flexGrow: 1, textAlign: "center" }}>{modelSelector}</Box>
       <IconButton
         size="large"
         aria-label="create thread"

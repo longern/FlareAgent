@@ -34,7 +34,15 @@ function useApiKey() {
   return [apiKey, setApiKey] as const;
 }
 
-function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+function Sidebar({
+  open,
+  onClose,
+  modelSelector,
+}: {
+  open: boolean;
+  onClose: () => void;
+  modelSelector?: React.ReactNode;
+}) {
   const [showSettings, setShowSettings] = React.useState<boolean>(false);
   const [apiKey, setApiKey] = useApiKey();
 
@@ -56,6 +64,9 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
       onClose={onClose}
     >
       <Stack height="100%">
+        {modelSelector ? (
+          <Stack sx={{ px: 2, py: 1 }}>{modelSelector}</Stack>
+        ) : null}
         <List sx={{ flexGrow: 1, minHeight: 0 }}></List>
         <List>
           <ListItem disablePadding>

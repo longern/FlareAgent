@@ -4,6 +4,8 @@ import {
   Container,
   Fab,
   IconButton,
+  MenuItem,
+  Select,
   Snackbar,
   Stack,
   TextField,
@@ -135,15 +137,34 @@ function App() {
     modelRef.current = model;
   }, [model]);
 
+  const models = ["gpt-3.5-turbo", "gpt-4"];
+  const ModelSelector = (
+    <Select
+      variant="standard"
+      value={model}
+      onChange={(e) => {
+        setModel(e.target.value);
+      }}
+      inputProps={{ "aria-label": "model" }}
+    >
+      {models.map((model) => (
+        <MenuItem key={model} value={model}>
+          {model}
+        </MenuItem>
+      ))}
+    </Select>
+  );
   return (
     <Stack height="100%">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        modelSelector={matchesLg ? ModelSelector : undefined}
+      />
       {!matchesLg && (
         <MobileToolbar
-          models={["gpt-3.5-turbo", "gpt-4"]}
-          modelValue={model}
+          modelSelector={ModelSelector}
           onMenuClick={() => setSidebarOpen(true)}
-          onModelChange={(model) => setModel(model)}
           onCreateThread={clearMessages}
         />
       )}
