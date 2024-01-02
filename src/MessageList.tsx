@@ -75,11 +75,13 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
             key={index}
             sx={{
               minWidth: 0,
+              overflow: "hidden",
               overflowWrap: "break-word",
               padding: "0.5em 0.8em",
               borderRadius: "14px",
               backgroundColor: message.role === "user" ? "#e0e0e0" : "#f5f5f5",
               "& p": { margin: 0 },
+              "& pre>code": { whiteSpace: "pre-wrap" },
             }}
           >
             {message.role === "assistant" ? (
