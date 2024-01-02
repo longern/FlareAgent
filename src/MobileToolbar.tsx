@@ -34,6 +34,7 @@ function MobileToolbar({
           onChange={(e) => {
             onModelChange(e.target.value);
           }}
+          inputProps={{ "aria-label": "model" }}
         >
           {models.map((model) => (
             <MenuItem key={model} value={model}>

@@ -182,10 +182,12 @@ function App() {
             }
           }}
           sx={{ flexShrink: 0, marginY: 1 }}
+          inputProps={{ "aria-label": "user input" }}
           InputProps={{
             sx: { borderRadius: "16px" },
             endAdornment: (
               <IconButton
+                aria-label="send"
                 size="small"
                 disabled={userInput === ""}
                 onClick={() => {
