@@ -45,6 +45,21 @@ function MarkdownHighlighter({ children }: { children: string }) {
   );
 }
 
+function MaybeJsonBlock({ children }: { children: string }) {
+  try {
+    const pretty = JSON.stringify(JSON.parse(children), null, 2);
+    return (
+      <pre style={{ margin: 0 }}>
+        <div style={{ overflow: "auto" }}>
+          <code>{pretty}</code>
+        </div>
+      </pre>
+    );
+  } catch (e) {
+    return children;
+  }
+}
+
 function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
   return (
     <Stack spacing={2}>
@@ -92,8 +107,14 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
                 <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
               )
             ) : message.role === "tool" ? (
-              <Box sx={{ maxHeight: "12rem", overflow: "auto" }}>
-                {message.content}
+              <Box
+                sx={{
+                  maxHeight: "12rem",
+                  overflow: "auto",
+                  fontSize: "0.8rem",
+                }}
+              >
+                <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
               </Box>
             ) : (
               (message.content as string)
