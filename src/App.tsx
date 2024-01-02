@@ -159,6 +159,7 @@ function App() {
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onNewChat={clearMessages}
         modelSelector={matchesLg ? ModelSelector : undefined}
       />
       {!matchesLg && (

@@ -37,10 +37,12 @@ function useApiKey() {
 function Sidebar({
   open,
   onClose,
+  onNewChat,
   modelSelector,
 }: {
   open: boolean;
   onClose: () => void;
+  onNewChat: () => void;
   modelSelector?: React.ReactNode;
 }) {
   const [showSettings, setShowSettings] = React.useState<boolean>(false);
@@ -67,7 +69,13 @@ function Sidebar({
         {modelSelector ? (
           <Stack sx={{ px: 2, py: 1 }}>{modelSelector}</Stack>
         ) : null}
-        <List sx={{ flexGrow: 1, minHeight: 0 }}></List>
+        <List sx={{ flexGrow: 1, minHeight: 0 }}>
+          <ListItem disablePadding>
+            <ListItemButton onClick={onNewChat}>
+              <ListItemText>New Chat</ListItemText>
+            </ListItemButton>
+          </ListItem>
+        </List>
         <List>
           <ListItem disablePadding>
             <ListItemButton onClick={() => setShowSettings(true)}>
