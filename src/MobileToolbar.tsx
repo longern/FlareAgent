@@ -34,4 +34,5 @@ function MobileToolbar({
     </Toolbar>
   );
 }
+
 export default MobileToolbar;

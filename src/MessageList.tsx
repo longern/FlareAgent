@@ -1,8 +1,10 @@
 import React, { Suspense, lazy } from "react";
-import { Avatar, Box, Stack } from "@mui/material";
+import { Avatar, Box, Collapse, IconButton, Stack } from "@mui/material";
 import {
   Build as BuildIcon,
+  ContentCopy as ContentCopyIcon,
   Person as PersonIcon,
+  Replay as ReplayIcon,
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
 import Markdown from "react-markdown";
@@ -61,6 +63,8 @@ function MaybeJsonBlock({ children }: { children: string }) {
 }
 
 function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
+  const [selected, setSelected] = React.useState<number | null>(null);
+
   return (
     <Stack spacing={2}>
       {messages.map((message, index) => (
@@ -87,49 +91,80 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
             <Avatar>?</Avatar>
           )}
           <Box
-            key={index}
             sx={{
               minWidth: 0,
               overflow: "hidden",
               overflowWrap: "break-word",
-              padding: "0.5em 0.8em",
-              borderRadius: "14px",
-              backgroundColor: message.role === "user" ? "#e0e0e0" : "#f5f5f5",
-              "& p": { margin: 0 },
-              "& pre>code": { whiteSpace: "pre-wrap" },
             }}
           >
-            {message.role === "assistant" ? (
-              message.tool_calls?.length > 0 ? (
-                <>
-                  <span>Calling functions:</span>
-                  {message.tool_calls.map((tool_call) => (
-                    <div
-                      key={tool_call.id}
-                      style={{ overflow: "auto", fontSize: "0.8rem" }}
-                    >
-                      <code>{tool_call.function.name}</code>
-                      <br />
-                      <code>{tool_call.function.arguments}</code>
-                    </div>
-                  ))}
-                </>
+            <Box
+              key={index}
+              sx={{
+                padding: "0.5em 0.8em",
+                borderRadius: "14px",
+                backgroundColor:
+                  message.role === "user" ? "#e0e0e0" : "#f5f5f5",
+                "& p": { margin: 0 },
+                "& pre>code": { whiteSpace: "pre-wrap" },
+              }}
+              onClick={() => setSelected(selected === index ? null : index)}
+            >
+              {message.role === "assistant" ? (
+                message.tool_calls?.length > 0 ? (
+                  <>
+                    <span>Calling functions:</span>
+                    {message.tool_calls.map((tool_call) => (
+                      <div
+                        key={tool_call.id}
+                        style={{ overflow: "auto", fontSize: "0.8rem" }}
+                      >
+                        <code>{tool_call.function.name}</code>
+                        <br />
+                        <code>{tool_call.function.arguments}</code>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
+                )
+              ) : message.role === "tool" ? (
+                <Box
+                  sx={{
+                    maxHeight: "12rem",
+                    overflow: "auto",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
+                </Box>
               ) : (
-                <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
-              )
-            ) : message.role === "tool" ? (
-              <Box
-                sx={{
-                  maxHeight: "12rem",
-                  overflow: "auto",
-                  fontSize: "0.8rem",
-                }}
+                (message.content as string)
+              )}
+            </Box>
+
+            <Collapse in={selected === index}>
+              <Stack
+                direction="row"
+                sx={{ fontSize: "0.8rem", color: "text.secondary" }}
               >
-                <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
-              </Box>
-            ) : (
-              (message.content as string)
-            )}
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    navigator.clipboard.writeText(message.content as string);
+                  }}
+                >
+                  <ContentCopyIcon />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setSelected(null);
+                  }}
+                >
+                  <ReplayIcon />
+                </IconButton>
+              </Stack>
+            </Collapse>
           </Box>
           <Box flexShrink={0} width={48} />
         </Stack>

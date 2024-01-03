@@ -258,7 +258,7 @@ function App() {
       />
       {!scrollToBottom && (
         <Fab
-          color="primary"
+          size="small"
           sx={{
             position: "absolute",
             bottom: 80,

@@ -4,7 +4,7 @@ const observer = new ResizeObserver((entries) => {
   for (const entry of entries) {
     const { parentElement } = entry.target as HTMLDivElement;
     parentElement.scrollTo({
-      top: parentElement.scrollHeight - parentElement.clientHeight,
+      top: parentElement.scrollHeight,
       behavior: "smooth",
     });
   }
@@ -40,7 +40,7 @@ function ScrollToBottom({
     const component = componentRef.current!;
     function handler() {
       const { scrollHeight, scrollTop, clientHeight } = componentRef.current!;
-      const scrollToBottom = scrollHeight - scrollTop === clientHeight;
+      const scrollToBottom = scrollHeight - scrollTop - clientHeight <= 8;
       onScrollToBottomChange(scrollToBottom);
     }
     component.addEventListener("scroll", handler);
@@ -55,7 +55,7 @@ function ScrollToBottom({
         behavior: behavior || "auto",
       });
     }
-  }, [scrollToBottom, behavior]);
+  }, [behavior, scrollToBottom]);
 
   return (
     <Component ref={componentRef} {...props}>
