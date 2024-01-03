@@ -101,8 +101,19 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
           >
             {message.role === "assistant" ? (
               message.tool_calls?.length > 0 ? (
-                "Calling function: " +
-                message.tool_calls.map((tool_call) => tool_call.function.name)
+                <>
+                  <span>Calling functions:</span>
+                  {message.tool_calls.map((tool_call) => (
+                    <div
+                      key={tool_call.id}
+                      style={{ overflow: "auto", fontSize: "0.8rem" }}
+                    >
+                      <code>{tool_call.function.name}</code>
+                      <br />
+                      <code>{tool_call.function.arguments}</code>
+                    </div>
+                  ))}
+                </>
               ) : (
                 <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
               )

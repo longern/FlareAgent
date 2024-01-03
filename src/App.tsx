@@ -14,21 +14,22 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import {
-  Send as SendIcon,
   ArrowDownward as ArrowDownwardIcon,
+  Send as SendIcon,
 } from "@mui/icons-material";
 import OpenAI from "openai";
 import type {
   ChatCompletionMessageParam,
-  ChatCompletionTool,
   ChatCompletionToolMessageParam,
 } from "openai/resources/index.mjs";
+import type { OpenAPIV3 } from "openapi-types";
 
 import MessageList from "./MessageList";
 import MobileToolbar from "./MobileToolbar";
 import Sidebar from "./Sidebar";
 import ScrollToBottom from "./ScrollToBottom";
 import { useMessages } from "./messages";
+import { Tool, apisToTool } from "./tools";
 
 const MessageListPlaceholder = (
   <Box
@@ -47,7 +48,7 @@ const MessageListPlaceholder = (
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [tools, setTools] = useState<ChatCompletionTool[]>([]);
+  const [tools, setTools] = useState<OpenAPIV3.Document[]>([]);
   const { messages, addMessage, clearMessages } = useMessages();
   const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
@@ -60,9 +61,17 @@ function App() {
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
   const fetchTools = useCallback(async () => {
-    const response = await fetch("/tools");
-    const data: { tools: ChatCompletionTool[] } = await response.json();
-    setTools(data.tools);
+    await import("./tools");
+    const response = await fetch("tool://");
+    const data: { tools: string[] } = await response.json();
+    const tools = await Promise.all(
+      data.tools.map(async (url) => {
+        const response = await fetch(url);
+        const tool: OpenAPIV3.Document = await response.json();
+        return tool;
+      })
+    );
+    setTools(tools);
   }, []);
 
   const fetchCompletion = useCallback(
@@ -73,7 +82,7 @@ function App() {
     }: {
       model: string;
       messages: ChatCompletionMessageParam[];
-      tools: ChatCompletionTool[];
+      tools: Tool[];
     }) => {
       const openaiApiKey = localStorage.getItem("openaiApiKey");
       const openai = new OpenAI({
@@ -83,7 +92,13 @@ function App() {
       const response = await openai.chat.completions.create({
         model,
         messages,
-        tools: tools.length === 0 ? undefined : tools,
+        tools:
+          tools.length === 0
+            ? undefined
+            : tools.map((tool) => ({
+                type: "function",
+                function: tool.function,
+              })),
       });
 
       if (response.choices.length > 0) {
@@ -95,22 +110,29 @@ function App() {
         if (choice.finish_reason === "tool_calls") {
           const tool_calls = choice.message.tool_calls;
           const results = await Promise.all(
-            tool_calls.map(async (tool_call) => {
-              const response = await fetch(
-                `/tools/${tool_call.function.name}`,
-                {
-                  method: "POST",
+            tool_calls.map(
+              async (tool_call): Promise<ChatCompletionToolMessageParam> => {
+                const tool = tools.find(
+                  (tool) => tool.function.name === tool_call.function.name
+                );
+                if (!tool)
+                  return {
+                    role: "tool",
+                    tool_call_id: tool_call.id,
+                    content: "Tool not found",
+                  };
+                const response = await fetch(tool.endpoint, {
+                  method: tool.method,
                   headers: { "Content-Type": "application/json" },
                   body: tool_call.function.arguments,
-                }
-              );
-              const toolMessage = {
-                role: "tool",
-                tool_call_id: tool_call.id,
-                content: await response.text(),
-              } as ChatCompletionToolMessageParam;
-              return toolMessage;
-            })
+                });
+                return {
+                  role: "tool",
+                  tool_call_id: tool_call.id,
+                  content: await response.text(),
+                };
+              }
+            )
           );
           results.forEach((result) => addMessage(result));
           setNeedAssistant(true);
@@ -128,9 +150,11 @@ function App() {
 
   useEffect(() => {
     if (!needAssistant) return;
-    fetchCompletion({ model: modelRef.current, messages, tools }).catch(
-      (error) => setError(error.message)
-    );
+    fetchCompletion({
+      model: modelRef.current,
+      messages,
+      tools: apisToTool(tools),
+    }).catch((error) => setError(error.message));
   }, [fetchCompletion, messages, needAssistant, tools]);
 
   useEffect(() => {

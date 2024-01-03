@@ -10,9 +10,15 @@ app.get("/", () => {
 
 app.post("/time", async (context) => {
   const body: {
-    locale: string;
+    timeZone: string;
   } = await context.req.json();
-  return Response.json({ time: new Date().toLocaleString(body.locale) });
+  try {
+    return Response.json({
+      time: new Date().toLocaleString(undefined, { timeZone: body.timeZone }),
+    });
+  } catch (e) {
+    return Response.json({ error: e.message });
+  }
 });
 
 app.get("/time/openapi.json", async () => {
@@ -34,12 +40,12 @@ app.get("/time/openapi.json", async () => {
                 schema: {
                   type: "object",
                   properties: {
-                    locale: {
+                    timeZone: {
                       type: "string",
-                      description: "The locale to format the time",
+                      description: "Time zone names",
+                      required: false,
                     },
                   },
-                  required: [],
                 },
               },
             },
