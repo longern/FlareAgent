@@ -2,11 +2,8 @@ import React from "react";
 
 const observer = new ResizeObserver((entries) => {
   for (const entry of entries) {
-    const { parentElement } = entry.target as HTMLDivElement;
-    parentElement.scrollTo({
-      top: parentElement.scrollHeight,
-      behavior: "smooth",
-    });
+    const target = entry.target as HTMLDivElement;
+    target.scrollIntoView({ behavior: "smooth", block: "end" });
   }
 });
 
@@ -49,10 +46,9 @@ function ScrollToBottom({
 
   React.useEffect(() => {
     if (scrollToBottom) {
-      const { scrollHeight, clientHeight } = componentRef.current!;
-      componentRef.current!.scrollTo({
-        top: scrollHeight - clientHeight,
+      ref.current!.scrollIntoView({
         behavior: behavior || "auto",
+        block: "end",
       });
     }
   }, [behavior, scrollToBottom]);
