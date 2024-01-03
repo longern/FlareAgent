@@ -1,18 +1,3 @@
-export const meta = {
-  name: "search",
-  description: "Search on the web",
-  parameters: {
-    type: "object",
-    properties: {
-      keyword: {
-        type: "string",
-        description: "The keyword to search for",
-      },
-    },
-    required: ["keyword"],
-  },
-};
-
 async function extract_vqd(keyword: string) {
   const params = new URLSearchParams({ q: keyword });
   const response = await fetch(`https://duckduckgo.com/?${params}`);
@@ -23,7 +8,7 @@ async function extract_vqd(keyword: string) {
   return vqd;
 }
 
-export async function search(keyword: string) {
+async function search(keyword: string) {
   const vqd = await extract_vqd(keyword);
   const params = new URLSearchParams({ q: keyword, vqd });
   const response = await fetch(`https://links.duckduckgo.com/d.js?${params}`, {
