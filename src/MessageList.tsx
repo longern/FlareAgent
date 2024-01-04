@@ -123,6 +123,7 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
                 borderRadius: "14px",
                 backgroundColor:
                   message.role === "user" ? "#e0e0e0" : "#f5f5f5",
+                "& img": { maxWidth: "100%" },
                 "& p": { margin: 0 },
                 "& pre>code": { whiteSpace: "pre-wrap" },
               }}
