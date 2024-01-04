@@ -7,7 +7,7 @@ app.post("/", async (context) => {
   const url = new URL(body.url);
   const response = await fetch(`/crawl/${url.hostname}${url.pathname}`);
   if (!response.ok) {
-    return response;
+    return new Response(response.statusText, { status: response.status });
   }
   const html = await response.text();
   const {
@@ -22,14 +22,7 @@ app.post("/", async (context) => {
     return new Response(textContent.slice(0, 4096));
   }
 
-  const description = document
-    .querySelector("meta[name=description]")
-    ?.getAttribute("content");
-  if (description) {
-    return new Response(description);
-  }
-
-  return new Response("No content found");
+  return new Response(document.body.textContent.slice(0, 4096));
 });
 
 const DEFINITION = {
