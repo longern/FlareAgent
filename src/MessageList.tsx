@@ -10,9 +10,9 @@ import {
 import Markdown from "react-markdown";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
-function MarkdownHighlighter({ children }: { children: string }) {
-  const Highlighter = lazy(() => import("./Highlighter"));
+const Highlighter = lazy(() => import("./Highlighter"));
 
+function MarkdownHighlighter({ children }: { children: string }) {
   return (
     <Markdown
       components={{
@@ -56,6 +56,25 @@ function MaybeJsonBlock({ children }: { children: string }) {
           <code>{pretty}</code>
         </div>
       </pre>
+    );
+  } catch (e) {
+    return children;
+  }
+}
+
+function MaybePythonBlock({ children }: { children: string }) {
+  try {
+    const parsed: { code: string } = JSON.parse(children);
+    return (
+      <Suspense
+        fallback={
+          <div style={{ overflow: "auto" }}>
+            <code>{parsed.code}</code>
+          </div>
+        }
+      >
+        <Highlighter children={parsed.code} language={"python"} />
+      </Suspense>
     );
   } catch (e) {
     return children;
@@ -118,9 +137,17 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
                         key={tool_call.id}
                         style={{ overflow: "auto", fontSize: "0.8rem" }}
                       >
-                        <code>{tool_call.function.name}</code>
-                        <br />
-                        <code>{tool_call.function.arguments}</code>
+                        <code>
+                          {tool_call.function.name}
+                          <br />
+                          {tool_call.function.name === "python" ? (
+                            <MaybePythonBlock>
+                              {tool_call.function.arguments}
+                            </MaybePythonBlock>
+                          ) : (
+                            tool_call.function.arguments
+                          )}
+                        </code>
                       </div>
                     ))}
                   </>

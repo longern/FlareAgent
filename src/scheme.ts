@@ -10,7 +10,7 @@ const schemeHandlers: {
 if (typeof window !== "undefined") {
   const oldFetch = window.fetch;
   window.fetch = async (url: string, options?: RequestInit) => {
-    const scheme = url.split(":")[0];
+    const scheme = typeof url === "string" ? url.split(":")[0] : "";
     if (schemeHandlers[scheme]) {
       return await schemeHandlers[scheme](url, options);
     }
