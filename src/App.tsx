@@ -52,7 +52,7 @@ function App() {
   const { messages, addMessage, clearMessages } = useMessages();
   const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
-  const [model, setModel] = useState<string>("gpt-3.5-turbo");
+  const [model, setModel] = useState<string>("gpt-3.5-turbo-1106");
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const userInputRef = useRef<HTMLDivElement | null>(null);
@@ -161,7 +161,7 @@ function App() {
     modelRef.current = model;
   }, [model]);
 
-  const models = ["gpt-3.5-turbo", "gpt-4"];
+  const models = ["gpt-3.5-turbo-1106", "gpt-4-1106-preview"];
   const ModelSelector = (
     <Select
       variant="standard"

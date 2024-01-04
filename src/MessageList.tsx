@@ -165,7 +165,9 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
                   <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
                 </Box>
               ) : (
-                (message.content as string)
+                <Box sx={{ whiteSpace: "pre-wrap" }}>
+                  {message.content as string}
+                </Box>
               )}
             </Box>
 
