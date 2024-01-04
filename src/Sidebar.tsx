@@ -1,4 +1,5 @@
 import {
+  Collapse,
   Dialog,
   DialogContent,
   Drawer,
@@ -11,7 +12,12 @@ import {
   Theme,
   useMediaQuery,
 } from "@mui/material";
-import React from "react";
+import {
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+} from "@mui/icons-material";
+import React, { useCallback } from "react";
+import { OpenAPIV3 } from "openapi-types";
 
 function useApiKey() {
   const [apiKey, setApiKey] = React.useState<string | null>(null);
@@ -39,16 +45,24 @@ function Sidebar({
   onClose,
   onNewChat,
   modelSelector,
+  tools,
 }: {
   open: boolean;
   onClose: () => void;
   onNewChat: () => void;
   modelSelector?: React.ReactNode;
+  tools: OpenAPIV3.Document[];
 }) {
   const [showSettings, setShowSettings] = React.useState<boolean>(false);
+  const [expanded, setExpanded] = React.useState<string | null>(null);
   const [apiKey, setApiKey] = useApiKey();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+
+  const handleNewChat = useCallback(() => {
+    onNewChat();
+    onClose();
+  }, [onNewChat, onClose]);
 
   return (
     <Drawer
@@ -71,10 +85,55 @@ function Sidebar({
         ) : null}
         <List sx={{ flexGrow: 1, minHeight: 0 }}>
           <ListItem disablePadding>
-            <ListItemButton onClick={onNewChat}>
+            <ListItemButton onClick={handleNewChat}>
               <ListItemText>New Chat</ListItemText>
             </ListItemButton>
           </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => {
+                setExpanded(expanded === "system" ? null : "system");
+              }}
+            >
+              <ListItemText>System</ListItemText>
+              {expanded === "system" ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={expanded === "system"}>
+            <List sx={{ pl: 2 }} disablePadding>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemText>Empty</ListItemText>
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemText>New Prompt...</ListItemText>
+                </ListItemButton>
+              </ListItem>
+            </List>
+          </Collapse>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => {
+                setExpanded(expanded === "tools" ? null : "tools");
+              }}
+            >
+              <ListItemText>Tools</ListItemText>
+              {expanded === "tools" ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={expanded === "tools"}>
+            <List sx={{ pl: 2 }} disablePadding>
+              {tools.map((tool) => (
+                <ListItem disablePadding key={tool.info.title}>
+                  <ListItemButton>
+                    <ListItemText>{tool.info.title}</ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Collapse>
         </List>
         <List>
           <ListItem disablePadding>

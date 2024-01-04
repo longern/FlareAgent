@@ -185,6 +185,7 @@ function App() {
         onClose={() => setSidebarOpen(false)}
         onNewChat={clearMessages}
         modelSelector={matchesLg ? ModelSelector : undefined}
+        tools={tools}
       />
       {!matchesLg && (
         <MobileToolbar
