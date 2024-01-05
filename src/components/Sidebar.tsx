@@ -7,6 +7,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Radio,
   Stack,
   TextField,
   Theme,
@@ -18,6 +19,7 @@ import {
 } from "@mui/icons-material";
 import React, { useCallback } from "react";
 import { OpenAPIV3 } from "openapi-types";
+import { Workflow } from "../workflow";
 
 function useApiKey() {
   const [apiKey, setApiKey] = React.useState<string | null>(null);
@@ -46,12 +48,20 @@ function Sidebar({
   onNewChat,
   modelSelector,
   tools,
+  workflows,
+  onNewWorkflow,
+  currentWorkflow,
+  onWorkflowChange,
 }: {
   open: boolean;
   onClose: () => void;
   onNewChat: () => void;
   modelSelector?: React.ReactNode;
   tools: OpenAPIV3.Document[];
+  workflows: Workflow[];
+  onNewWorkflow: () => void;
+  currentWorkflow: Workflow | null;
+  onWorkflowChange: (workflow: Workflow) => void;
 }) {
   const [showSettings, setShowSettings] = React.useState<boolean>(false);
   const [expanded, setExpanded] = React.useState<string | null>(null);
@@ -92,23 +102,41 @@ function Sidebar({
           <ListItem disablePadding>
             <ListItemButton
               onClick={() => {
-                setExpanded(expanded === "system" ? null : "system");
+                setExpanded(expanded === "workflow" ? null : "workflow");
               }}
             >
-              <ListItemText>System</ListItemText>
-              {expanded === "system" ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              <ListItemText>Workflow</ListItemText>
+              {expanded === "workflow" ? (
+                <ExpandLessIcon />
+              ) : (
+                <ExpandMoreIcon />
+              )}
             </ListItemButton>
           </ListItem>
-          <Collapse in={expanded === "system"}>
+          <Collapse in={expanded === "workflow"}>
             <List sx={{ pl: 2 }} disablePadding>
+              {workflows.map((workflow) => (
+                <ListItem
+                  disablePadding
+                  key={workflow.name}
+                  secondaryAction={
+                    <Radio
+                      checked={currentWorkflow?.name === workflow.name}
+                      onChange={() => onWorkflowChange(workflow)}
+                      value={workflow.name}
+                      name="workflow"
+                      inputProps={{ "aria-label": workflow.name }}
+                    />
+                  }
+                >
+                  <ListItemButton>
+                    <ListItemText>{workflow.name}</ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              ))}
               <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemText>Empty</ListItemText>
-                </ListItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton>
-                  <ListItemText>New Prompt...</ListItemText>
+                <ListItemButton onClick={onNewWorkflow}>
+                  <ListItemText>New...</ListItemText>
                 </ListItemButton>
               </ListItem>
             </List>
@@ -126,10 +154,8 @@ function Sidebar({
           <Collapse in={expanded === "tools"}>
             <List sx={{ pl: 2 }} disablePadding>
               {tools.map((tool) => (
-                <ListItem disablePadding key={tool.info.title}>
-                  <ListItemButton>
-                    <ListItemText>{tool.info.title}</ListItemText>
-                  </ListItemButton>
+                <ListItem key={tool.info.title}>
+                  <ListItemText>{tool.info.title}</ListItemText>
                 </ListItem>
               ))}
             </List>

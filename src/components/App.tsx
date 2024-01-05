@@ -30,6 +30,7 @@ import Sidebar from "./Sidebar";
 import ScrollToBottom from "./ScrollToBottom";
 import { useMessages } from "../messages";
 import { Tool, apisToTool } from "../tools";
+import { Workflow, defaultWorkflow } from "../workflow";
 
 const MessageListPlaceholder = (
   <Box
@@ -49,6 +50,8 @@ const MessageListPlaceholder = (
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [tools, setTools] = useState<OpenAPIV3.Document[]>([]);
+  const [workflows, setWorkflows] = useState<Workflow[]>([defaultWorkflow]);
+  const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
   const { messages, addMessage, clearMessages } = useMessages();
   const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
@@ -153,6 +156,16 @@ function App() {
     [addMessage]
   );
 
+  const handleNewWorkflow = useCallback(() => {
+    for (let i = 0; i < 1000; i++) {
+      const name = `Workflow ${i + 1}`;
+      if (!workflows.find((workflow) => workflow.name === name)) {
+        setWorkflows([...workflows, { name, nodes: [] }]);
+        break;
+      }
+    }
+  }, [workflows]);
+
   useEffect(() => {
     fetchTools();
   }, [fetchTools]);
@@ -195,6 +208,10 @@ function App() {
         onNewChat={clearMessages}
         modelSelector={matchesLg ? ModelSelector : undefined}
         tools={tools}
+        workflows={workflows}
+        onNewWorkflow={handleNewWorkflow}
+        currentWorkflow={currentWorkflow}
+        onWorkflowChange={setCurrentWorkflow}
       />
       {!matchesLg && (
         <MobileToolbar
