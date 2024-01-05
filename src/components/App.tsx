@@ -2,21 +2,17 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
+  Dialog,
+  DialogContent,
   Fab,
-  IconButton,
   MenuItem,
   Select,
   Snackbar,
   Stack,
-  TextField,
   Theme,
-  Typography,
   useMediaQuery,
 } from "@mui/material";
-import {
-  ArrowDownward as ArrowDownwardIcon,
-  Send as SendIcon,
-} from "@mui/icons-material";
+import { ArrowDownward as ArrowDownwardIcon } from "@mui/icons-material";
 import OpenAI from "openai";
 import type {
   ChatCompletionMessageParam,
@@ -28,37 +24,24 @@ import MessageList from "./MessageList";
 import MobileToolbar from "./MobileToolbar";
 import Sidebar from "./Sidebar";
 import ScrollToBottom from "./ScrollToBottom";
+import UserInput from "./UserInput";
 import { useMessages } from "../messages";
 import { Tool, apisToTool } from "../tools";
 import { Workflow, defaultWorkflow } from "../workflow";
-
-const MessageListPlaceholder = (
-  <Box
-    sx={{
-      height: "100%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <Typography variant="h6" sx={{ color: "text.secondary" }}>
-      Start chatting with the assistant!
-    </Typography>
-  </Box>
-);
+import WorkflowForm from "./WorkflowForm";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [tools, setTools] = useState<OpenAPIV3.Document[]>([]);
   const [workflows, setWorkflows] = useState<Workflow[]>([defaultWorkflow]);
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
+  const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
+  const [workflowDialogOpen, setWorkflowDialogOpen] = useState<boolean>(false);
   const { messages, addMessage, clearMessages } = useMessages();
-  const [userInput, setUserInput] = useState<string>("");
   const [needAssistant, setNeedAssistant] = useState<boolean>(false);
   const [model, setModel] = useState<string>("gpt-3.5-turbo-1106");
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const userInputRef = useRef<HTMLDivElement | null>(null);
   const modelRef = useRef<string>(model);
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -210,6 +193,10 @@ function App() {
         tools={tools}
         workflows={workflows}
         onNewWorkflow={handleNewWorkflow}
+        onEditWorkflow={(workflow) => {
+          setEditWorkflow(workflow);
+          setWorkflowDialogOpen(true);
+        }}
         currentWorkflow={currentWorkflow}
         onWorkflowChange={setCurrentWorkflow}
       />
@@ -221,59 +208,22 @@ function App() {
         />
       )}
       <Box sx={{ minHeight: 0, flexGrow: 1 }}>
-        {messages.length === 0 ? (
-          MessageListPlaceholder
-        ) : (
-          <ScrollToBottom
-            scrollToBottom={scrollToBottom}
-            component={Box}
-            sx={{ height: "100%", overflow: "auto" }}
-            onScrollToBottomChange={setScrollToBottom}
-          >
-            <Container maxWidth="md" sx={{ padding: 1 }}>
-              <MessageList messages={messages} />
-            </Container>
-          </ScrollToBottom>
-        )}
+        <ScrollToBottom
+          scrollToBottom={scrollToBottom}
+          component={Box}
+          sx={{ height: "100%", overflow: "auto" }}
+          onScrollToBottomChange={setScrollToBottom}
+        >
+          <Container maxWidth="md" sx={{ padding: 1 }}>
+            <MessageList messages={messages} />
+          </Container>
+        </ScrollToBottom>
       </Box>
       <Container maxWidth="md">
-        <TextField
-          ref={userInputRef}
-          value={userInput}
-          multiline
-          fullWidth
-          size="small"
-          onChange={(e) => setUserInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (matchesLg && e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
-              e.preventDefault();
-              if (userInput === "") return;
-              addMessage({ role: "user", content: userInput });
-              setNeedAssistant(true);
-              setUserInput("");
-              userInputRef.current.blur();
-            }
-          }}
-          sx={{ flexShrink: 0, marginY: 1 }}
-          inputProps={{ "aria-label": "user input" }}
-          InputProps={{
-            sx: { borderRadius: "16px" },
-            endAdornment: (
-              <IconButton
-                aria-label="send"
-                size="small"
-                disabled={userInput === ""}
-                onClick={() => {
-                  addMessage({ role: "user", content: userInput });
-                  setNeedAssistant(true);
-                  setUserInput("");
-                  userInputRef.current.blur();
-                }}
-                sx={{ alignSelf: "flex-end" }}
-              >
-                <SendIcon />
-              </IconButton>
-            ),
+        <UserInput
+          onSend={(userInput) => {
+            addMessage({ role: "user", content: userInput });
+            setNeedAssistant(true);
           }}
         />
       </Container>
@@ -299,6 +249,24 @@ function App() {
           <ArrowDownwardIcon />
         </Fab>
       )}
+      <Dialog
+        open={workflowDialogOpen}
+        fullWidth
+        onClose={() => setWorkflowDialogOpen(false)}
+        onTransitionExited={() => setEditWorkflow(null)}
+      >
+        <DialogContent>
+          <WorkflowForm
+            workflow={editWorkflow}
+            onWorkflowChange={(workflow) => {
+              setWorkflows(
+                workflows.map((w) => (w.name === workflow.name ? workflow : w))
+              );
+              setWorkflowDialogOpen(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </Stack>
   );
 }

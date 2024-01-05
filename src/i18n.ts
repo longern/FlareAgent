@@ -5,19 +5,27 @@ const resources = {
   en: {
     translation: {
       "New Chat": "New Chat",
+      "Next Node": "Next Node",
+      "Node Name": "Node Name",
       Save: "Save",
       Settings: "Settings",
+      "System Prompt": "System Prompt",
       Tools: "Tools",
       Workflow: "Workflow",
+      "Workflow Name": "Workflow Name",
     },
   },
   zh: {
     translation: {
       "New Chat": "新对话",
+      "Next Node": "下一节点",
+      "Node Name": "节点名称",
       Save: "保存",
       Settings: "设置",
+      "System Prompt": "系统提示词",
       Tools: "工具",
       Workflow: "工作流",
+      "Workflow Name": "工作流名称",
     },
   },
 };

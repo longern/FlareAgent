@@ -1,18 +1,26 @@
-import React, { useCallback } from "react";
-import { Button, MenuItem, Select, Stack, TextField } from "@mui/material";
+import React, { Fragment, useCallback } from "react";
+import {
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 import type { Node, Workflow } from "../workflow";
 
 function WorkflowForm({
-  initialWorkflow,
+  workflow,
   onWorkflowChange,
 }: {
-  initialWorkflow: Workflow;
+  workflow: Workflow;
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
-  const [name, setName] = React.useState<string>(initialWorkflow.name);
-  const [nodes, setNodes] = React.useState<Node[]>(initialWorkflow.nodes);
+  const [name, setName] = React.useState<string>(workflow.name);
+  const [nodes, setNodes] = React.useState<Node[]>(workflow.nodes);
 
   const { t } = useTranslation();
 
@@ -27,14 +35,14 @@ function WorkflowForm({
   return (
     <Stack spacing={2}>
       <TextField
-        label="Workflow Name"
+        label={t("Workflow Name")}
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
       {nodes.map((node) => (
-        <>
+        <Fragment key={node.name}>
           <TextField
-            label="Node Name"
+            label={t("Node Name")}
             value={node.name}
             onChange={(e) => {
               setNodes(
@@ -45,48 +53,58 @@ function WorkflowForm({
             }}
           />
           {node.type === "user-input" ? (
-            <Select
-              key={node.name}
-              variant="standard"
-              value={node.next}
-              onChange={(e) => {
-                updateNode({ ...node, next: e.target.value });
-              }}
-              inputProps={{ "aria-label": node.name }}
-            >
-              {nodes.map((n) => (
-                <MenuItem key={n.name} value={n.name}>
-                  {n.name}
-                </MenuItem>
-              ))}
-            </Select>
+            <FormControl>
+              <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
+              <Select
+                key={node.name}
+                label={t("Next Node")}
+                labelId="next-node-label"
+                value={node.next}
+                onChange={(e) => {
+                  updateNode({ ...node, next: e.target.value });
+                }}
+                inputProps={{ "aria-label": node.name }}
+              >
+                {nodes.map((n) => (
+                  <MenuItem key={n.name} value={n.name}>
+                    {n.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           ) : node.type === "assistant" ? (
             <TextField
-              label="System Prompt"
+              key={node.name}
+              label={t("System Prompt")}
               value={node.prompt}
               multiline
+              rows={8}
               onChange={(e) => {
                 updateNode({ ...node, prompt: e.target.value });
               }}
             />
           ) : node.type === "tool-call" ? (
-            <Select
-              key={node.name}
-              variant="standard"
-              value={node.next}
-              onChange={(e) => {
-                updateNode({ ...node, next: e.target.value });
-              }}
-              inputProps={{ "aria-label": node.name }}
-            >
-              {nodes.map((n) => (
-                <MenuItem key={n.name} value={n.name}>
-                  {n.name}
-                </MenuItem>
-              ))}
-            </Select>
+            <FormControl>
+              <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
+              <Select
+                key={node.name}
+                label={t("Next Node")}
+                labelId="next-node-label"
+                value={node.next}
+                onChange={(e) => {
+                  updateNode({ ...node, next: e.target.value });
+                }}
+                inputProps={{ "aria-label": node.name }}
+              >
+                {nodes.map((n) => (
+                  <MenuItem key={n.name} value={n.name}>
+                    {n.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           ) : null}
-        </>
+        </Fragment>
       ))}
       <Button
         variant="contained"

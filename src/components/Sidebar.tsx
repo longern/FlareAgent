@@ -51,6 +51,7 @@ function Sidebar({
   tools,
   workflows,
   onNewWorkflow,
+  onEditWorkflow,
   currentWorkflow,
   onWorkflowChange,
 }: {
@@ -61,6 +62,7 @@ function Sidebar({
   tools: OpenAPIV3.Document[];
   workflows: Workflow[];
   onNewWorkflow: () => void;
+  onEditWorkflow: (workflow: Workflow) => void;
   currentWorkflow: Workflow | null;
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
@@ -131,7 +133,7 @@ function Sidebar({
                     />
                   }
                 >
-                  <ListItemButton>
+                  <ListItemButton onClick={() => onEditWorkflow(workflow)}>
                     <ListItemText>{workflow.name}</ListItemText>
                   </ListItemButton>
                 </ListItem>
