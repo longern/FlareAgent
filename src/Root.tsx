@@ -6,7 +6,7 @@ import {
   createTheme,
 } from "@mui/material";
 
-import App from "./App";
+import App from "./components/App";
 
 const theme = createTheme();
 

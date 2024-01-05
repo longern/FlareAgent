@@ -28,8 +28,8 @@ import MessageList from "./MessageList";
 import MobileToolbar from "./MobileToolbar";
 import Sidebar from "./Sidebar";
 import ScrollToBottom from "./ScrollToBottom";
-import { useMessages } from "./messages";
-import { Tool, apisToTool } from "./tools";
+import { useMessages } from "../messages";
+import { Tool, apisToTool } from "../tools";
 
 const MessageListPlaceholder = (
   <Box
@@ -61,7 +61,7 @@ function App() {
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
   const fetchTools = useCallback(async () => {
-    await import("./tools");
+    await import("../tools");
     const response = await fetch("tool://");
     const data: { tools: string[] } = await response.json();
     const tools = await Promise.all(
