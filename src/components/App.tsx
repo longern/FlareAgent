@@ -264,6 +264,12 @@ function App() {
               );
               setWorkflowDialogOpen(false);
             }}
+            onWorkflowDelete={() => {
+              setWorkflows(
+                workflows.filter((w) => w.name !== editWorkflow.name)
+              );
+              setWorkflowDialogOpen(false);
+            }}
           />
         </DialogContent>
       </Dialog>
