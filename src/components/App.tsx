@@ -64,13 +64,18 @@ function App() {
     await import("../tools");
     const response = await fetch("tool://");
     const data: { tools: string[] } = await response.json();
-    const tools = await Promise.all(
+    const toolsResult = await Promise.allSettled(
       data.tools.map(async (url) => {
         const response = await fetch(url);
         const tool: OpenAPIV3.Document = await response.json();
         return tool;
       })
     );
+    const tools = toolsResult
+      .map((result) => {
+        return result.status === "fulfilled" ? result.value : null;
+      })
+      .filter((tool) => tool !== null);
     setTools(tools);
   }, []);
 
@@ -109,7 +114,7 @@ function App() {
 
         if (choice.finish_reason === "tool_calls") {
           const tool_calls = choice.message.tool_calls;
-          const results = await Promise.all(
+          const results = await Promise.allSettled(
             tool_calls.map(
               async (tool_call): Promise<ChatCompletionToolMessageParam> => {
                 const tool = tools.find(
@@ -134,7 +139,11 @@ function App() {
               }
             )
           );
-          results.forEach((result) => addMessage(result));
+          results.forEach((result) =>
+            addMessage(
+              result.status === "fulfilled" ? result.value : result.reason
+            )
+          );
           setNeedAssistant(true);
         }
       }
