@@ -20,6 +20,7 @@ import {
 import React, { useCallback } from "react";
 import { OpenAPIV3 } from "openapi-types";
 import { Workflow } from "../workflow";
+import { useTranslation } from "react-i18next";
 
 function useApiKey() {
   const [apiKey, setApiKey] = React.useState<string | null>(null);
@@ -68,6 +69,7 @@ function Sidebar({
   const [apiKey, setApiKey] = useApiKey();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const { t } = useTranslation();
 
   const handleNewChat = useCallback(() => {
     onNewChat();
@@ -96,7 +98,7 @@ function Sidebar({
         <List sx={{ flexGrow: 1, minHeight: 0 }}>
           <ListItem disablePadding>
             <ListItemButton onClick={handleNewChat}>
-              <ListItemText>New Chat</ListItemText>
+              <ListItemText primary={t("New Chat")} />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
@@ -105,7 +107,7 @@ function Sidebar({
                 setExpanded(expanded === "workflow" ? null : "workflow");
               }}
             >
-              <ListItemText>Workflow</ListItemText>
+              <ListItemText primary={t("Workflow")} />
               {expanded === "workflow" ? (
                 <ExpandLessIcon />
               ) : (
@@ -147,7 +149,7 @@ function Sidebar({
                 setExpanded(expanded === "tools" ? null : "tools");
               }}
             >
-              <ListItemText>Tools</ListItemText>
+              <ListItemText primary={t("Tools")} />
               {expanded === "tools" ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </ListItemButton>
           </ListItem>
@@ -164,7 +166,7 @@ function Sidebar({
         <List>
           <ListItem disablePadding>
             <ListItemButton onClick={() => setShowSettings(true)}>
-              <ListItemText>Settings</ListItemText>
+              <ListItemText primary={t("Settings")} />
             </ListItemButton>
           </ListItem>
         </List>
@@ -172,7 +174,7 @@ function Sidebar({
       <Dialog open={showSettings} onClose={() => setShowSettings(false)}>
         <DialogContent>
           <TextField
-            label="API Key"
+            label={t("API Key")}
             fullWidth
             variant="standard"
             value={apiKey}

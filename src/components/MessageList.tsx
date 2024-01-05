@@ -9,6 +9,7 @@ import {
 } from "@mui/icons-material";
 import Markdown from "react-markdown";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { useTranslation } from "react-i18next";
 
 const Highlighter = lazy(() => import("./Highlighter"));
 
@@ -84,6 +85,8 @@ function MaybePythonBlock({ children }: { children: string }) {
 function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
   const [selected, setSelected] = React.useState<number | null>(null);
 
+  const { t } = useTranslation();
+
   return (
     <Stack spacing={2}>
       {messages.map((message, index) => (
@@ -132,7 +135,7 @@ function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
               {message.role === "assistant" ? (
                 message.tool_calls?.length > 0 ? (
                   <>
-                    <span>Calling functions:</span>
+                    <span>{t("Calling functions:")}</span>
                     {message.tool_calls.map((tool_call) => (
                       <div
                         key={tool_call.id}
