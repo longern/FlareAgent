@@ -134,6 +134,7 @@ function WorkflowForm({
       />
       <Tabs
         value={editingNode}
+        variant="scrollable"
         scrollButtons="auto"
         onChange={(e, value) => {
           setEditingNode(value);

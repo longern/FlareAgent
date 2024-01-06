@@ -31,7 +31,8 @@ const DEFINITION = {
                 properties: {
                   keyword: {
                     type: "string",
-                    description: "One or two keyword to search tools",
+                    description:
+                      "One or two keyword in English to search tools",
                     required: true,
                   },
                 },

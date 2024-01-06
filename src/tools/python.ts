@@ -22,7 +22,7 @@ async function loadPython() {
 app.post("/", async (context) => {
   function getCode(text: string) {
     try {
-      const json = JSON.parse(text);
+      const json: { code: string } = JSON.parse(text);
       return json.code;
     } catch (e) {
       return text;
@@ -35,10 +35,11 @@ app.post("/", async (context) => {
   }
   try {
     const code = getCode(body);
+    await pyodide.loadPackagesFromImports(code);
     const result = pyodide.runPython(code);
     return new Response(result);
   } catch (e) {
-    return Response.json({ error: e.message }, { status: 400 });
+    return new Response(e.message, { status: 400 });
   }
 });
 
