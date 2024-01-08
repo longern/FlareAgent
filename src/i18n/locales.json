@@ -1,0 +1,32 @@
+{
+  "en": {
+    "translation": {
+      "Delete": "Delete",
+      "New Chat": "New Chat",
+      "Next Node": "Next Node",
+      "No output": "No output",
+      "Node Label": "Node Label",
+      "Save": "Save",
+      "Settings": "Settings",
+      "System Prompt": "System Prompt",
+      "Tools": "Tools",
+      "Workflow": "Workflow",
+      "Workflow Name": "Workflow Name"
+    }
+  },
+  "zh": {
+    "translation": {
+      "Delete": "删除",
+      "New Chat": "新对话",
+      "Next Node": "下一节点",
+      "No output": "无输出",
+      "Node Label": "节点名称",
+      "Save": "保存",
+      "Settings": "设置",
+      "System Prompt": "系统提示词",
+      "Tools": "工具",
+      "Workflow": "工作流",
+      "Workflow Name": "工作流名称"
+    }
+  }
+}

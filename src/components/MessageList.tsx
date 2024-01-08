@@ -1,5 +1,13 @@
 import React, { Suspense, lazy } from "react";
-import { Avatar, Box, Collapse, IconButton, Stack } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  CircularProgress,
+  Collapse,
+  IconButton,
+  Stack,
+  Typography,
+} from "@mui/material";
 import {
   Build as BuildIcon,
   ContentCopy as ContentCopyIcon,
@@ -82,126 +90,148 @@ function MaybePythonBlock({ children }: { children: string }) {
   }
 }
 
-function MessageList({ messages }: { messages: ChatCompletionMessageParam[] }) {
+function MessageList({
+  messages,
+}: {
+  messages: ChatCompletionMessageParam[] | null;
+}) {
   const [selected, setSelected] = React.useState<number | null>(null);
 
   const { t } = useTranslation();
 
   return (
     <Stack spacing={2}>
-      {messages.map((message, index) => (
-        <Stack
-          key={index}
-          direction={message.role === "user" ? "row-reverse" : "row"}
-          spacing={1}
+      {messages === null ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
-          {message.role === "system" ? (
-            <Avatar>S</Avatar>
-          ) : message.role === "user" ? (
-            <Avatar>
-              <PersonIcon />
-            </Avatar>
-          ) : message.role === "assistant" ? (
-            <Avatar sx={{ backgroundColor: "#19c37d" }}>
-              <SmartToyIcon />
-            </Avatar>
-          ) : message.role === "tool" ? (
-            <Avatar>
-              <BuildIcon />
-            </Avatar>
-          ) : (
-            <Avatar>?</Avatar>
-          )}
-          <Box
-            sx={{
-              minWidth: 0,
-              overflow: "hidden",
-              overflowWrap: "break-word",
-            }}
+          <CircularProgress />
+        </Box>
+      ) : (
+        messages.map((message, index) => (
+          <Stack
+            key={index}
+            direction={message.role === "user" ? "row-reverse" : "row"}
+            spacing={1}
           >
+            {message.role === "system" ? (
+              <Avatar>S</Avatar>
+            ) : message.role === "user" ? (
+              <Avatar>
+                <PersonIcon />
+              </Avatar>
+            ) : message.role === "assistant" ? (
+              <Avatar sx={{ backgroundColor: "#19c37d" }}>
+                <SmartToyIcon />
+              </Avatar>
+            ) : message.role === "tool" ? (
+              <Avatar>
+                <BuildIcon />
+              </Avatar>
+            ) : (
+              <Avatar>?</Avatar>
+            )}
             <Box
-              key={index}
               sx={{
-                padding: "0.5em 0.8em",
-                borderRadius: "14px",
-                backgroundColor:
-                  message.role === "user" ? "#e0e0e0" : "#f5f5f5",
-                "& img": { maxWidth: "100%" },
-                "& p": { margin: 0 },
-                "& pre>code": { whiteSpace: "pre-wrap" },
+                minWidth: 0,
+                overflow: "hidden",
+                overflowWrap: "break-word",
               }}
-              onClick={() => setSelected(selected === index ? null : index)}
             >
-              {message.role === "assistant" ? (
-                message.tool_calls?.length > 0 ? (
-                  <>
-                    <span>{t("Calling functions:")}</span>
-                    {message.tool_calls.map((tool_call) => (
-                      <div
-                        key={tool_call.id}
-                        style={{ overflow: "auto", fontSize: "0.8rem" }}
-                      >
-                        <code>
-                          {tool_call.function.name}
-                          <br />
-                          {tool_call.function.name === "python" ? (
-                            <MaybePythonBlock>
-                              {tool_call.function.arguments}
-                            </MaybePythonBlock>
-                          ) : (
-                            tool_call.function.arguments
-                          )}
-                        </code>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
-                )
-              ) : message.role === "tool" ? (
-                <Box
-                  sx={{
-                    maxHeight: "12rem",
-                    overflow: "auto",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
-                </Box>
-              ) : (
-                <Box sx={{ whiteSpace: "pre-wrap" }}>
-                  {message.content as string}
-                </Box>
-              )}
-            </Box>
-
-            <Collapse in={selected === index}>
-              <Stack
-                direction="row"
-                sx={{ fontSize: "0.8rem", color: "text.secondary" }}
+              <Box
+                key={index}
+                sx={{
+                  padding: "0.5em 0.8em",
+                  borderRadius: "14px",
+                  backgroundColor:
+                    message.role === "user" ? "#e0e0e0" : "#f5f5f5",
+                  "& img": { maxWidth: "100%" },
+                  "& p": { margin: 0 },
+                  "& pre>code": { whiteSpace: "pre-wrap" },
+                }}
+                onClick={() => setSelected(selected === index ? null : index)}
               >
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    navigator.clipboard.writeText(message.content as string);
-                  }}
+                {message.role === "assistant" ? (
+                  message.tool_calls?.length > 0 ? (
+                    <>
+                      <span>{t("Calling functions:")}</span>
+                      {message.tool_calls.map((tool_call) => (
+                        <div
+                          key={tool_call.id}
+                          style={{ overflow: "auto", fontSize: "0.8rem" }}
+                        >
+                          <code>
+                            {tool_call.function.name}
+                            <br />
+                            {tool_call.function.name === "python" ? (
+                              <MaybePythonBlock>
+                                {tool_call.function.arguments}
+                              </MaybePythonBlock>
+                            ) : (
+                              tool_call.function.arguments
+                            )}
+                          </code>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
+                  )
+                ) : message.role === "tool" ? (
+                  <Box
+                    sx={{
+                      maxHeight: "12rem",
+                      overflow: "auto",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    {message.content ? (
+                      <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        {t("No output")}
+                      </Typography>
+                    )}
+                  </Box>
+                ) : (
+                  <Box sx={{ whiteSpace: "pre-wrap" }}>
+                    {message.content as string}
+                  </Box>
+                )}
+              </Box>
+
+              <Collapse in={selected === index}>
+                <Stack
+                  direction="row"
+                  sx={{ fontSize: "0.8rem", color: "text.secondary" }}
                 >
-                  <ContentCopyIcon />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    setSelected(null);
-                  }}
-                >
-                  <ReplayIcon />
-                </IconButton>
-              </Stack>
-            </Collapse>
-          </Box>
-          <Box flexShrink={0} width={48} />
-        </Stack>
-      ))}
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      navigator.clipboard.writeText(message.content as string);
+                    }}
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSelected(null);
+                    }}
+                  >
+                    <ReplayIcon />
+                  </IconButton>
+                </Stack>
+              </Collapse>
+            </Box>
+            <Box flexShrink={0} width={48} />
+          </Stack>
+        ))
+      )}
     </Stack>
   );
 }
