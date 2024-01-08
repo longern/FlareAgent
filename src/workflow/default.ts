@@ -4,25 +4,47 @@ export const defaultWorkflow: Workflow = {
   name: "Default",
   nodes: [
     {
+      id: "user-input",
       type: "user-input",
-      name: "User Input",
-      next: "Assistant",
+      data: {
+        label: "User Input",
+      },
     },
     {
+      id: "assistant",
       type: "assistant",
-      name: "Assistant",
-      edges: [
-        {
-          condition: "*",
-          next: "User Input",
-        },
-      ],
-      toolCallNext: "Tool Call",
+      data: {
+        label: "Assistant",
+      },
     },
     {
+      id: "tool-call",
       type: "tool-call",
-      name: "Tool Call",
-      next: "Assistant",
+      data: {
+        label: "Tool Call",
+      },
+    },
+  ],
+  edges: [
+    {
+      id: "e-user-input-assistant",
+      source: "user-input",
+      target: "assistant",
+    },
+    {
+      id: "e-assistant-tool-call",
+      source: "assistant",
+      target: "tool-call",
+      data: {
+        condition: {
+          toolCall: true,
+        },
+      },
+    },
+    {
+      id: "e-tool-call-assistant",
+      source: "tool-call",
+      target: "assistant",
     },
   ],
 };

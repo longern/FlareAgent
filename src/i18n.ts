@@ -4,9 +4,10 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   en: {
     translation: {
+      Delete: "Delete",
       "New Chat": "New Chat",
       "Next Node": "Next Node",
-      "Node Name": "Node Name",
+      "Node Label": "Node Label",
       Save: "Save",
       Settings: "Settings",
       "System Prompt": "System Prompt",
@@ -17,9 +18,10 @@ const resources = {
   },
   zh: {
     translation: {
+      Delete: "删除",
       "New Chat": "新对话",
       "Next Node": "下一节点",
-      "Node Name": "节点名称",
+      "Node Label": "节点名称",
       Save: "保存",
       Settings: "设置",
       "System Prompt": "系统提示词",

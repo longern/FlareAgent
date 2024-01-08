@@ -13,51 +13,65 @@ import {
 import { Add as AddIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
-import type { Node, Workflow } from "../workflow";
+import type { Edge, Node, Workflow } from "../workflow";
 
 function NodeForm({
   node,
   nodes,
   onUpdateNode,
-  onRenameNode,
+  edges,
+  onEdgesChange,
 }: {
   node: Node;
   nodes: Node[];
   onUpdateNode: (node: Node) => void;
-  onRenameNode: (node: Node, newName: string) => void;
+  edges: Edge[];
+  onEdgesChange: (edges: Edge[]) => void;
 }) {
   const { t } = useTranslation();
 
   return (
     <Stack spacing={2} sx={{ py: 2 }}>
       <TextField
-        label={t("Node Name")}
-        value={node.name}
-        onChange={(e) => onRenameNode(node, e.target.value)}
+        label={t("Node Label")}
+        value={node.data.label}
+        onChange={(e) => {
+          onUpdateNode({
+            ...node,
+            data: { ...node.data, label: e.target.value },
+          });
+        }}
       />
       {node.type === "user-input" ? (
         <FormControl>
           <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
           <Select
-            key={node.name}
+            key={node.id}
             label={t("Next Node")}
             labelId="next-node-label"
-            value={node.next}
+            value={edges.find((edge) => edge.source === node.id)?.target}
             onChange={(e) => {
-              onUpdateNode({ ...node, next: e.target.value });
+              onEdgesChange([
+                ...edges.filter((edge) => edge.source !== node.id),
+                {
+                  id: `e-${node.id}-${e.target.value}`,
+                  source: node.id,
+                  target: e.target.value,
+                },
+              ]);
             }}
-            inputProps={{ "aria-label": node.name }}
+            inputProps={{ "aria-label": node.data.label }}
           >
             {nodes.map((n) => (
-              <MenuItem key={n.name} value={n.name}>
-                {n.name}
+              <MenuItem key={n.id} value={n.id}>
+                {n.data.label}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
       ) : node.type === "assistant" ? (
         <TextField
-          key={node.name}
+          key={node.id}
           label={t("System Prompt")}
           value={node.prompt}
           multiline
@@ -70,18 +84,25 @@ function NodeForm({
         <FormControl>
           <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
           <Select
-            key={node.name}
+            key={node.id}
             label={t("Next Node")}
             labelId="next-node-label"
-            value={node.next}
+            value={edges.find((edge) => edge.source === node.id)?.target}
             onChange={(e) => {
-              onUpdateNode({ ...node, next: e.target.value });
+              onEdgesChange([
+                ...edges.filter((edge) => edge.source !== node.id),
+                {
+                  id: `e-${node.id}-${e.target.value}`,
+                  source: node.id,
+                  target: e.target.value,
+                },
+              ]);
             }}
-            inputProps={{ "aria-label": node.name }}
+            inputProps={{ "aria-label": node.data.label }}
           >
             {nodes.map((n) => (
-              <MenuItem key={n.name} value={n.name}>
-                {n.name}
+              <MenuItem key={n.id} value={n.id}>
+                {n.data.label}
               </MenuItem>
             ))}
           </Select>
@@ -102,27 +123,17 @@ function WorkflowForm({
 }) {
   const [name, setName] = React.useState<string>(workflow.name);
   const [nodes, setNodes] = React.useState<Node[]>(workflow.nodes);
+  const [edges, setEdges] = React.useState<Edge[]>(workflow.edges);
   const [editingNode, setEditingNode] = React.useState<Node | undefined>(
     nodes[0]
   );
 
   const { t } = useTranslation();
 
-  // Don't use `updateNode` if updating the node's name
   const updateNode = useCallback((node: Node) => {
-    setNodes((nodes) => nodes.map((n) => (n.name === node.name ? node : n)));
+    setNodes((nodes) => nodes.map((n) => (n.id === node.id ? node : n)));
     setEditingNode(node);
   }, []);
-
-  const renameNode = useCallback(
-    (node: Node, newName: string) => {
-      const newNodes = nodes.map((n) =>
-        n.name === node.name ? { ...n, name: newName } : n
-      );
-      setNodes(newNodes);
-    },
-    [nodes]
-  );
 
   return (
     <Stack spacing={2}>
@@ -136,14 +147,14 @@ function WorkflowForm({
         value={editingNode}
         variant="scrollable"
         scrollButtons="auto"
-        onChange={(e, value) => {
+        onChange={(_e, value) => {
           setEditingNode(value);
         }}
       >
         {nodes.map((node) => (
           <Tab
-            key={node.name}
-            label={node.name}
+            key={node.id}
+            label={node.data.label}
             value={node}
             sx={{ textTransform: "none" }}
             onClick={() => {
@@ -155,12 +166,13 @@ function WorkflowForm({
           icon={<AddIcon />}
           onClick={() => {
             for (let i = 0; i < 1000; i++) {
-              const name = `Node ${i + 1}`;
-              if (!nodes.find((node) => node.name === name)) {
+              const id = `node-${i + 1}`;
+              const label = `Node ${i + 1}`;
+              if (!nodes.find((node) => node.id === id)) {
                 const newNode: Node = {
-                  name,
+                  id,
+                  data: { label },
                   type: "user-input",
-                  next: nodes[0]?.name,
                 };
                 setNodes([...nodes, newNode]);
                 setEditingNode(newNode);
@@ -175,14 +187,15 @@ function WorkflowForm({
           node={editingNode}
           nodes={nodes}
           onUpdateNode={updateNode}
-          onRenameNode={renameNode}
+          edges={edges}
+          onEdgesChange={setEdges}
         />
       )}
       <Stack direction="row" spacing={2} justifyContent="end">
         <Button
           variant="contained"
           onClick={() => {
-            onWorkflowChange({ name, nodes });
+            onWorkflowChange({ name, nodes, edges });
           }}
         >
           {t("Save")}

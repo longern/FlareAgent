@@ -1,31 +1,42 @@
-export interface UserInputNode {
+export interface BaseNode<T = { label: string }> {
+  id: string;
+  data: T;
+}
+
+export interface UserInputNode extends BaseNode {
   type: "user-input";
-  name: string;
-  next?: string;
 }
 
-export interface AssistantNode {
+export interface AssistantNode extends BaseNode {
   type: "assistant";
-  name: string;
   prompt?: string;
-  edges: [
-    {
-      condition: string;
-      next: string;
-    }
-  ];
-  toolCallNext?: string;
 }
 
-export interface ToolCallNode {
+export interface ToolCallNode extends BaseNode {
   type: "tool-call";
-  name: string;
-  next?: string;
 }
 
 export type Node = UserInputNode | AssistantNode | ToolCallNode;
 
+export type EdgeCondition =
+  | {
+      toolCall?: boolean;
+    }
+  | {
+      regex?: string;
+    };
+
+export interface Edge {
+  id: string;
+  source: string;
+  target: string;
+  data?: {
+    condition?: EdgeCondition;
+  };
+}
+
 export interface Workflow {
   name: string;
   nodes: Node[];
+  edges: Edge[];
 }
