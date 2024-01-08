@@ -4,6 +4,13 @@ export const defaultWorkflow: Workflow = {
   name: "Default",
   nodes: [
     {
+      id: "start",
+      type: "start",
+      data: {
+        label: "Start",
+      },
+    },
+    {
       id: "user-input",
       type: "user-input",
       data: {
@@ -26,6 +33,11 @@ export const defaultWorkflow: Workflow = {
     },
   ],
   edges: [
+    {
+      id: "e-start-user-input",
+      source: "start",
+      target: "user-input",
+    },
     {
       id: "e-user-input-assistant",
       source: "user-input",

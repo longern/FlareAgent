@@ -142,10 +142,16 @@ function App() {
   const handleNewWorkflow = useCallback(() => {
     for (let i = 0; i < 1000; i++) {
       const name = `Workflow ${i + 1}`;
-      if (!workflows.find((workflow) => workflow.name === name)) {
-        setWorkflows([...workflows, { name, nodes: [] }]);
-        break;
+      if (workflows.find((workflow) => workflow.name === name)) {
+        continue;
       }
+      const startNode = {
+        id: "start",
+        type: "start" as const,
+        data: { label: "Start" },
+      };
+      setWorkflows([...workflows, { name, nodes: [startNode], edges: [] }]);
+      break;
     }
   }, [workflows]);
 

@@ -42,14 +42,14 @@ function NodeForm({
           });
         }}
       />
-      {node.type === "user-input" ? (
+      {node.type === "start" || node.type === "user-input" ? (
         <FormControl>
           <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
           <Select
             key={node.id}
             label={t("Next Node")}
             labelId="next-node-label"
-            value={edges.find((edge) => edge.source === node.id)?.target}
+            value={edges.find((edge) => edge.source === node.id)?.target ?? ""}
             onChange={(e) => {
               onEdgesChange([
                 ...edges.filter((edge) => edge.source !== node.id),
@@ -62,11 +62,13 @@ function NodeForm({
             }}
             inputProps={{ "aria-label": node.data.label }}
           >
-            {nodes.map((n) => (
-              <MenuItem key={n.id} value={n.id}>
-                {n.data.label}
-              </MenuItem>
-            ))}
+            {nodes
+              .filter((n) => n.type !== "start")
+              .map((n) => (
+                <MenuItem key={n.id} value={n.id}>
+                  {n.data.label}
+                </MenuItem>
+              ))}
           </Select>
         </FormControl>
       ) : node.type === "assistant" ? (
@@ -87,7 +89,7 @@ function NodeForm({
             key={node.id}
             label={t("Next Node")}
             labelId="next-node-label"
-            value={edges.find((edge) => edge.source === node.id)?.target}
+            value={edges.find((edge) => edge.source === node.id)?.target ?? ""}
             onChange={(e) => {
               onEdgesChange([
                 ...edges.filter((edge) => edge.source !== node.id),
@@ -100,11 +102,13 @@ function NodeForm({
             }}
             inputProps={{ "aria-label": node.data.label }}
           >
-            {nodes.map((n) => (
-              <MenuItem key={n.id} value={n.id}>
-                {n.data.label}
-              </MenuItem>
-            ))}
+            {nodes
+              .filter((n) => n.type !== "start")
+              .map((n) => (
+                <MenuItem key={n.id} value={n.id}>
+                  {n.data.label}
+                </MenuItem>
+              ))}
           </Select>
         </FormControl>
       ) : null}
@@ -157,27 +161,26 @@ function WorkflowForm({
             label={node.data.label}
             value={node}
             sx={{ textTransform: "none" }}
-            onClick={() => {
-              setEditingNode(node);
-            }}
           />
         ))}
         <Tab
           icon={<AddIcon />}
+          sx={{ minWidth: "auto" }}
           onClick={() => {
             for (let i = 0; i < 1000; i++) {
               const id = `node-${i + 1}`;
               const label = `Node ${i + 1}`;
-              if (!nodes.find((node) => node.id === id)) {
-                const newNode: Node = {
-                  id,
-                  data: { label },
-                  type: "user-input",
-                };
-                setNodes([...nodes, newNode]);
-                setEditingNode(newNode);
-                break;
+              if (nodes.find((node) => node.id === id)) {
+                continue;
               }
+              const newNode: Node = {
+                id,
+                type: "user-input",
+                data: { label },
+              };
+              setNodes([...nodes, newNode]);
+              setEditingNode(newNode);
+              break;
             }
           }}
         />

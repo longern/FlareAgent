@@ -3,6 +3,10 @@ export interface BaseNode<T = { label: string }> {
   data: T;
 }
 
+export interface StartNode extends BaseNode {
+  type: "start";
+}
+
 export interface UserInputNode extends BaseNode {
   type: "user-input";
 }
@@ -16,7 +20,7 @@ export interface ToolCallNode extends BaseNode {
   type: "tool-call";
 }
 
-export type Node = UserInputNode | AssistantNode | ToolCallNode;
+export type Node = StartNode | UserInputNode | AssistantNode | ToolCallNode;
 
 export type EdgeCondition =
   | {
