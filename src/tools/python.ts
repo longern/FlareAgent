@@ -4,7 +4,7 @@ const app = new Hono();
 
 let pyodide: any;
 
-async function loadPython() {
+export async function loadPython() {
   if (pyodide) return pyodide;
   if (typeof window === "undefined") return null;
   if (!("loadPyodide" in window)) {
@@ -16,6 +16,10 @@ async function loadPython() {
     });
   }
   pyodide = await (window as any).loadPyodide();
+  const mountDir = "/root";
+  pyodide.FS.mkdir(mountDir);
+  pyodide.FS.mount(pyodide.FS.filesystems.IDBFS, { root: "." }, mountDir);
+  pyodide.FS.chdir(mountDir);
   return pyodide;
 }
 
@@ -36,7 +40,9 @@ app.post("/", async (context) => {
   try {
     const code = getCode(body);
     await pyodide.loadPackagesFromImports(code);
+    await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
     const result = pyodide.runPython(code);
+    await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
     return new Response(result);
   } catch (e) {
     return new Response(e.message, { status: 400 });
