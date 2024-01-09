@@ -185,7 +185,7 @@ function Sidebar({
             label={t("API Key")}
             fullWidth
             variant="standard"
-            value={apiKey}
+            value={apiKey ?? ""}
             onChange={(e) => setApiKey(e.target.value)}
           />
         </DialogContent>

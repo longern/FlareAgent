@@ -49,9 +49,14 @@ export const defaultWorkflow: Workflow = {
       target: "tool-call",
       data: {
         condition: {
-          toolCall: true,
+          type: "tool-call",
         },
       },
+    },
+    {
+      id: "e-assistant-user-input",
+      source: "assistant",
+      target: "user-input",
     },
     {
       id: "e-tool-call-assistant",

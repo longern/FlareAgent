@@ -19,11 +19,6 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { ArrowDownward as ArrowDownwardIcon } from "@mui/icons-material";
-import OpenAI from "openai";
-import type {
-  ChatCompletionMessageParam,
-  ChatCompletionToolMessageParam,
-} from "openai/resources/index.mjs";
 import type { OpenAPIV3 } from "openapi-types";
 
 import MessageList from "./MessageList";
@@ -32,12 +27,24 @@ import Sidebar from "./Sidebar";
 import ScrollToBottom from "./ScrollToBottom";
 import UserInput from "./UserInput";
 import { useMessages } from "../messages";
-import { Tool, apisToTool } from "../tools";
-import { Workflow, defaultWorkflow } from "../workflow";
+import { apisToTool } from "../tools";
+import { Node, Workflow, defaultWorkflow } from "../workflow";
 import WorkflowForm from "./WorkflowForm";
 import { useSyncFS } from "../fs/hooks";
+import {
+  executeUserInputNode,
+  executeWorkflowStep,
+} from "../workflow/execution";
 
 const fallbackWorkflows: Workflow[] = [];
+
+function useCallbackRef<T>(callback: T): React.MutableRefObject<T> {
+  const ref = useRef(callback);
+
+  ref.current = callback;
+
+  return ref;
+}
 
 function useWorkflows() {
   const [workflows, setWorkflows] = useState<Workflow[] | null>(null);
@@ -102,106 +109,50 @@ function App() {
   const tools = useTools();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
   const [messages, setMessages] = useMessages();
+  const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
+  const [currentNode, setCurrentNode] = useState<Node | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
   const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState<boolean>(false);
-  const [needAssistant, setNeedAssistant] = useState<boolean>(false);
   const [model, setModel] = useState<string>("gpt-3.5-turbo-1106");
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const modelRef = useRef<string>(model);
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
-  const fetchCompletion = useCallback(
-    async ({
-      model,
-      messages,
-      tools,
-    }: {
-      model: string;
-      messages: ChatCompletionMessageParam[];
-      tools: Tool[];
-    }) => {
-      const openaiApiKey = localStorage.getItem("openaiApiKey");
-      const openai = new OpenAI({
-        apiKey: openaiApiKey,
-        dangerouslyAllowBrowser: true,
+  const executeWorkflowStepEvent = useCallbackRef(
+    (workflow: Workflow, node: Node) => {
+      return executeWorkflowStep({
+        workflow: workflow,
+        node: node,
+        messages: messages,
+        setMessages: setMessages,
+        model: model,
+        tools: apisToTool(tools),
       });
-      const response = await openai.chat.completions.create({
-        model,
-        messages,
-        tools:
-          tools.length === 0
-            ? undefined
-            : tools.map((tool) => ({
-                type: "function",
-                function: tool.function,
-              })),
-      });
-
-      if (response.choices.length > 0) {
-        const choice = response.choices[0];
-
-        setNeedAssistant(false);
-        setMessages((messages) => [...messages, response.choices[0].message]);
-
-        if (choice.finish_reason === "tool_calls") {
-          const tool_calls = choice.message.tool_calls;
-          const results = await Promise.allSettled(
-            tool_calls.map(
-              async (tool_call): Promise<ChatCompletionToolMessageParam> => {
-                const tool = tools.find(
-                  (tool) => tool.function.name === tool_call.function.name
-                );
-                if (!tool)
-                  return {
-                    role: "tool",
-                    tool_call_id: tool_call.id,
-                    content: "Tool not found",
-                  };
-                const response = await fetch(tool.endpoint, {
-                  method: tool.method,
-                  headers: { "Content-Type": "application/json" },
-                  body: tool_call.function.arguments,
-                });
-                return {
-                  role: "tool",
-                  tool_call_id: tool_call.id,
-                  content: await response.text(),
-                };
-              }
-            )
-          );
-          results.forEach((result) =>
-            setMessages((messages) => [
-              ...messages,
-              result.status === "fulfilled" ? result.value : result.reason,
-            ])
-          );
-          setNeedAssistant(true);
-        }
-      }
-
-      return response;
-    },
-    [setMessages]
+    }
   );
 
   useEffect(() => {
-    if (!needAssistant) return;
-    fetchCompletion({
-      model: modelRef.current,
-      messages,
-      tools: apisToTool(tools),
-    }).catch((error) => setError(error.message));
-  }, [fetchCompletion, messages, needAssistant, tools]);
+    if (currentWorkflow === null) return;
+    if (currentNode !== null) return;
+    const startNode = currentWorkflow.nodes.find(
+      (node) => node.type === "start"
+    );
+    setCurrentNode(startNode);
+  }, [currentWorkflow, currentNode]);
 
   useEffect(() => {
-    modelRef.current = model;
-  }, [model]);
+    if (currentWorkflow === null) return;
+    if (!currentNode) return;
+    if (currentNode.type === "user-input") return;
+    executeWorkflowStepEvent
+      .current(currentWorkflow, currentNode)
+      .then((nextNode) => {
+        setCurrentNode(nextNode);
+      });
+  }, [currentWorkflow, currentNode, executeWorkflowStepEvent]);
 
   const workflowsWithDefault = useMemo(
     () => (workflows === null ? null : [defaultWorkflow, ...workflows]),
@@ -266,11 +217,14 @@ function App() {
       <Container maxWidth="md">
         <UserInput
           onSend={(userInput) => {
-            setMessages((messages) => [
-              ...messages,
-              { role: "user", content: userInput },
-            ]);
-            setNeedAssistant(true);
+            executeUserInputNode({
+              workflow: currentWorkflow,
+              node: currentNode,
+              setMessages: setMessages,
+              userInput: userInput,
+            }).then((nextNode) => {
+              setCurrentNode(nextNode);
+            });
           }}
         />
       </Container>

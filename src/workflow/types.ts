@@ -24,10 +24,11 @@ export type Node = StartNode | UserInputNode | AssistantNode | ToolCallNode;
 
 export type EdgeCondition =
   | {
-      toolCall?: boolean;
+      type: "tool-call";
     }
   | {
-      regex?: string;
+      type: "regex";
+      regex: string;
     };
 
 export interface Edge {
