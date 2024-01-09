@@ -316,6 +316,9 @@ function App() {
                 workflows.filter((w) => w.name !== editWorkflow.name)
               );
               setWorkflowDialogOpen(false);
+              if (currentWorkflow.name === editWorkflow.name) {
+                setCurrentWorkflow(defaultWorkflow);
+              }
             }}
           />
         </DialogContent>
