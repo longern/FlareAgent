@@ -60,7 +60,7 @@ function Sidebar({
   onNewChat: () => void;
   modelSelector?: React.ReactNode;
   tools: OpenAPIV3.Document[];
-  workflows: Workflow[];
+  workflows: Workflow[] | null;
   onNewWorkflow: () => void;
   onEditWorkflow: (workflow: Workflow) => void;
   currentWorkflow: Workflow | null;
@@ -119,25 +119,31 @@ function Sidebar({
           </ListItem>
           <Collapse in={expanded === "workflow"}>
             <List sx={{ pl: 2 }} disablePadding>
-              {workflows.map((workflow) => (
-                <ListItem
-                  disablePadding
-                  key={workflow.name}
-                  secondaryAction={
-                    <Radio
-                      checked={currentWorkflow?.name === workflow.name}
-                      onChange={() => onWorkflowChange(workflow)}
-                      value={workflow.name}
-                      name="workflow"
-                      inputProps={{ "aria-label": workflow.name }}
-                    />
-                  }
-                >
-                  <ListItemButton onClick={() => onEditWorkflow(workflow)}>
-                    <ListItemText>{workflow.name}</ListItemText>
-                  </ListItemButton>
+              {workflows === null ? (
+                <ListItem>
+                  <ListItemText primary={t("Loading...")} />
                 </ListItem>
-              ))}
+              ) : (
+                workflows.map((workflow) => (
+                  <ListItem
+                    disablePadding
+                    key={workflow.name}
+                    secondaryAction={
+                      <Radio
+                        checked={currentWorkflow?.name === workflow.name}
+                        onChange={() => onWorkflowChange(workflow)}
+                        value={workflow.name}
+                        name="workflow"
+                        inputProps={{ "aria-label": workflow.name }}
+                      />
+                    }
+                  >
+                    <ListItemButton onClick={() => onEditWorkflow(workflow)}>
+                      <ListItemText>{workflow.name}</ListItemText>
+                    </ListItemButton>
+                  </ListItem>
+                ))
+              )}
               <ListItem disablePadding>
                 <ListItemButton onClick={onNewWorkflow}>
                   <ListItemText>New...</ListItemText>

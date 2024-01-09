@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Box,
   Container,
@@ -29,22 +35,42 @@ import { useMessages } from "../messages";
 import { Tool, apisToTool } from "../tools";
 import { Workflow, defaultWorkflow } from "../workflow";
 import WorkflowForm from "./WorkflowForm";
+import { useSyncFS } from "../fs/hooks";
 
-function App() {
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+const fallbackWorkflows: Workflow[] = [];
+
+function useWorkflows() {
+  const [workflows, setWorkflows] = useState<Workflow[] | null>(null);
+
+  useSyncFS({
+    path: "/root/.flareagent/workflows.json",
+    value: workflows,
+    setValue: setWorkflows,
+    fallbackValue: fallbackWorkflows,
+  });
+
+  const newWorkflow = useCallback(() => {
+    if (workflows === null) return;
+    for (let i = 0; i < 1000; i++) {
+      const name = `Workflow ${i + 1}`;
+      if (workflows.find((workflow) => workflow.name === name)) {
+        continue;
+      }
+      const startNode = {
+        id: "start",
+        type: "start" as const,
+        data: { label: "Start" },
+      };
+      setWorkflows([...workflows, { name, nodes: [startNode], edges: [] }]);
+      break;
+    }
+  }, [workflows]);
+
+  return [workflows, setWorkflows, newWorkflow] as const;
+}
+
+function useTools() {
   const [tools, setTools] = useState<OpenAPIV3.Document[]>([]);
-  const [workflows, setWorkflows] = useState<Workflow[]>([defaultWorkflow]);
-  const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
-  const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
-  const [workflowDialogOpen, setWorkflowDialogOpen] = useState<boolean>(false);
-  const { messages, addMessage, clearMessages } = useMessages();
-  const [needAssistant, setNeedAssistant] = useState<boolean>(false);
-  const [model, setModel] = useState<string>("gpt-3.5-turbo-1106");
-  const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const modelRef = useRef<string>(model);
-
-  const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
   const fetchTools = useCallback(async () => {
     await import("../tools");
@@ -64,6 +90,30 @@ function App() {
       .filter((tool) => tool !== null);
     setTools(tools);
   }, []);
+
+  useEffect(() => {
+    fetchTools();
+  }, [fetchTools]);
+
+  return tools;
+}
+
+function App() {
+  const tools = useTools();
+  const [workflows, setWorkflows, newWorkflow] = useWorkflows();
+  const [messages, setMessages] = useMessages();
+
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
+  const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
+  const [workflowDialogOpen, setWorkflowDialogOpen] = useState<boolean>(false);
+  const [needAssistant, setNeedAssistant] = useState<boolean>(false);
+  const [model, setModel] = useState<string>("gpt-3.5-turbo-1106");
+  const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const modelRef = useRef<string>(model);
+
+  const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
   const fetchCompletion = useCallback(
     async ({
@@ -96,7 +146,7 @@ function App() {
         const choice = response.choices[0];
 
         setNeedAssistant(false);
-        addMessage(response.choices[0].message);
+        setMessages((messages) => [...messages, response.choices[0].message]);
 
         if (choice.finish_reason === "tool_calls") {
           const tool_calls = choice.message.tool_calls;
@@ -126,9 +176,10 @@ function App() {
             )
           );
           results.forEach((result) =>
-            addMessage(
-              result.status === "fulfilled" ? result.value : result.reason
-            )
+            setMessages((messages) => [
+              ...messages,
+              result.status === "fulfilled" ? result.value : result.reason,
+            ])
           );
           setNeedAssistant(true);
         }
@@ -136,28 +187,8 @@ function App() {
 
       return response;
     },
-    [addMessage]
+    [setMessages]
   );
-
-  const handleNewWorkflow = useCallback(() => {
-    for (let i = 0; i < 1000; i++) {
-      const name = `Workflow ${i + 1}`;
-      if (workflows.find((workflow) => workflow.name === name)) {
-        continue;
-      }
-      const startNode = {
-        id: "start",
-        type: "start" as const,
-        data: { label: "Start" },
-      };
-      setWorkflows([...workflows, { name, nodes: [startNode], edges: [] }]);
-      break;
-    }
-  }, [workflows]);
-
-  useEffect(() => {
-    fetchTools();
-  }, [fetchTools]);
 
   useEffect(() => {
     if (!needAssistant) return;
@@ -171,6 +202,11 @@ function App() {
   useEffect(() => {
     modelRef.current = model;
   }, [model]);
+
+  const workflowsWithDefault = useMemo(
+    () => (workflows === null ? null : [defaultWorkflow, ...workflows]),
+    [workflows]
+  );
 
   const models = ["gpt-3.5-turbo-1106", "gpt-4-1106-preview"];
   const ModelSelector = (
@@ -189,17 +225,19 @@ function App() {
       ))}
     </Select>
   );
+
   return (
     <Stack height="100%">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onNewChat={clearMessages}
+        onNewChat={() => setMessages([])}
         modelSelector={matchesLg ? ModelSelector : undefined}
         tools={tools}
-        workflows={workflows}
-        onNewWorkflow={handleNewWorkflow}
+        workflows={workflowsWithDefault}
+        onNewWorkflow={newWorkflow}
         onEditWorkflow={(workflow) => {
+          if (workflow === defaultWorkflow) return;
           setEditWorkflow(workflow);
           setWorkflowDialogOpen(true);
         }}
@@ -210,7 +248,7 @@ function App() {
         <MobileToolbar
           modelSelector={ModelSelector}
           onMenuClick={() => setSidebarOpen(true)}
-          onCreateThread={clearMessages}
+          onCreateThread={() => setMessages([])}
         />
       )}
       <Box sx={{ minHeight: 0, flexGrow: 1 }}>
@@ -228,7 +266,10 @@ function App() {
       <Container maxWidth="md">
         <UserInput
           onSend={(userInput) => {
-            addMessage({ role: "user", content: userInput });
+            setMessages((messages) => [
+              ...messages,
+              { role: "user", content: userInput },
+            ]);
             setNeedAssistant(true);
           }}
         />

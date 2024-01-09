@@ -6,10 +6,11 @@ Another ChatGPT front-end. Focus on tool calls and workflow management.
 
 - [x] Chat with GPT-3.5 and GPT-4
 - [x] Markdown support
-- [x] Code block support
+- [x] Code Highlighting
 - [x] Local tools
     * [x] Current time
     * [x] Run python code (with pyodide)
+    * [x] IndexedDB File System
 - [x] Remote tools
     * [x] DuckDuckGo search (Need Cloudflare Workers)
     * [x] Crawl a web page (Need Cloudflare Workers)

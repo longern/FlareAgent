@@ -5,12 +5,12 @@ export function useSyncFS<T = any>({
   path,
   value,
   setValue,
-  fallback = null,
+  fallbackValue = null,
 }: {
   path: string;
   value: T | null;
   setValue: (value: T) => void;
-  fallback: T | null;
+  fallbackValue: T | null;
 }) {
   useEffect(() => {
     if (value === null) return;
@@ -41,9 +41,11 @@ export function useSyncFS<T = any>({
     FS.readFile(path)
       .then((contents) => {
         setValue(
-          contents ? JSON.parse(new TextDecoder().decode(contents)) : null
+          contents
+            ? JSON.parse(new TextDecoder().decode(contents))
+            : fallbackValue
         );
       })
-      .catch(() => setValue(fallback));
-  }, [path, setValue, fallback]);
+      .catch(() => setValue(fallbackValue));
+  }, [path, setValue, fallbackValue]);
 }
