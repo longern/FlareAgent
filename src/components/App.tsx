@@ -35,6 +35,7 @@ import {
   executeUserInputNode,
   executeWorkflowStep,
 } from "../workflow/execution";
+import { useTranslation } from "react-i18next";
 
 const fallbackWorkflows: Workflow[] = [];
 
@@ -48,6 +49,7 @@ function useCallbackRef<T>(callback: T): React.MutableRefObject<T> {
 
 function useWorkflows() {
   const [workflows, setWorkflows] = useState<Workflow[] | null>(null);
+  const { t } = useTranslation();
 
   useSyncFS({
     path: "/root/.flareagent/workflows.json",
@@ -66,12 +68,12 @@ function useWorkflows() {
       const startNode = {
         id: "start",
         type: "start" as const,
-        data: { label: "Start" },
+        data: { label: t("Start") },
       };
       setWorkflows([...workflows, { name, nodes: [startNode], edges: [] }]);
       break;
     }
-  }, [workflows]);
+  }, [workflows, t]);
 
   return [workflows, setWorkflows, newWorkflow] as const;
 }
