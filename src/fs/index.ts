@@ -1,7 +1,7 @@
 function getIDBFS({ name, version }: { name: string; version: number }) {
   const dbPromise = new Promise<IDBDatabase>(async (resolve, reject) => {
     const databases = await window.indexedDB.databases();
-    if (!databases.find((db) => db.name === name))
+    if (!databases.find((db) => db.name === name && db.version === version))
       return reject(new Error("Database not found"));
     const request = window.indexedDB.open(name, version);
     request.onsuccess = () => {
@@ -47,12 +47,14 @@ function getIDBFS({ name, version }: { name: string; version: number }) {
     return new Promise<void>((resolve, reject) => {
       const transaction = db.transaction(["FILE_DATA"], "readwrite");
       const objectStore = transaction.objectStore("FILE_DATA");
+      const trimmedPath = path.endsWith("/") ? path.slice(0, -1) : path;
+      if (trimmedPath === db.name) return resolve();
       const request = objectStore.put(
         {
           mode: 0o40000 | (mode & 0o777),
           timestamp: new Date(),
         },
-        path
+        trimmedPath
       );
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve();

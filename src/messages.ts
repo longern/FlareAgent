@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import { FS } from "./fs";
+
+import { useSyncFS } from "./fs/hooks";
 
 function messagesReducer(
   messages: ChatCompletionMessageParam[] | null,
@@ -30,6 +31,8 @@ function messagesReducer(
   }
 }
 
+const messagesFallback: ChatCompletionMessageParam[] = [];
+
 export function useMessages() {
   const [messages, dispatch] = React.useReducer(messagesReducer, null);
 
@@ -45,28 +48,12 @@ export function useMessages() {
     dispatch({ type: "clear" });
   }, []);
 
-  useEffect(() => {
-    if (messages !== null) return;
-    FS.readFile("/root/FlareAgent/messages.json")
-      .then((contents) => {
-        setMessages(
-          contents ? JSON.parse(new TextDecoder().decode(contents)) : []
-        );
-      })
-      .catch(() => setMessages([]));
-  }, [messages, setMessages]);
-
-  useEffect(() => {
-    if (messages === null) return;
-    FS.mkdir("/root/FlareAgent")
-      .then(() =>
-        FS.writeFile(
-          "/root/FlareAgent/messages.json",
-          new Int8Array(new TextEncoder().encode(JSON.stringify(messages)))
-        )
-      )
-      .catch(() => {});
-  }, [messages]);
+  useSyncFS({
+    path: "/root/.flareagent/messages.json",
+    value: messages,
+    setValue: setMessages,
+    fallback: messagesFallback,
+  });
 
   return { messages, addMessage, setMessages, clearMessages };
 }
