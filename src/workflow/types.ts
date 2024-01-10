@@ -11,16 +11,32 @@ export interface UserInputNode extends BaseNode {
   type: "user-input";
 }
 
-export interface AssistantNode extends BaseNode {
+export interface AssistantNode
+  extends BaseNode<{
+    label: string;
+    prompt?: string;
+  }> {
   type: "assistant";
-  prompt?: string;
 }
 
 export interface ToolCallNode extends BaseNode {
   type: "tool-call";
 }
 
-export type Node = StartNode | UserInputNode | AssistantNode | ToolCallNode;
+export interface CodeNode
+  extends BaseNode<{
+    label: string;
+    code?: string;
+  }> {
+  type: "code";
+}
+
+export type Node =
+  | StartNode
+  | UserInputNode
+  | AssistantNode
+  | ToolCallNode
+  | CodeNode;
 
 export type EdgeCondition =
   | {

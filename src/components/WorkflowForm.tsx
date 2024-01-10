@@ -78,11 +78,14 @@ function NodeForm({
         <TextField
           key={node.id}
           label={t("System Prompt")}
-          value={node.prompt}
+          value={node.data.prompt}
           multiline
           rows={8}
           onChange={(e) => {
-            onUpdateNode({ ...node, prompt: e.target.value });
+            onUpdateNode({
+              ...node,
+              data: { ...node.data, prompt: e.target.value },
+            });
           }}
         />
       ) : node.type === "tool-call" ? (
@@ -114,6 +117,20 @@ function NodeForm({
               ))}
           </Select>
         </FormControl>
+      ) : node.type === "code" ? (
+        <TextField
+          key={node.id}
+          label={t("Code")}
+          value={node.data.code}
+          multiline
+          rows={8}
+          onChange={(e) => {
+            onUpdateNode({
+              ...node,
+              data: { ...node.data, code: e.target.value },
+            });
+          }}
+        />
       ) : null}
     </Stack>
   );
@@ -230,6 +247,14 @@ function WorkflowForm({
             }}
           >
             {t("Tool Call")}
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              addNode("code");
+              setAnchorEl(null);
+            }}
+          >
+            {t("Code")}
           </MenuItem>
         </Menu>
       </Stack>

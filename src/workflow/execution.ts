@@ -3,7 +3,7 @@ import {
   ChatCompletionMessageParam,
   ChatCompletionToolMessageParam,
 } from "openai/resources/index.mjs";
-import { AssistantNode, Node, ToolCallNode, Workflow } from ".";
+import { AssistantNode, CodeNode, Node, ToolCallNode, Workflow } from ".";
 import React from "react";
 import OpenAI from "openai";
 import { Tool } from "../tools";
@@ -65,12 +65,17 @@ async function executeAssistantNode({
     ...tool,
     function: tool.function,
   }));
+
+  const hasToolCallTransition = workflow.edges.some(
+    (edge) =>
+      edge.source === node.id && edge.data?.condition?.type === "tool-call"
+  );
   const response = await openai.chat.completions.create({
     model,
-    messages: node.prompt
-      ? [...messages, { role: "system", content: node.prompt }]
+    messages: node.data.prompt
+      ? [...messages, { role: "system", content: node.data.prompt }]
       : messages,
-    tools: tools.length === 0 ? undefined : tools,
+    tools: tools.length === 0 || !hasToolCallTransition ? undefined : tools,
   });
   if (response.choices.length > 0) {
     const choice = response.choices[0];
@@ -154,6 +159,22 @@ async function executeToolCallNode({
   return findNextNode(workflow, node);
 }
 
+export async function executeCodeNode({
+  node,
+  workflow,
+}: {
+  node: CodeNode;
+  workflow: Workflow;
+}) {
+  const { loadPython } = await import("../tools/python");
+  const pyodide = await loadPython();
+  await pyodide.loadPackagesFromImports(node.data.code);
+  await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
+  await pyodide.runPythonAsync(node.data.code);
+  await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
+  return findNextNode(workflow, node);
+}
+
 export async function executeWorkflowStep({
   workflow,
   node,
@@ -191,6 +212,11 @@ export async function executeWorkflowStep({
         messages,
         setMessages,
         tools,
+      });
+    case "code":
+      return executeCodeNode({
+        node,
+        workflow,
       });
     default:
       throw new Error(`Unknown node type: ${(node as Node).type}`);

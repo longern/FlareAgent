@@ -41,7 +41,7 @@ app.post("/", async (context) => {
     const code = getCode(body);
     await pyodide.loadPackagesFromImports(code);
     await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
-    const result = pyodide.runPython(code);
+    const result = await pyodide.runPythonAsync(code);
     await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
     return new Response(result);
   } catch (e) {

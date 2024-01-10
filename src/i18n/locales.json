@@ -1,6 +1,7 @@
 {
   "en": {
     "translation": {
+      "Code": "Code",
       "Delete": "Delete",
       "New Chat": "New Chat",
       "Next Node": "Next Node",
@@ -19,6 +20,7 @@
   },
   "zh": {
     "translation": {
+      "Code": "代码",
       "Delete": "删除",
       "New Chat": "新对话",
       "Next Node": "下一节点",
