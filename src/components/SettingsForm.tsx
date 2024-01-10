@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, TextField } from "@mui/material";
+import { Box, IconButton, Stack, TextField } from "@mui/material";
+import { AirlineStops as AirlineStopsIcon } from "@mui/icons-material";
 
 function useApiKey() {
   const [apiKey, setApiKey] = React.useState<string | null>(null);
@@ -44,11 +45,25 @@ function SettingsForm() {
         value={apiKey ?? ""}
         onChange={(e) => setApiKey(e.target.value)}
       />
-      <TextField
-        label={t("Base URL")}
-        value={baseUrl ?? ""}
-        onChange={(e) => setBaseUrl(e.target.value)}
-      />
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <TextField
+          label={t("Base URL")}
+          value={baseUrl ?? ""}
+          fullWidth
+          onChange={(e) => setBaseUrl(e.target.value)}
+        />
+        <Box>
+          <IconButton
+            aria-label="proxy"
+            onClick={() => {
+              const proxyUrl = new URL("/openai", window.location.href);
+              setBaseUrl(proxyUrl.toString());
+            }}
+          >
+            <AirlineStopsIcon />
+          </IconButton>
+        </Box>
+      </Stack>
     </Stack>
   );
 }

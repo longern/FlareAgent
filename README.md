@@ -15,7 +15,8 @@ Another ChatGPT front-end. Focus on tool calls and workflow management.
     * [x] DuckDuckGo search (Need Cloudflare Workers)
     * [x] Crawl a web page (Need Cloudflare Workers)
     * [x] Dalle-3 image generation
-- [ ] Workflow management
+- [x] Proxy OpenAI requests
+- [x] Workflow management
 
 ## Usage
 
