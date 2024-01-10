@@ -14,7 +14,12 @@ app.post("/", async (context) => {
       { status: 500 }
     );
   }
-  const openai = new OpenAI({ apiKey: token, dangerouslyAllowBrowser: true });
+  const baseURL = window.localStorage.getItem("openaiBaseUrl");
+  const openai = new OpenAI({
+    apiKey: token,
+    baseURL,
+    dangerouslyAllowBrowser: true,
+  });
   const imageResponse = await openai.images.generate({
     prompt: body.prompt,
   });

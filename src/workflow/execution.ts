@@ -55,8 +55,10 @@ async function executeAssistantNode({
   tools: Tool[];
 }) {
   const openaiApiKey = localStorage.getItem("openaiApiKey");
+  const baseURL = localStorage.getItem("openaiBaseUrl");
   const openai = new OpenAI({
     apiKey: openaiApiKey,
+    baseURL,
     dangerouslyAllowBrowser: true,
   });
   const tools = toolsArg.map((tool) => ({

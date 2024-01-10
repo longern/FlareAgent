@@ -2,6 +2,7 @@ import {
   Collapse,
   Dialog,
   DialogContent,
+  DialogTitle,
   Drawer,
   List,
   ListItem,
@@ -9,7 +10,6 @@ import {
   ListItemText,
   Radio,
   Stack,
-  TextField,
   Theme,
   useMediaQuery,
 } from "@mui/material";
@@ -21,27 +21,7 @@ import React, { useCallback } from "react";
 import { OpenAPIV3 } from "openapi-types";
 import { Workflow } from "../workflow";
 import { useTranslation } from "react-i18next";
-
-function useApiKey() {
-  const [apiKey, setApiKey] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const apiKey = localStorage.getItem("openaiApiKey");
-    if (apiKey) {
-      setApiKey(apiKey);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem("openaiApiKey", apiKey);
-    } else {
-      localStorage.removeItem("openaiApiKey");
-    }
-  }, [apiKey]);
-
-  return [apiKey, setApiKey] as const;
-}
+import SettingsForm from "./SettingsForm";
 
 function Sidebar({
   open,
@@ -68,7 +48,6 @@ function Sidebar({
 }) {
   const [showSettings, setShowSettings] = React.useState<boolean>(false);
   const [expanded, setExpanded] = React.useState<string | null>(null);
-  const [apiKey, setApiKey] = useApiKey();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
@@ -179,15 +158,14 @@ function Sidebar({
           </ListItem>
         </List>
       </Stack>
-      <Dialog open={showSettings} onClose={() => setShowSettings(false)}>
+      <Dialog
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        fullWidth
+      >
+        <DialogTitle>{t("Settings")}</DialogTitle>
         <DialogContent>
-          <TextField
-            label={t("API Key")}
-            fullWidth
-            variant="standard"
-            value={apiKey ?? ""}
-            onChange={(e) => setApiKey(e.target.value)}
-          />
+          <SettingsForm />
         </DialogContent>
       </Dialog>
     </Drawer>
