@@ -6,19 +6,26 @@ import React, {
   useState,
 } from "react";
 import {
+  AppBar,
   Box,
   Container,
   Dialog,
   DialogContent,
   Fab,
+  IconButton,
   MenuItem,
   Select,
   Snackbar,
   Stack,
   Theme,
+  Toolbar,
+  Typography,
   useMediaQuery,
 } from "@mui/material";
-import { ArrowDownward as ArrowDownwardIcon } from "@mui/icons-material";
+import {
+  ArrowDownward as ArrowDownwardIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import type { OpenAPIV3 } from "openapi-types";
 
 import MessageList from "./MessageList";
@@ -57,12 +64,40 @@ function useWorkflows() {
       if (workflows.find((workflow) => workflow.name === name)) {
         continue;
       }
-      const startNode = {
-        id: "start",
-        type: "start" as const,
-        data: { label: t("Start") },
+      const workflow: Workflow = {
+        name,
+        nodes: [
+          { id: "start", type: "start", data: { label: t("Start") } },
+          {
+            id: "user-input",
+            type: "user-input",
+            data: { label: t("User Input") },
+          },
+          {
+            id: "assistant",
+            type: "assistant",
+            data: { label: t("Assistant") },
+          },
+        ],
+        edges: [
+          {
+            id: "e-start-user-input",
+            source: "start",
+            target: "user-input",
+          },
+          {
+            id: "e-user-input-assistant",
+            source: "user-input",
+            target: "assistant",
+          },
+          {
+            id: "e-assistant-user-input",
+            source: "assistant",
+            target: "user-input",
+          },
+        ],
       };
-      setWorkflows([...workflows, { name, nodes: [startNode], edges: [] }]);
+      setWorkflows([...workflows, workflow]);
       break;
     }
   }, [workflows, t]);
@@ -246,10 +281,25 @@ function App() {
       )}
       <Dialog
         open={workflowDialogOpen}
-        fullWidth
+        fullScreen
         onClose={() => setWorkflowDialogOpen(false)}
         onTransitionExited={() => setEditWorkflow(null)}
       >
+        <AppBar position="relative">
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => setWorkflowDialogOpen(false)}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+              {editWorkflow?.name}
+            </Typography>
+          </Toolbar>
+        </AppBar>
         <DialogContent>
           <WorkflowForm
             workflow={editWorkflow}

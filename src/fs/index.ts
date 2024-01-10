@@ -61,10 +61,25 @@ function getIDBFS({ name, version }: { name: string; version: number }) {
     });
   }
 
+  async function readdir(path: string) {
+    const db = await dbPromise;
+    return new Promise<string[]>((resolve, reject) => {
+      const transaction = db.transaction(["FILE_DATA"], "readonly");
+      const objectStore = transaction.objectStore("FILE_DATA");
+      const request = objectStore.getAllKeys(
+        IDBKeyRange.bound(path, `${path}\uffff`)
+      );
+      const directories = request.result as string[];
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve([".", ...directories]);
+    });
+  }
+
   return {
     readFile,
     writeFile,
     mkdir,
+    readdir,
   };
 }
 
