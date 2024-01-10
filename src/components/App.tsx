@@ -39,14 +39,6 @@ import { useTranslation } from "react-i18next";
 
 const fallbackWorkflows: Workflow[] = [];
 
-function useCallbackRef<T>(callback: T): React.MutableRefObject<T> {
-  const ref = useRef(callback);
-
-  ref.current = callback;
-
-  return ref;
-}
-
 function useWorkflows() {
   const [workflows, setWorkflows] = useState<Workflow[] | null>(null);
   const { t } = useTranslation();
@@ -123,38 +115,38 @@ function App() {
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
-  const executeWorkflowStepEvent = useCallbackRef(
-    (workflow: Workflow, node: Node) => {
-      return executeWorkflowStep({
-        workflow: workflow,
-        node: node,
-        messages: messages,
-        setMessages: setMessages,
-        model: model,
-        tools: apisToTool(tools),
-      });
-    }
-  );
+  const executeWorkflowStepCallback = (workflow: Workflow, node: Node) => {
+    return executeWorkflowStep({
+      workflow: workflow,
+      node: node,
+      messages: messages,
+      setMessages: setMessages,
+      model: model,
+      tools: apisToTool(tools),
+    });
+  };
+  const executeWorkflowStepRef = useRef(executeWorkflowStepCallback);
+  executeWorkflowStepRef.current = executeWorkflowStepCallback;
 
   useEffect(() => {
-    if (currentWorkflow === null) return;
+    if (currentWorkflow === null || messages === null) return;
     if (currentNode !== null) return;
     const startNode = currentWorkflow.nodes.find(
       (node) => node.type === "start"
     );
     setCurrentNode(startNode);
-  }, [currentWorkflow, currentNode]);
+  }, [currentWorkflow, currentNode, messages]);
 
   useEffect(() => {
     if (currentWorkflow === null) return;
     if (!currentNode) return;
     if (currentNode.type === "user-input") return;
-    executeWorkflowStepEvent
+    executeWorkflowStepRef
       .current(currentWorkflow, currentNode)
       .then((nextNode) => {
         setCurrentNode(nextNode);
       });
-  }, [currentWorkflow, currentNode, executeWorkflowStepEvent]);
+  }, [currentWorkflow, currentNode]);
 
   const workflowsWithDefault = useMemo(
     () => (workflows === null ? null : [defaultWorkflow, ...workflows]),
