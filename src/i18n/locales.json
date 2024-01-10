@@ -10,7 +10,9 @@
       "Settings": "Settings",
       "Start": "Start",
       "System Prompt": "System Prompt",
+      "Tool Call": "Tool Call",
       "Tools": "Tools",
+      "User Input": "User Input",
       "Workflow": "Workflow",
       "Workflow Name": "Workflow Name"
     }
@@ -26,7 +28,9 @@
       "Settings": "设置",
       "Start": "开始",
       "System Prompt": "系统提示词",
+      "Tool Call": "工具调用",
       "Tools": "工具",
+      "User Input": "用户输入",
       "Workflow": "工作流",
       "Workflow Name": "工作流名称"
     }

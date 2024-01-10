@@ -76,7 +76,7 @@ function useWorkflows() {
           {
             id: "assistant",
             type: "assistant",
-            data: { label: t("Assistant") },
+            data: { label: t("LLM") },
           },
         ],
         edges: [
@@ -163,6 +163,12 @@ function App() {
   const executeWorkflowStepRef = useRef(executeWorkflowStepCallback);
   executeWorkflowStepRef.current = executeWorkflowStepCallback;
 
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    setCurrentNode(null);
+    setSidebarOpen(false);
+  }, [setMessages]);
+
   useEffect(() => {
     if (currentWorkflow === null || messages === null) return;
     if (currentNode !== null) return;
@@ -211,7 +217,7 @@ function App() {
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onNewChat={() => setMessages([])}
+        onNewChat={handleNewChat}
         modelSelector={matchesLg ? ModelSelector : undefined}
         tools={tools}
         workflows={workflowsWithDefault}
@@ -222,13 +228,16 @@ function App() {
           setWorkflowDialogOpen(true);
         }}
         currentWorkflow={currentWorkflow}
-        onWorkflowChange={setCurrentWorkflow}
+        onWorkflowChange={(workflow) => {
+          setCurrentWorkflow(workflow);
+          handleNewChat();
+        }}
       />
       {!matchesLg && (
         <MobileToolbar
           modelSelector={ModelSelector}
           onMenuClick={() => setSidebarOpen(true)}
-          onCreateThread={() => setMessages([])}
+          onCreateThread={handleNewChat}
         />
       )}
       <Box sx={{ minHeight: 0, flexGrow: 1 }}>
@@ -305,7 +314,7 @@ function App() {
             workflow={editWorkflow}
             onWorkflowChange={(workflow) => {
               setWorkflows(
-                workflows.map((w) => (w.name === workflow.name ? workflow : w))
+                workflows.map((w) => (w === editWorkflow ? workflow : w))
               );
               setWorkflowDialogOpen(false);
             }}
@@ -316,6 +325,7 @@ function App() {
               setWorkflowDialogOpen(false);
               if (currentWorkflow.name === editWorkflow.name) {
                 setCurrentWorkflow(defaultWorkflow);
+                handleNewChat();
               }
             }}
           />

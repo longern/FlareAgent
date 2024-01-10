@@ -3,7 +3,7 @@ import {
   ChatCompletionMessageParam,
   ChatCompletionToolMessageParam,
 } from "openai/resources/index.mjs";
-import { Node, Workflow } from ".";
+import { AssistantNode, Node, ToolCallNode, Workflow } from ".";
 import React from "react";
 import OpenAI from "openai";
 import { Tool } from "../tools";
@@ -45,7 +45,7 @@ async function executeAssistantNode({
   model,
   tools: toolsArg,
 }: {
-  node: Node;
+  node: AssistantNode;
   workflow: Workflow;
   messages: ChatCompletionMessageParam[] | null;
   setMessages: React.Dispatch<
@@ -65,7 +65,9 @@ async function executeAssistantNode({
   }));
   const response = await openai.chat.completions.create({
     model,
-    messages,
+    messages: node.prompt
+      ? [...messages, { role: "system", content: node.prompt }]
+      : messages,
     tools: tools.length === 0 ? undefined : tools,
   });
   if (response.choices.length > 0) {
@@ -106,7 +108,7 @@ async function executeToolCallNode({
   setMessages,
   tools,
 }: {
-  node: Node;
+  node: ToolCallNode;
   workflow: Workflow;
   messages: ChatCompletionMessageParam[] | null;
   setMessages: React.Dispatch<

@@ -1,8 +1,11 @@
 import React, { useCallback } from "react";
 import {
+  Box,
   Button,
   FormControl,
+  IconButton,
   InputLabel,
+  Menu,
   MenuItem,
   Select,
   Stack,
@@ -132,12 +135,35 @@ function WorkflowForm({
     nodes[0]
   );
 
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
   const { t } = useTranslation();
 
   const updateNode = useCallback((node: Node) => {
     setNodes((nodes) => nodes.map((n) => (n.id === node.id ? node : n)));
     setEditingNode(node);
   }, []);
+
+  const addNode = useCallback(
+    (type: Node["type"]) => {
+      for (let i = 0; i < 1000; i++) {
+        const id = `node-${i + 1}`;
+        const label = `Node ${i + 1}`;
+        if (nodes.find((node) => node.id === id)) {
+          continue;
+        }
+        const newNode: Node = {
+          id,
+          type,
+          data: { label },
+        };
+        setNodes([...nodes, newNode]);
+        setEditingNode(newNode);
+        break;
+      }
+    },
+    [nodes]
+  );
 
   return (
     <Stack spacing={2}>
@@ -147,44 +173,66 @@ function WorkflowForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <Tabs
-        value={editingNode}
-        variant="scrollable"
-        scrollButtons="auto"
-        onChange={(_e, value) => {
-          setEditingNode(value);
-        }}
-      >
-        {nodes.map((node) => (
-          <Tab
-            key={node.id}
-            label={node.data.label}
-            value={node}
-            sx={{ textTransform: "none" }}
-          />
-        ))}
-        <Tab
-          icon={<AddIcon />}
-          sx={{ minWidth: "auto" }}
-          onClick={() => {
-            for (let i = 0; i < 1000; i++) {
-              const id = `node-${i + 1}`;
-              const label = `Node ${i + 1}`;
-              if (nodes.find((node) => node.id === id)) {
-                continue;
-              }
-              const newNode: Node = {
-                id,
-                type: "user-input",
-                data: { label },
-              };
-              setNodes([...nodes, newNode]);
-              setEditingNode(newNode);
-              break;
-            }
+      <Stack direction="row" alignItems="center">
+        <Tabs
+          value={editingNode}
+          variant="scrollable"
+          scrollButtons="auto"
+          onChange={(_e, value) => {
+            setEditingNode(value);
           }}
-        />
-      </Tabs>
+        >
+          {nodes.map((node) => (
+            <Tab
+              key={node.id}
+              label={node.data.label}
+              value={node}
+              sx={{ textTransform: "none" }}
+            />
+          ))}
+        </Tabs>
+        <Box>
+          <IconButton
+            onClick={(e) => {
+              setAnchorEl(e.currentTarget);
+            }}
+          >
+            <AddIcon />
+          </IconButton>
+        </Box>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => {
+            setAnchorEl(null);
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              addNode("user-input");
+              setAnchorEl(null);
+            }}
+          >
+            {t("User Input")}
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              addNode("assistant");
+              setAnchorEl(null);
+            }}
+          >
+            {t("LLM")}
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              addNode("tool-call");
+              setAnchorEl(null);
+            }}
+          >
+            {t("Tool Call")}
+          </MenuItem>
+        </Menu>
+      </Stack>
       {editingNode && (
         <NodeForm
           node={editingNode}
