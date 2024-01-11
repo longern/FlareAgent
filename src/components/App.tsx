@@ -137,9 +137,10 @@ function useTools() {
 function App() {
   const tools = useTools();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
-  const [messages, setMessages] = useMessages();
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
+  const [messages, setMessages] = useMessages();
   const [currentNode, setCurrentNode] = useState<Node | null>(null);
+  const [variables, setVariables] = useState<Map<string, any>>(new Map());
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
@@ -150,22 +151,30 @@ function App() {
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
-  const executeWorkflowStepCallback = (workflow: Workflow, node: Node) => {
-    return executeWorkflowStep({
+  const executeWorkflowStepCallback = async (
+    workflow: Workflow,
+    node: Node
+  ) => {
+    const state = await executeWorkflowStep({
       workflow: workflow,
-      node: node,
-      messages: messages,
-      setMessages: setMessages,
+      state: {
+        node: node,
+        messages: messages,
+        variables: variables,
+      },
       model: model,
       tools: apisToTool(tools),
     });
+    setVariables(state.variables);
+    return state;
   };
   const executeWorkflowStepRef = useRef(executeWorkflowStepCallback);
   executeWorkflowStepRef.current = executeWorkflowStepCallback;
 
   const handleNewChat = useCallback(() => {
-    setMessages([]);
     setCurrentNode(null);
+    setMessages([]);
+    setVariables(new Map());
     setSidebarOpen(false);
   }, [setMessages]);
 
@@ -184,10 +193,11 @@ function App() {
     if (currentNode.type === "user-input") return;
     executeWorkflowStepRef
       .current(currentWorkflow, currentNode)
-      .then((nextNode) => {
-        setCurrentNode(nextNode);
+      .then((state) => {
+        setCurrentNode(state.node);
+        setMessages(state.messages);
       });
-  }, [currentWorkflow, currentNode]);
+  }, [currentWorkflow, currentNode, setMessages]);
 
   const workflowsWithDefault = useMemo(
     () => (workflows === null ? null : [defaultWorkflow, ...workflows]),
@@ -257,11 +267,15 @@ function App() {
           onSend={(userInput) => {
             executeUserInputNode({
               workflow: currentWorkflow,
-              node: currentNode,
-              setMessages: setMessages,
+              state: {
+                node: currentNode,
+                messages: messages,
+                variables: variables,
+              },
               userInput: userInput,
-            }).then((nextNode) => {
-              setCurrentNode(nextNode);
+            }).then((state) => {
+              setCurrentNode(state.node);
+              setMessages(state.messages);
             });
           }}
         />
@@ -317,6 +331,10 @@ function App() {
                 workflows.map((w) => (w === editWorkflow ? workflow : w))
               );
               setWorkflowDialogOpen(false);
+              if (currentWorkflow === editWorkflow) {
+                setCurrentWorkflow(workflow);
+                handleNewChat();
+              }
             }}
             onWorkflowDelete={() => {
               setWorkflows(
