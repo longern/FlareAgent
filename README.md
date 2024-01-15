@@ -6,6 +6,7 @@ Another ChatGPT front-end. Focus on tool calls and workflow management.
 
 - [x] Chat with GPT-3.5 and GPT-4
 - [x] Markdown support
+- [x] LaTeX support
 - [x] Code Highlighting
 - [x] Local tools
   - [x] Current time

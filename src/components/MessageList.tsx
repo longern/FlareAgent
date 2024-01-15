@@ -16,8 +16,11 @@ import {
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
 import Markdown from "react-markdown";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useTranslation } from "react-i18next";
+import "katex/dist/katex.min.css";
 
 const Highlighter = lazy(() => import("./Highlighter"));
 
@@ -50,6 +53,8 @@ function MarkdownHighlighter({ children }: { children: string }) {
           );
         },
       }}
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeKatex]}
     >
       {children}
     </Markdown>
