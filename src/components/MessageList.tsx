@@ -77,9 +77,11 @@ function MaybePythonBlock({ children }: { children: string }) {
     return (
       <Suspense
         fallback={
-          <div style={{ overflow: "auto" }}>
-            <code>{parsed.code}</code>
-          </div>
+          <pre style={{ margin: 0 }}>
+            <div style={{ overflow: "auto" }}>
+              <code>{parsed.code}</code>
+            </div>
+          </pre>
         }
       >
         <Highlighter children={parsed.code} language={"python"} />

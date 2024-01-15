@@ -124,6 +124,7 @@ function NodeForm({
           value={node.data.code}
           multiline
           rows={8}
+          InputProps={{ sx: { fontFamily: "Consolas, Monaco, monospace" } }}
           onChange={(e) => {
             onUpdateNode({
               ...node,
