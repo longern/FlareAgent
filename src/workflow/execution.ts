@@ -1,4 +1,5 @@
 import {
+  ChatCompletion,
   ChatCompletionMessage,
   ChatCompletionMessageParam,
   ChatCompletionToolMessageParam,
@@ -41,15 +42,32 @@ export async function executeUserInputNode({
 }): Promise<WorkflowExecutionState> {
   const node = state.node as UserInputNode;
   const nextNode = findNextNode(workflow, node);
-  const messages = [
-    ...state.messages,
-    { role: "user" as const, content: userInput },
-  ];
   return {
     node: nextNode,
-    messages,
+    messages: [...state.messages, { role: "user", content: userInput }],
     variables: state.variables,
   };
+}
+
+function patchDelta(obj: any, delta: any) {
+  if (Array.isArray(delta)) {
+    const newObj = obj ? [...obj] : [];
+    delta.forEach((item: { index: number; [key: string]: any }) => {
+      newObj[item.index] = patchDelta(newObj[item.index], item);
+    });
+    return newObj;
+  } else if (delta === null) {
+    return null;
+  } else if (typeof delta === "object") {
+    const newObj = obj ? { ...obj } : {};
+    for (const key in delta) {
+      newObj[key] = patchDelta(newObj[key], delta[key]);
+    }
+    return newObj;
+  } else if (typeof delta === "string") {
+    return (obj ?? "") + delta;
+  }
+  return delta;
 }
 
 async function executeAssistantNode({
@@ -57,11 +75,13 @@ async function executeAssistantNode({
   state,
   model,
   tools: toolsArg,
+  onPartialMessage,
 }: {
   workflow: Workflow;
   state: WorkflowExecutionState;
   model: string;
   tools: Tool[];
+  onPartialMessage?: (message: ChatCompletionMessage) => void;
 }): Promise<WorkflowExecutionState> {
   const node = state.node as AssistantNode;
   const openaiApiKey = localStorage.getItem("OPENAI_API_KEY");
@@ -85,24 +105,38 @@ async function executeAssistantNode({
         return prompt.replace(`{${key}}`, value);
       }, node.data.prompt)
     : undefined;
-  const response = await openai.chat.completions.create({
+  const completion = await openai.chat.completions.create({
     model,
     messages: systemPrompt
       ? [{ role: "system", content: systemPrompt }, ...state.messages]
       : state.messages,
     tools: tools.length === 0 || !hasToolCallTransition ? undefined : tools,
+    stream: true,
   });
-  if (response.choices.length === 0) {
-    throw new Error("No response from OpenAI API");
+
+  const choices: ChatCompletion.Choice[] = [];
+  for await (const chunk of completion) {
+    for (const chunkChoice of chunk.choices) {
+      const { index, delta, finish_reason } = chunkChoice;
+      if (choices.length <= index) choices[index] = {} as ChatCompletion.Choice;
+      const choice = choices[index];
+      choice.finish_reason = finish_reason;
+      choice.message = patchDelta(choice.message, delta);
+      onPartialMessage?.(choice.message);
+    }
   }
 
-  const choice = response.choices[0];
+  if (choices.length === 0) {
+    throw new Error("No response from OpenAI API");
+  }
+  const choice = choices[0];
 
   const nextNode = (() => {
     for (const edge of workflow.edges) {
       if (edge.source !== node.id) continue;
       if (edge.data?.condition?.type === "regex") {
-        if (new RegExp(edge.data.condition.regex).test(choice.message.content))
+        const regex = new RegExp(edge.data.condition.regex);
+        if (regex.test(choice.message.content))
           return findNode(workflow, edge.target);
       } else if (edge.data?.condition?.type === "tool-call") {
         if (choice.finish_reason === "tool_calls")
@@ -210,11 +244,13 @@ export async function executeWorkflowStep({
   state,
   model,
   tools,
+  onPartialMessage,
 }: {
   workflow: Workflow;
   state: WorkflowExecutionState;
   model: string;
   tools: Tool[];
+  onPartialMessage?: (message: ChatCompletionMessage) => void;
 }): Promise<WorkflowExecutionState> {
   if (!state.messages) return state;
   switch (state.node.type) {
@@ -226,6 +262,7 @@ export async function executeWorkflowStep({
         state,
         model,
         tools,
+        onPartialMessage,
       });
     case "tool-call":
       return executeToolCallNode({

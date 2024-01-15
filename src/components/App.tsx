@@ -164,6 +164,9 @@ function App() {
       },
       model: model,
       tools: apisToTool(tools),
+      onPartialMessage: (message) => {
+        setMessages([...messages, message]);
+      },
     });
     setVariables(state.variables);
     return state;
