@@ -7,14 +7,14 @@ app.post("/", async (context) => {
   const body: {
     prompt: string;
   } = await context.req.json();
-  const token = window.localStorage.getItem("openaiApiKey");
+  const token = window.localStorage.getItem("OPENAI_API_KEY");
   if (!token) {
     return Response.json(
       { error: "OpenAI API token not found" },
       { status: 500 }
     );
   }
-  const baseURL = window.localStorage.getItem("openaiBaseUrl");
+  const baseURL = window.localStorage.getItem("OPENAI_BASE_URL");
   const openai = new OpenAI({
     apiKey: token,
     baseURL,

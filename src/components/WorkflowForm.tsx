@@ -13,7 +13,7 @@ import {
   Tabs,
   TextField,
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
 import type { Edge, Node, Workflow } from "../workflow";
@@ -22,12 +22,14 @@ function NodeForm({
   node,
   nodes,
   onUpdateNode,
+  onDeleteNode,
   edges,
   onEdgesChange,
 }: {
   node: Node;
   nodes: Node[];
   onUpdateNode: (node: Node) => void;
+  onDeleteNode: (node: Node) => void;
   edges: Edge[];
   onEdgesChange: (edges: Edge[]) => void;
 }) {
@@ -35,6 +37,27 @@ function NodeForm({
 
   return (
     <Stack spacing={2} sx={{ py: 2 }}>
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <FormControl fullWidth>
+          <InputLabel id="node-type-label">{t("Node Type")}</InputLabel>
+          <Select
+            label={t("Node Type")}
+            labelId="node-type-label"
+            value={node.type}
+            disabled
+          >
+            <MenuItem value={node.type}>{node.type}</MenuItem>
+          </Select>
+        </FormControl>
+        <Box>
+          <IconButton
+            disabled={node.type === "start"}
+            onClick={() => onDeleteNode(node)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Box>
+      </Stack>
       <TextField
         label={t("Node Label")}
         value={node.data.label}
@@ -49,7 +72,6 @@ function NodeForm({
         <FormControl>
           <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
           <Select
-            key={node.id}
             label={t("Next Node")}
             labelId="next-node-label"
             value={edges.find((edge) => edge.source === node.id)?.target ?? ""}
@@ -76,7 +98,6 @@ function NodeForm({
         </FormControl>
       ) : node.type === "assistant" ? (
         <TextField
-          key={node.id}
           label={t("System Prompt")}
           value={node.data.prompt}
           multiline
@@ -92,7 +113,6 @@ function NodeForm({
         <FormControl>
           <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
           <Select
-            key={node.id}
             label={t("Next Node")}
             labelId="next-node-label"
             value={edges.find((edge) => edge.source === node.id)?.target ?? ""}
@@ -119,7 +139,6 @@ function NodeForm({
         </FormControl>
       ) : node.type === "code" ? (
         <TextField
-          key={node.id}
           label={t("Code")}
           value={node.data.code}
           multiline
@@ -161,6 +180,15 @@ function WorkflowForm({
     setNodes((nodes) => nodes.map((n) => (n.id === node.id ? node : n)));
     setEditingNode(node);
   }, []);
+
+  const deleteNode = useCallback(
+    (node: Node) => {
+      setNodes((nodes) => nodes.filter((n) => n.id !== node.id));
+      setEdges((edges) => edges.filter((edge) => edge.source !== node.id));
+      setEditingNode(nodes[0]);
+    },
+    [nodes]
+  );
 
   const addNode = useCallback(
     (type: Node["type"]) => {
@@ -264,6 +292,7 @@ function WorkflowForm({
           node={editingNode}
           nodes={nodes}
           onUpdateNode={updateNode}
+          onDeleteNode={deleteNode}
           edges={edges}
           onEdgesChange={setEdges}
         />

@@ -64,8 +64,8 @@ async function executeAssistantNode({
   tools: Tool[];
 }): Promise<WorkflowExecutionState> {
   const node = state.node as AssistantNode;
-  const openaiApiKey = localStorage.getItem("openaiApiKey");
-  const baseURL = localStorage.getItem("openaiBaseUrl");
+  const openaiApiKey = localStorage.getItem("OPENAI_API_KEY");
+  const baseURL = localStorage.getItem("OPENAI_BASE_URL");
   const openai = new OpenAI({
     apiKey: openaiApiKey,
     baseURL,

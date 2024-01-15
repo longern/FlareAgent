@@ -7,7 +7,7 @@ function useApiKey() {
   const [apiKey, setApiKey] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    const apiKey = localStorage.getItem("openaiApiKey");
+    const apiKey = localStorage.getItem("OPENAI_API_KEY");
     if (apiKey) {
       setApiKey(apiKey);
     }
@@ -15,9 +15,9 @@ function useApiKey() {
 
   React.useEffect(() => {
     if (apiKey) {
-      localStorage.setItem("openaiApiKey", apiKey);
+      localStorage.setItem("OPENAI_API_KEY", apiKey);
     } else {
-      localStorage.removeItem("openaiApiKey");
+      localStorage.removeItem("OPENAI_API_KEY");
     }
   }, [apiKey]);
 
@@ -27,15 +27,15 @@ function useApiKey() {
 function SettingsForm() {
   const [apiKey, setApiKey] = useApiKey();
   const [baseUrl, setBaseUrl] = React.useState<string | null>(
-    localStorage.getItem("openaiBaseUrl") ?? null
+    localStorage.getItem("OPENAI_BASE_URL") ?? null
   );
 
   const { t } = useTranslation();
 
   useEffect(() => {
     baseUrl
-      ? localStorage.setItem("openaiBaseUrl", baseUrl)
-      : localStorage.removeItem("openaiBaseUrl");
+      ? localStorage.setItem("OPENAI_BASE_URL", baseUrl)
+      : localStorage.removeItem("OPENAI_BASE_URL");
   }, [baseUrl]);
 
   return (
