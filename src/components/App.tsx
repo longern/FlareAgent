@@ -26,7 +26,6 @@ import {
   ArrowDownward as ArrowDownwardIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
-import type { OpenAPIV3 } from "openapi-types";
 
 import MessageList from "./MessageList";
 import MobileToolbar from "./MobileToolbar";
@@ -37,101 +36,41 @@ import { useMessages } from "../messages";
 import { apisToTool } from "../tools";
 import { Node, Workflow, defaultWorkflow } from "../workflow";
 import WorkflowForm from "./WorkflowForm";
-import { useSyncFS } from "../fs/hooks";
 import {
   executeUserInputNode,
   executeWorkflowStep,
 } from "../workflow/execution";
-import { useTranslation } from "react-i18next";
+import { useModels, useTools, useWorkflows } from "./hooks";
 
-const fallbackWorkflows: Workflow[] = [];
+function ModelSelector({
+  model,
+  onModelChange,
+}: {
+  model: string;
+  onModelChange: (model: string) => void;
+}) {
+  const models = useModels();
 
-function useWorkflows() {
-  const [workflows, setWorkflows] = useState<Workflow[] | null>(null);
-  const { t } = useTranslation();
-
-  useSyncFS({
-    path: "/root/.flareagent/workflows.json",
-    value: workflows,
-    setValue: setWorkflows,
-    fallbackValue: fallbackWorkflows,
-  });
-
-  const newWorkflow = useCallback(() => {
-    if (workflows === null) return;
-    for (let i = 0; i < 1000; i++) {
-      const name = `Workflow ${i + 1}`;
-      if (workflows.find((workflow) => workflow.name === name)) {
-        continue;
-      }
-      const workflow: Workflow = {
-        name,
-        nodes: [
-          { id: "start", type: "start", data: { label: t("Start") } },
-          {
-            id: "user-input",
-            type: "user-input",
-            data: { label: t("User Input") },
-          },
-          {
-            id: "assistant",
-            type: "assistant",
-            data: { label: t("LLM") },
-          },
-        ],
-        edges: [
-          {
-            id: "e-start-user-input",
-            source: "start",
-            target: "user-input",
-          },
-          {
-            id: "e-user-input-assistant",
-            source: "user-input",
-            target: "assistant",
-          },
-          {
-            id: "e-assistant-user-input",
-            source: "assistant",
-            target: "user-input",
-          },
-        ],
-      };
-      setWorkflows([...workflows, workflow]);
-      break;
-    }
-  }, [workflows, t]);
-
-  return [workflows, setWorkflows, newWorkflow] as const;
-}
-
-function useTools() {
-  const [tools, setTools] = useState<OpenAPIV3.Document[]>([]);
-
-  const fetchTools = useCallback(async () => {
-    await import("../tools");
-    const response = await fetch("tool://");
-    const data: { tools: string[] } = await response.json();
-    const toolsResult = await Promise.allSettled(
-      data.tools.map(async (url) => {
-        const response = await fetch(url);
-        const tool: OpenAPIV3.Document = await response.json();
-        return tool;
-      })
-    );
-    const tools = toolsResult
-      .map((result) => {
-        return result.status === "fulfilled" ? result.value : null;
-      })
-      .filter((tool) => tool !== null);
-    setTools(tools);
-  }, []);
-
-  useEffect(() => {
-    fetchTools();
-  }, [fetchTools]);
-
-  return tools;
+  return (
+    <Select
+      variant="standard"
+      value={model}
+      onChange={(e) => {
+        onModelChange(e.target.value);
+      }}
+      inputProps={{ "aria-label": "model" }}
+    >
+      {models ? (
+        models.map((model) => (
+          <MenuItem key={model} value={model}>
+            {model}
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem value={model}>{model}</MenuItem>
+      )}
+    </Select>
+  );
 }
 
 function App() {
@@ -207,31 +146,17 @@ function App() {
     [workflows]
   );
 
-  const models = ["gpt-3.5-turbo-1106", "gpt-4-1106-preview"];
-  const ModelSelector = (
-    <Select
-      variant="standard"
-      value={model}
-      onChange={(e) => {
-        setModel(e.target.value);
-      }}
-      inputProps={{ "aria-label": "model" }}
-    >
-      {models.map((model) => (
-        <MenuItem key={model} value={model}>
-          {model}
-        </MenuItem>
-      ))}
-    </Select>
-  );
-
   return (
     <Stack height="100%">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNewChat={handleNewChat}
-        modelSelector={matchesLg ? ModelSelector : undefined}
+        modelSelector={
+          matchesLg ? (
+            <ModelSelector model={model} onModelChange={setModel} />
+          ) : undefined
+        }
         tools={tools}
         workflows={workflowsWithDefault}
         onNewWorkflow={newWorkflow}
@@ -248,7 +173,9 @@ function App() {
       />
       {!matchesLg && (
         <MobileToolbar
-          modelSelector={ModelSelector}
+          modelSelector={
+            <ModelSelector model={model} onModelChange={setModel} />
+          }
           onMenuClick={() => setSidebarOpen(true)}
           onCreateThread={handleNewChat}
         />
