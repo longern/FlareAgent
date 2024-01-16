@@ -65,14 +65,18 @@ function MaybeJsonBlock({ children }: { children: string }) {
   try {
     const pretty = JSON.stringify(JSON.parse(children), null, 2);
     return (
-      <pre style={{ margin: 0 }}>
+      <pre>
         <div style={{ overflow: "auto" }}>
           <code>{pretty}</code>
         </div>
       </pre>
     );
   } catch (e) {
-    return children;
+    return (
+      <pre>
+        <code>{children}</code>
+      </pre>
+    );
   }
 }
 
@@ -82,7 +86,7 @@ function MaybePythonBlock({ children }: { children: string }) {
     return (
       <Suspense
         fallback={
-          <pre style={{ margin: 0 }}>
+          <pre>
             <div style={{ overflow: "auto" }}>
               <code>{parsed.code}</code>
             </div>
@@ -93,7 +97,11 @@ function MaybePythonBlock({ children }: { children: string }) {
       </Suspense>
     );
   } catch (e) {
-    return children;
+    return (
+      <pre>
+        <code>{children}</code>
+      </pre>
+    );
   }
 }
 
@@ -158,6 +166,7 @@ function MessageList({
                     message.role === "user" ? "#e0e0e0" : "#f5f5f5",
                   "& img": { maxWidth: "100%" },
                   "& p": { margin: 0 },
+                  "& pre": { margin: 0 },
                   "& pre>code": { whiteSpace: "pre-wrap" },
                 }}
                 onClick={() => setSelected(selected === index ? null : index)}

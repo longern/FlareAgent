@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 
+import aiohttp from "./aiohttp";
+
 const app = new Hono();
 
 let pyodide: any;
@@ -16,10 +18,14 @@ export async function loadPython() {
     });
   }
   pyodide = await (window as any).loadPyodide();
+
   const mountDir = "/root";
   pyodide.FS.mkdir(mountDir);
   pyodide.FS.mount(pyodide.FS.filesystems.IDBFS, { root: "." }, mountDir);
   pyodide.FS.chdir(mountDir);
+
+  pyodide.runPython(aiohttp, { filename: "aiohttp.py" });
+
   return pyodide;
 }
 
