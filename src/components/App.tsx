@@ -138,6 +138,9 @@ function App() {
       .then((state) => {
         setCurrentNode(state.node);
         setMessages(state.messages);
+      })
+      .catch((e) => {
+        setError(e.message);
       });
   }, [currentWorkflow, currentNode, setMessages]);
 

@@ -193,7 +193,7 @@ async function executeToolCallNode({
         return {
           role: "tool",
           tool_call_id: tool_call.id,
-          content: content,
+          content: content.slice(content.length - 4096),
         };
       }
     )

@@ -47,8 +47,13 @@ app.post("/", async (context) => {
     const code = getCode(body);
     await pyodide.loadPackagesFromImports(code);
     await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
-    const result = await pyodide.runPythonAsync(code);
+    const stdoutBuffer = [];
+    pyodide.setStdout({
+      batched: (output: string) => stdoutBuffer.push(output + "\n"),
+    });
+    const lastExpr = await pyodide.runPythonAsync(code);
     await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
+    const result = stdoutBuffer.join("") + (lastExpr ?? "");
     return new Response(result);
   } catch (e) {
     return new Response(e.message, { status: 400 });

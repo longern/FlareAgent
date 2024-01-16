@@ -45,7 +45,7 @@ const DEFINITION = {
                 properties: {
                   url: {
                     type: "string",
-                    description: "The url to crawl",
+                    description: "The url to crawl (must be https)",
                     required: true,
                   },
                 },
