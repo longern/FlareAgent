@@ -71,7 +71,7 @@ export function useTools() {
   const [tools, setTools] = useState<OpenAPIV3.Document[]>([]);
 
   const fetchTools = useCallback(async () => {
-    await import("../tools");
+    await import("../tools/scheme");
     const response = await fetch("tool://");
     const data: { tools: string[] } = await response.json();
     const toolsResult = await Promise.allSettled(

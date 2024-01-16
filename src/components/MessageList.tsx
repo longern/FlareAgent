@@ -15,51 +15,17 @@ import {
   Replay as ReplayIcon,
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
-import Markdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import remarkMath from "remark-math";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 
-const Highlighter = lazy(() => import("./Highlighter"));
-
-function MarkdownHighlighter({ children }: { children: string }) {
-  return (
-    <Markdown
-      components={{
-        code(props) {
-          const { children, className, node, ...rest } = props;
-          const match = /language-(\w+)/.exec(className || "");
-          return match ? (
-            <Suspense
-              fallback={
-                <div style={{ overflow: "auto" }}>
-                  <code {...rest} className={className}>
-                    {children}
-                  </code>
-                </div>
-              }
-            >
-              <Highlighter
-                children={String(children).replace(/\n$/, "")}
-                language={match[1]}
-              />
-            </Suspense>
-          ) : (
-            <code {...rest} className={className}>
-              {children}
-            </code>
-          );
-        },
-      }}
-      remarkPlugins={[remarkMath]}
-      rehypePlugins={[rehypeKatex]}
-    >
-      {children}
-    </Markdown>
-  );
-}
+const MarkdownModule = import("./Highlighter");
+const Highlighter = lazy(() =>
+  MarkdownModule.then((m) => ({ default: m.Highlighter }))
+);
+const MarkdownHighlighter = lazy(() =>
+  MarkdownModule.then((m) => ({ default: m.MarkdownHighlighter }))
+);
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {
@@ -195,7 +161,11 @@ function MessageList({
                       ))}
                     </>
                   ) : (
-                    <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
+                    <Suspense fallback={message.content}>
+                      <MarkdownHighlighter>
+                        {message.content}
+                      </MarkdownHighlighter>
+                    </Suspense>
                   )
                 ) : message.role === "tool" ? (
                   <Box

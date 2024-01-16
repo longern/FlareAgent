@@ -1,21 +1,7 @@
 import { ChatCompletionTool } from "openai/resources/index.mjs";
 import type { OpenAPIV3 } from "openapi-types";
 
-import { registerSchemeHandler } from "../scheme";
-import app from "./route";
-
-const TOOL_SCHEME = "tool";
-
-registerSchemeHandler(
-  TOOL_SCHEME,
-  async (url: string, options?: RequestInit) => {
-    const urlObj = new URL(url);
-    const response = await app.fetch(
-      new Request(urlObj.pathname.replace("//", "/"), options)
-    );
-    return response;
-  }
-);
+export const TOOL_SCHEME = "tool";
 
 export type Tool = ChatCompletionTool & {
   endpoint: string;
