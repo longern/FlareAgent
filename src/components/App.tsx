@@ -247,7 +247,7 @@ function App() {
           size="small"
           sx={{
             position: "absolute",
-            bottom: 80,
+            bottom: 64,
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1,

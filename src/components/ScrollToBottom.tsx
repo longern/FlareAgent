@@ -1,9 +1,19 @@
 import React from "react";
 
-const observer = new ResizeObserver((entries) => {
+const parentObserver = new ResizeObserver((entries) => {
   for (const entry of entries) {
     const target = entry.target as HTMLDivElement;
-    target.scrollIntoView({ behavior: "smooth", block: "end" });
+    target.firstElementChild!.scrollIntoView({
+      behavior: "instant",
+      block: "end",
+    });
+  }
+});
+
+const childObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    const target = entry.target as HTMLDivElement;
+    target.scrollIntoView({ behavior: "instant", block: "end" });
   }
 });
 
@@ -27,10 +37,15 @@ function ScrollToBottom({
   const ref = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const container = ref.current!;
     if (!scrollToBottom) return;
-    observer.observe(container);
-    return () => observer.unobserve(container);
+    const parent = componentRef.current!;
+    parentObserver.observe(parent);
+    const container = ref.current!;
+    childObserver.observe(container);
+    return () => {
+      parentObserver.unobserve(parent);
+      childObserver.unobserve(container);
+    };
   }, [scrollToBottom]);
 
   React.useEffect(() => {
