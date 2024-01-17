@@ -25,6 +25,7 @@ import {
 import {
   ArrowDownward as ArrowDownwardIcon,
   Close as CloseIcon,
+  Stop as StopIcon,
 } from "@mui/icons-material";
 
 import MessageList from "./MessageList";
@@ -78,7 +79,7 @@ function App() {
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
   const [messages, setMessages] = useMessages();
-  const [currentNode, setCurrentNode] = useState<Node | null>(null);
+  const [currentNode, setCurrentNode] = useState<Node | undefined | null>(null);
   const [variables, setVariables] = useState<Map<string, any>>(new Map());
   const [controller, setController] = useState<AbortController | undefined>(
     undefined
@@ -101,12 +102,12 @@ function App() {
       workflow: workflow,
       state: {
         node: node,
-        messages: messages,
+        messages: messages!,
         variables: variables,
       },
       model: model,
       tools: apisToTool(tools),
-      onPartialMessage: (message) => setMessages([...messages, message]),
+      onPartialMessage: (message) => setMessages([...messages!, message]),
       onAbortController: (controller) => setController(controller),
     });
     setVariables(state.variables);
@@ -207,8 +208,8 @@ function App() {
             executeUserInputNode({
               workflow: currentWorkflow,
               state: {
-                node: currentNode,
-                messages: messages,
+                node: currentNode!,
+                messages: messages!,
                 variables: variables,
               },
               userInput: userInput,
@@ -241,6 +242,23 @@ function App() {
           <ArrowDownwardIcon />
         </Fab>
       )}
+      {controller && (
+        <Fab
+          size="small"
+          sx={{
+            position: "absolute",
+            bottom: 80,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1,
+          }}
+          onClick={() => {
+            controller.abort();
+          }}
+        >
+          <StopIcon />
+        </Fab>
+      )}
       <Dialog
         open={workflowDialogOpen}
         fullScreen
@@ -264,10 +282,10 @@ function App() {
         </AppBar>
         <DialogContent>
           <WorkflowForm
-            workflow={editWorkflow}
+            workflow={editWorkflow!}
             onWorkflowChange={(workflow) => {
               setWorkflows(
-                workflows.map((w) => (w === editWorkflow ? workflow : w))
+                workflows!.map((w) => (w === editWorkflow ? workflow : w))
               );
               setWorkflowDialogOpen(false);
               if (currentWorkflow === editWorkflow) {
@@ -277,10 +295,10 @@ function App() {
             }}
             onWorkflowDelete={() => {
               setWorkflows(
-                workflows.filter((w) => w.name !== editWorkflow.name)
+                workflows!.filter((w) => w.name !== editWorkflow!.name)
               );
               setWorkflowDialogOpen(false);
-              if (currentWorkflow.name === editWorkflow.name) {
+              if (currentWorkflow.name === editWorkflow!.name) {
                 setCurrentWorkflow(defaultWorkflow);
                 handleNewChat();
               }
