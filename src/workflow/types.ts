@@ -26,7 +26,7 @@ export interface ToolCallNode extends BaseNode {
 export interface CodeNode
   extends BaseNode<{
     label: string;
-    code: string;
+    code?: string;
   }> {
   type: "code";
 }

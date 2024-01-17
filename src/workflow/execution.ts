@@ -232,7 +232,7 @@ export async function executeCodeNode({
   const node = state.node as CodeNode;
   const controller = new AbortController();
   onAbortController?.(controller);
-  const { variables } = await runPython(node.data.code, {
+  const { variables } = await runPython(node.data.code!, {
     messages: state.messages,
     variables: state.variables,
     signal: controller.signal,

@@ -18,7 +18,7 @@ import {
 import {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
-} from "openai/resources/index.mjs";
+} from "openai/resources";
 import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 
@@ -168,17 +168,18 @@ function MessageList({
                         </MarkdownHighlighter>
                       </Suspense>
                     )}
-                    {message.tool_calls?.length > 0 && (
-                      <>
-                        <div>{t("Calling functions:")}</div>
-                        {message.tool_calls.map((tool_call) => (
-                          <AssistantToolCallMessasge
-                            key={tool_call.id}
-                            tool_call={tool_call}
-                          />
-                        ))}
-                      </>
-                    )}
+                    {Array.isArray(message.tool_calls) &&
+                      message.tool_calls.length > 0 && (
+                        <>
+                          <div>{t("Calling functions:")}</div>
+                          {message.tool_calls.map((tool_call) => (
+                            <AssistantToolCallMessasge
+                              key={tool_call.id}
+                              tool_call={tool_call}
+                            />
+                          ))}
+                        </>
+                      )}
                   </>
                 ) : message.role === "tool" ? (
                   <Box

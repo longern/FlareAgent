@@ -22,7 +22,7 @@ function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
           if (userInput === "") return;
           onSend(userInput);
           setUserInput("");
-          userInputRef.current.blur();
+          userInputRef.current!.blur();
         }
       }}
       sx={{ flexShrink: 0, marginY: 1 }}
@@ -37,7 +37,7 @@ function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
             onClick={() => {
               onSend(userInput);
               setUserInput("");
-              userInputRef.current.blur();
+              userInputRef.current!.blur();
             }}
             sx={{ alignSelf: "flex-end" }}
           >
