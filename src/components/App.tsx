@@ -80,6 +80,9 @@ function App() {
   const [messages, setMessages] = useMessages();
   const [currentNode, setCurrentNode] = useState<Node | null>(null);
   const [variables, setVariables] = useState<Map<string, any>>(new Map());
+  const [controller, setController] = useState<AbortController | undefined>(
+    undefined
+  );
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
@@ -103,9 +106,8 @@ function App() {
       },
       model: model,
       tools: apisToTool(tools),
-      onPartialMessage: (message) => {
-        setMessages([...messages, message]);
-      },
+      onPartialMessage: (message) => setMessages([...messages, message]),
+      onAbortController: (controller) => setController(controller),
     });
     setVariables(state.variables);
     return state;
@@ -118,7 +120,11 @@ function App() {
     setMessages([]);
     setVariables(new Map());
     setSidebarOpen(false);
-  }, [setMessages]);
+    if (controller) {
+      controller.abort();
+      setController(undefined);
+    }
+  }, [setMessages, controller]);
 
   useEffect(() => {
     if (currentWorkflow === null || messages === null) return;

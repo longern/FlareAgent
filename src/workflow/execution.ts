@@ -76,12 +76,14 @@ async function executeAssistantNode({
   model,
   tools: toolsArg,
   onPartialMessage,
+  onAbortController,
 }: {
   workflow: Workflow;
   state: WorkflowExecutionState;
   model: string;
   tools: Tool[];
   onPartialMessage?: (message: ChatCompletionMessage) => void;
+  onAbortController?: (controller: AbortController | undefined) => void;
 }): Promise<WorkflowExecutionState> {
   const node = state.node as AssistantNode;
   const openaiApiKey = localStorage.getItem("OPENAI_API_KEY");
@@ -113,6 +115,7 @@ async function executeAssistantNode({
     tools: tools.length === 0 || !hasToolCallTransition ? undefined : tools,
     stream: true,
   });
+  onAbortController?.(completion.controller);
 
   const choices: ChatCompletion.Choice[] = [];
   for await (const chunk of completion) {
@@ -125,6 +128,7 @@ async function executeAssistantNode({
       onPartialMessage?.(choice.message);
     }
   }
+  onAbortController?.(undefined);
 
   if (choices.length === 0) {
     throw new Error("No response from OpenAI API");
@@ -159,10 +163,12 @@ async function executeToolCallNode({
   workflow,
   state,
   tools,
+  onAbortController,
 }: {
   workflow: Workflow;
   state: WorkflowExecutionState;
   tools: Tool[];
+  onAbortController?: (controller: AbortController | undefined) => void;
 }): Promise<WorkflowExecutionState> {
   const node = state.node as ToolCallNode;
   const lastMessage = state.messages[
@@ -181,14 +187,20 @@ async function executeToolCallNode({
             tool_call_id: tool_call.id,
             content: "Tool not found",
           };
+        const controller = new AbortController();
+        onAbortController?.(controller);
         const content = await fetch(tool.endpoint, {
           method: tool.method,
           headers: { "Content-Type": "application/json" },
           body: tool_call.function.arguments,
+          signal: controller.signal,
         })
           .then((response) => response.text())
           .catch((e) => {
             return e.message as string;
+          })
+          .finally(() => {
+            onAbortController?.(undefined);
           });
         return {
           role: "tool",
@@ -245,12 +257,14 @@ export async function executeWorkflowStep({
   model,
   tools,
   onPartialMessage,
+  onAbortController,
 }: {
   workflow: Workflow;
   state: WorkflowExecutionState;
   model: string;
   tools: Tool[];
   onPartialMessage?: (message: ChatCompletionMessage) => void;
+  onAbortController?: (controller: AbortController | undefined) => void;
 }): Promise<WorkflowExecutionState> {
   if (!state.messages) return state;
   switch (state.node.type) {
@@ -263,12 +277,14 @@ export async function executeWorkflowStep({
         model,
         tools,
         onPartialMessage,
+        onAbortController,
       });
     case "tool-call":
       return executeToolCallNode({
         workflow,
         state,
         tools,
+        onAbortController,
       });
     case "code":
       return executeCodeNode({

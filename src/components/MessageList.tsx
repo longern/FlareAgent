@@ -15,7 +15,10 @@ import {
   Replay as ReplayIcon,
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import {
+  ChatCompletionMessageParam,
+  ChatCompletionMessageToolCall,
+} from "openai/resources/index.mjs";
 import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 
@@ -69,6 +72,25 @@ function MaybePythonBlock({ children }: { children: string }) {
       </pre>
     );
   }
+}
+
+function AssistantToolCallMessasge({
+  tool_call,
+}: {
+  tool_call: ChatCompletionMessageToolCall;
+}) {
+  return (
+    <div style={{ overflow: "auto", fontSize: "0.8rem" }}>
+      <code>
+        <div>{tool_call.function.name}</div>
+        {tool_call.function.name === "python" ? (
+          <MaybePythonBlock>{tool_call.function.arguments}</MaybePythonBlock>
+        ) : (
+          tool_call.function.arguments
+        )}
+      </code>
+    </div>
+  );
 }
 
 function MessageList({
@@ -138,35 +160,26 @@ function MessageList({
                 onClick={() => setSelected(selected === index ? null : index)}
               >
                 {message.role === "assistant" ? (
-                  message.tool_calls?.length > 0 ? (
-                    <>
-                      <span>{t("Calling functions:")}</span>
-                      {message.tool_calls.map((tool_call) => (
-                        <div
-                          key={tool_call.id}
-                          style={{ overflow: "auto", fontSize: "0.8rem" }}
-                        >
-                          <code>
-                            {tool_call.function.name}
-                            <br />
-                            {tool_call.function.name === "python" ? (
-                              <MaybePythonBlock>
-                                {tool_call.function.arguments}
-                              </MaybePythonBlock>
-                            ) : (
-                              tool_call.function.arguments
-                            )}
-                          </code>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    <Suspense fallback={message.content}>
-                      <MarkdownHighlighter>
-                        {message.content}
-                      </MarkdownHighlighter>
-                    </Suspense>
-                  )
+                  <>
+                    {message.content && (
+                      <Suspense fallback={message.content}>
+                        <MarkdownHighlighter>
+                          {message.content}
+                        </MarkdownHighlighter>
+                      </Suspense>
+                    )}
+                    {message.tool_calls?.length > 0 && (
+                      <>
+                        <div>{t("Calling functions:")}</div>
+                        {message.tool_calls.map((tool_call) => (
+                          <AssistantToolCallMessasge
+                            key={tool_call.id}
+                            tool_call={tool_call}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </>
                 ) : message.role === "tool" ? (
                   <Box
                     sx={{
