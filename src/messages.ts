@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { ChatCompletionMessageParam } from "openai/resources";
 
 import { useSyncFS } from "./fs/hooks";
 

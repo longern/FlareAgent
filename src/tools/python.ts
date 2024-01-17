@@ -1,33 +1,8 @@
 import { Hono } from "hono";
 
-import aiohttp from "./aiohttp";
+import { runPython } from "../python";
 
 const app = new Hono();
-
-let pyodide: any;
-
-export async function loadPython() {
-  if (pyodide) return pyodide;
-  if (typeof window === "undefined") return null;
-  if (!("loadPyodide" in window)) {
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js";
-    await new Promise((resolve) => {
-      script.onload = resolve;
-      document.body.appendChild(script);
-    });
-  }
-  pyodide = await (window as any).loadPyodide();
-
-  const mountDir = "/root";
-  pyodide.FS.mkdir(mountDir);
-  pyodide.FS.mount(pyodide.FS.filesystems.IDBFS, { root: "." }, mountDir);
-  pyodide.FS.chdir(mountDir);
-
-  pyodide.runPython(aiohttp, { filename: "aiohttp.py" });
-
-  return pyodide;
-}
 
 app.post("/", async (context) => {
   function getCode(text: string) {
@@ -39,21 +14,11 @@ app.post("/", async (context) => {
     }
   }
   const body = await context.req.text();
-  const pyodide = await loadPython();
-  if (!pyodide) {
-    return Response.json({ error: "Failed to load python" }, { status: 500 });
-  }
   try {
     const code = getCode(body);
-    await pyodide.loadPackagesFromImports(code);
-    await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
-    const stdoutBuffer = [];
-    pyodide.setStdout({
-      batched: (output: string) => stdoutBuffer.push(output + "\n"),
+    const { result } = await runPython(code, {
+      signal: context.req.raw.signal,
     });
-    const lastExpr = await pyodide.runPythonAsync(code);
-    await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
-    const result = stdoutBuffer.join("") + (lastExpr ?? "");
     return new Response(result);
   } catch (e) {
     return new Response(e.message, { status: 400 });

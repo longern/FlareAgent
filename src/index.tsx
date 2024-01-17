@@ -5,7 +5,7 @@ import "./i18n";
 import Root from "./Root";
 import "./scheme";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById("root")!);
 root.render(
   <React.StrictMode>
     <Root />

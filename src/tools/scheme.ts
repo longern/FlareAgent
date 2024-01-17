@@ -4,8 +4,8 @@ import app from "./route";
 
 registerSchemeHandler(
   TOOL_SCHEME,
-  async (url: string, options?: RequestInit) => {
-    const urlObj = new URL(url);
+  async (url: URL | RequestInfo, options?: RequestInit) => {
+    const urlObj = url instanceof Request ? new URL(url.url) : new URL(url);
     const response = await app.fetch(
       new Request(urlObj.pathname.replace("//", "/"), options)
     );

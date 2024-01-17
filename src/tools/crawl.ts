@@ -22,7 +22,7 @@ app.post("/", async (context) => {
     return new Response(textContent.slice(0, 4096));
   }
 
-  return new Response(document.body.textContent.slice(0, 4096));
+  return new Response((document.body.textContent ?? "").slice(0, 4096));
 });
 
 const DEFINITION = {

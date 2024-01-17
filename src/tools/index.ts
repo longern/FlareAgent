@@ -1,4 +1,4 @@
-import { ChatCompletionTool } from "openai/resources/index.mjs";
+import { ChatCompletionTool } from "openai/resources";
 import type { OpenAPIV3 } from "openapi-types";
 
 export const TOOL_SCHEME = "tool";
@@ -16,7 +16,7 @@ export function apisToTool(apis: OpenAPIV3.Document[]): Tool[] {
           const schema = (operation.requestBody as OpenAPIV3.RequestBodyObject)
             ?.content?.["application/json"]?.schema as OpenAPIV3.SchemaObject;
 
-          const required = [];
+          const required: string[] = [];
 
           const properties = Object.fromEntries(
             Object.entries(schema?.properties ?? {}).map(

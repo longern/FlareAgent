@@ -1,5 +1,5 @@
 export type SchemeHandler = (
-  url: string,
+  url: RequestInfo | URL,
   options?: RequestInit
 ) => Promise<Response>;
 
@@ -9,7 +9,7 @@ const schemeHandlers: {
 
 if (typeof window !== "undefined") {
   const oldFetch = window.fetch;
-  window.fetch = async (url: string, options?: RequestInit) => {
+  window.fetch = async (url: RequestInfo | URL, options?: RequestInit) => {
     const scheme = typeof url === "string" ? url.split(":")[0] : "";
     if (schemeHandlers[scheme]) {
       return await schemeHandlers[scheme](url, options);

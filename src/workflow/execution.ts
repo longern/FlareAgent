@@ -3,7 +3,7 @@ import {
   ChatCompletionMessage,
   ChatCompletionMessageParam,
   ChatCompletionToolMessageParam,
-} from "openai/resources/index.mjs";
+} from "openai/resources";
 import {
   AssistantNode,
   CodeNode,
@@ -14,10 +14,11 @@ import {
 } from ".";
 import OpenAI from "openai";
 import { Tool } from "../tools";
+import { runPython } from "../python";
 
 interface WorkflowExecutionState {
-  node: Node;
-  messages: ChatCompletionMessageParam[] | null;
+  node: Node | undefined;
+  messages: ChatCompletionMessageParam[];
   variables: Map<string, any>;
 }
 
@@ -86,7 +87,7 @@ async function executeAssistantNode({
   onAbortController?: (controller: AbortController | undefined) => void;
 }): Promise<WorkflowExecutionState> {
   const node = state.node as AssistantNode;
-  const openaiApiKey = localStorage.getItem("OPENAI_API_KEY");
+  const openaiApiKey = localStorage.getItem("OPENAI_API_KEY") ?? "";
   const baseURL = localStorage.getItem("OPENAI_BASE_URL");
   const openai = new OpenAI({
     apiKey: openaiApiKey,
@@ -123,7 +124,7 @@ async function executeAssistantNode({
       const { index, delta, finish_reason } = chunkChoice;
       if (choices.length <= index) choices[index] = {} as ChatCompletion.Choice;
       const choice = choices[index];
-      choice.finish_reason = finish_reason;
+      choice.finish_reason = finish_reason!;
       choice.message = patchDelta(choice.message, delta);
       onPartialMessage?.(choice.message);
     }
@@ -140,7 +141,7 @@ async function executeAssistantNode({
       if (edge.source !== node.id) continue;
       if (edge.data?.condition?.type === "regex") {
         const regex = new RegExp(edge.data.condition.regex);
-        if (regex.test(choice.message.content))
+        if (regex.test(choice.message.content ?? ""))
           return findNode(workflow, edge.target);
       } else if (edge.data?.condition?.type === "tool-call") {
         if (choice.finish_reason === "tool_calls")
@@ -174,7 +175,7 @@ async function executeToolCallNode({
   const lastMessage = state.messages[
     state.messages.length - 1
   ] as ChatCompletionMessage;
-  const tool_calls = lastMessage.tool_calls;
+  const tool_calls = lastMessage.tool_calls!;
   const results = (await Promise.allSettled(
     tool_calls.map(
       async (tool_call): Promise<ChatCompletionToolMessageParam> => {
@@ -219,35 +220,30 @@ async function executeToolCallNode({
   };
 }
 
-let flareAgentModule: any = null;
-
 export async function executeCodeNode({
   workflow,
   state,
+  onAbortController,
 }: {
   workflow: Workflow;
   state: WorkflowExecutionState;
+  onAbortController?: (controller: AbortController | undefined) => void;
 }): Promise<WorkflowExecutionState> {
   const node = state.node as CodeNode;
-  const { loadPython } = await import("../tools/python");
-  const pyodide = await loadPython();
-  await pyodide.loadPackagesFromImports(node.data.code);
-  if (!flareAgentModule) {
-    flareAgentModule = {};
-    pyodide.registerJsModule("flareagent", flareAgentModule);
-  }
-  flareAgentModule.messages = pyodide.toPy(state.messages);
-  flareAgentModule.variables = pyodide.toPy(state.variables);
+  const controller = new AbortController();
+  onAbortController?.(controller);
+  const { variables } = await runPython(node.data.code, {
+    messages: state.messages,
+    variables: state.variables,
+    signal: controller.signal,
+  }).finally(() => {
+    onAbortController?.(undefined);
+  });
 
-  await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
-  await pyodide.runPythonAsync(node.data.code);
-  await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
-
-  const newVariables = flareAgentModule.variables.toJs();
   return {
     node: findNextNode(workflow, node),
     messages: state.messages,
-    variables: newVariables,
+    variables,
   };
 }
 
@@ -267,6 +263,7 @@ export async function executeWorkflowStep({
   onAbortController?: (controller: AbortController | undefined) => void;
 }): Promise<WorkflowExecutionState> {
   if (!state.messages) return state;
+  if (!state.node) return state;
   switch (state.node.type) {
     case "start":
       return { ...state, node: findNextNode(workflow, state.node) };
