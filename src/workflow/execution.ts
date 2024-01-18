@@ -19,7 +19,7 @@ import { runPython } from "../python";
 interface WorkflowExecutionState {
   node: Node | undefined;
   messages: ChatCompletionMessageParam[];
-  variables: Map<string, any>;
+  variables: Map<string, string>;
 }
 
 function findNode(workflow: Workflow, nodeId?: string) {
@@ -232,13 +232,15 @@ export async function executeCodeNode({
   const node = state.node as CodeNode;
   const controller = new AbortController();
   onAbortController?.(controller);
+  const env = new Map(state.variables);
+  env.set("MESSAGES", JSON.stringify(state.messages));
   const { variables } = await runPython(node.data.code!, {
-    messages: state.messages,
-    variables: state.variables,
+    env,
     signal: controller.signal,
   }).finally(() => {
     onAbortController?.(undefined);
   });
+  variables.delete("MESSAGES");
 
   return {
     node: findNextNode(workflow, node),

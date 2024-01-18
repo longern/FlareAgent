@@ -28,12 +28,13 @@ Another ChatGPT front-end. Focus on tool calls and workflow management.
 
 ### Python reference
 
-To access chat messages and variables in python, use the following code:
+Chat messages can be accessed by `MESSAGES` environment variable.
+Any modification to `os.environ` will be preserved between messages.
 
 ```py
-import flareagent
-print(flareagent.messages)
-flareagent.variables["foo"] = "bar"
+import os
+print(os.environ["MESSAGES"])
+os.environ["foo"] = "bar"
 ```
 
-Variables can be accessed in the system prompt with `{foo}`.
+Environment variables can be accessed in the system prompt with `{foo}`.

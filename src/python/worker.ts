@@ -5,7 +5,6 @@ importScripts("https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js");
 async function initPyodide() {
   // eslint-disable-next-line no-restricted-globals
   const pyodide = await (self as any).loadPyodide();
-  pyodide.registerJsModule("flareagent", flareAgentModule);
 
   const mountDir = "/root";
   pyodide.FS.mkdir(mountDir);
@@ -14,30 +13,31 @@ async function initPyodide() {
 
   pyodide.runPython(aiohttp, { filename: "aiohttp.py" });
 
+  osEnviron = pyodide.runPython("import os\ndict(os.environ)").toJs();
+
   return pyodide;
 }
 
 let pyodideReadyPromise = initPyodide();
-let flareAgentModule = {};
+let osEnviron: Map<string, string> | undefined;
 
 // eslint-disable-next-line no-restricted-globals
 self.onmessage = async (
   event: MessageEvent<{
     id: string;
     code: string;
-    messages?: any;
-    variables?: Record<string, any>;
+    env?: Map<string, string>;
     interruptBuffer?: Uint8Array;
   }>
 ) => {
   const pyodide = await pyodideReadyPromise;
-  const { id, code, messages, variables, interruptBuffer } = event.data;
+  const { id, code, env, interruptBuffer } = event.data;
 
-  if (messages) {
-    flareAgentModule["messages"] = pyodide.toPy(messages);
-  }
-  if (variables) {
-    flareAgentModule["variables"] = pyodide.toPy(variables);
+  if (env) {
+    osEnviron?.forEach((_value, key) => env.delete(key));
+    pyodide.globals.set("env", pyodide.toPy(env));
+    pyodide.runPython(`import os; os.environ.update(env)`);
+    pyodide.globals.delete("env");
   }
 
   try {
@@ -53,7 +53,11 @@ self.onmessage = async (
     const lastExpr = await pyodide.runPythonAsync(code);
     await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
     const result = stdoutBuffer.join("") + (lastExpr ?? "");
-    const variables = flareAgentModule["variables"]?.toJs();
+
+    const environProxy = pyodide.runPython("import os\ndict(os.environ)");
+    const variables = environProxy.toJs() as Map<string, string>;
+    osEnviron!.forEach((_value, key) => variables.delete(key));
+
     // eslint-disable-next-line no-restricted-globals
     self.postMessage({ result, id, variables });
   } catch (error) {

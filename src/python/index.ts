@@ -19,16 +19,15 @@ function signalToInterruptBuffer(signal: AbortSignal | undefined) {
 export function runPython(
   code: string,
   options?: {
-    messages?: any;
-    variables?: Map<string, any>;
+    env?: Map<string, string>;
     signal?: AbortSignal;
   }
 ): Promise<{
   result: string;
-  variables: Map<string, any>;
+  variables: Map<string, string>;
 }> {
   options = options ?? {};
-  const { messages, variables, signal } = options;
+  const { env, signal } = options;
 
   if (!pythonWorker) {
     pythonWorker = new Worker(new URL("./worker.ts", import.meta.url));
@@ -50,8 +49,7 @@ export function runPython(
       id,
       code,
       interruptBuffer,
-      messages,
-      variables,
+      env,
     });
   });
 }
