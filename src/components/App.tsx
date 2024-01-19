@@ -80,7 +80,7 @@ function App() {
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
   const [messages, setMessages] = useMessages();
   const [currentNode, setCurrentNode] = useState<Node | undefined | null>(null);
-  const [variables, setVariables] = useState<Map<string, any>>(new Map());
+  const [variables, setVariables] = useState<Map<string, string>>(new Map());
   const [controller, setController] = useState<AbortController | undefined>(
     undefined
   );
