@@ -37,22 +37,34 @@ function ScrollToBottom({
   const ref = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (!scrollToBottom) return;
     const parent = componentRef.current!;
-    parentObserver.observe(parent);
     const container = ref.current!;
+
+    if (!scrollToBottom) {
+      const observer = new ResizeObserver(() => {
+        const { scrollHeight, scrollTop, clientHeight } = parent;
+        if (scrollHeight - scrollTop - clientHeight <= 1) {
+          onScrollToBottomChange(true);
+        }
+      });
+      observer.observe(parent);
+      observer.observe(container);
+      return () => observer.disconnect();
+    }
+
+    parentObserver.observe(parent);
     childObserver.observe(container);
     return () => {
       parentObserver.unobserve(parent);
       childObserver.unobserve(container);
     };
-  }, [scrollToBottom]);
+  }, [scrollToBottom, onScrollToBottomChange]);
 
   React.useEffect(() => {
     const component = componentRef.current!;
     function handler() {
       const { scrollHeight, scrollTop, clientHeight } = componentRef.current!;
-      const scrollToBottom = scrollHeight - scrollTop - clientHeight <= 8;
+      const scrollToBottom = scrollHeight - scrollTop - clientHeight <= 1;
       onScrollToBottomChange(scrollToBottom);
     }
     component.addEventListener("scroll", handler);
