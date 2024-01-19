@@ -4,7 +4,9 @@ importScripts("https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js");
 
 async function initPyodide() {
   // eslint-disable-next-line no-restricted-globals
-  const pyodide = await (self as any).loadPyodide();
+  const pyodide = await (self as any).loadPyodide({
+    packages: ["micropip"],
+  });
 
   const mountDir = "/root";
   pyodide.FS.mkdir(mountDir);
@@ -34,14 +36,23 @@ self.onmessage = async (
   const { id, code, env, interruptBuffer } = event.data;
 
   if (env) {
-    osEnviron?.forEach((_value, key) => env.delete(key));
-    pyodide.globals.set("env", pyodide.toPy(env));
-    pyodide.runPython(`import os; os.environ.update(env)`);
-    pyodide.globals.delete("env");
+    osEnviron!.forEach((_value, key) => env.delete(key));
+    pyodide.runPython(`import os; os.environ.update(env)`, {
+      globals: pyodide.toPy({ env }),
+    });
   }
 
   try {
-    await pyodide.loadPackagesFromImports(code);
+    await pyodide.runPythonAsync(
+      [
+        "import micropip",
+        "import sys",
+        "from pyodide.code import find_imports",
+        "imports = find_imports(code)",
+        "await micropip.install([name for name in imports if name not in sys.modules])",
+      ].join("\n"),
+      { globals: pyodide.toPy({ code }) }
+    );
     await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
     const stdoutBuffer: string[] = [];
     pyodide.setStdout({

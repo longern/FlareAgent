@@ -45,7 +45,8 @@ const DEFINITION = {
                 properties: {
                   code: {
                     type: "string",
-                    description: "The python code to run",
+                    description:
+                      "The python code to run (top-level await supported)",
                     required: true,
                   },
                 },
