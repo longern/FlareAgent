@@ -1,4 +1,4 @@
-import { ChatCompletionTool } from "openai/resources";
+import { ChatCompletionTool } from "openai/resources/index";
 import type { OpenAPIV3 } from "openapi-types";
 
 export const TOOL_SCHEME = "tool";

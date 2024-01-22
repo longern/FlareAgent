@@ -18,7 +18,7 @@ import {
 import {
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
-} from "openai/resources";
+} from "openai/resources/index";
 import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 

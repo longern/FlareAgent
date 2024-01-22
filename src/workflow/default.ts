@@ -22,6 +22,17 @@ export const defaultWorkflow: Workflow = {
       type: "assistant",
       data: {
         label: "Assistant",
+        tools: ["search", "crawl", "python"],
+      },
+    },
+    {
+      id: "decision",
+      type: "decision",
+      data: {
+        label: "Decision",
+        condition: {
+          type: "tool-call",
+        },
       },
     },
     {
@@ -44,14 +55,22 @@ export const defaultWorkflow: Workflow = {
       target: "assistant",
     },
     {
-      id: "e-assistant-tool-call",
+      id: "e-assistant-decision",
       source: "assistant",
+      target: "decision",
+    },
+    {
+      id: "e-decision-tool-call",
+      source: "decision",
       target: "tool-call",
       data: {
-        condition: {
-          type: "tool-call",
-        },
+        condition: true,
       },
+    },
+    {
+      id: "e-decision-user-input",
+      source: "decision",
+      target: "user-input",
     },
     {
       id: "e-assistant-user-input",

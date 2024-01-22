@@ -3,10 +3,11 @@ import {
   ChatCompletionMessage,
   ChatCompletionMessageParam,
   ChatCompletionToolMessageParam,
-} from "openai/resources";
+} from "openai/resources/index";
 import {
   AssistantNode,
   CodeNode,
+  DecisionNode,
   Node,
   ToolCallNode,
   UserInputNode,
@@ -30,6 +31,44 @@ function findNextNode(workflow: Workflow, node: Node) {
   const edge = workflow.edges.find((edge) => edge.source === node.id);
   const nextNode = findNode(workflow, edge?.target);
   return nextNode;
+}
+
+export async function executeDecisionNode({
+  workflow,
+  state,
+}: {
+  workflow: Workflow;
+  state: WorkflowExecutionState;
+}) {
+  const node = state.node as DecisionNode;
+  const lastMessage = state.messages[state.messages.length - 1];
+  const isTrue = (() => {
+    switch (node.data.condition?.type) {
+      case "regex":
+        const regex = new RegExp(node.data.condition.regex);
+        return regex.test(lastMessage.content ?? "");
+      case "tool-call":
+        return lastMessage.tool_calls?.length > 0;
+      default:
+        throw new Error(`Unknown decision: ${node.data.condition}`);
+    }
+  })();
+
+  const nextNode = (() => {
+    for (const edge of workflow.edges) {
+      if (edge.source !== node.id) continue;
+      if (isTrue === Boolean(edge.data?.condition)) {
+        return findNode(workflow, edge.target);
+      }
+    }
+    return undefined;
+  })();
+
+  return {
+    node: nextNode,
+    messages: state.messages,
+    variables: state.variables,
+  };
 }
 
 export async function executeUserInputNode({
@@ -94,15 +133,13 @@ async function executeAssistantNode({
     baseURL,
     dangerouslyAllowBrowser: true,
   });
-  const tools = toolsArg.map((tool) => ({
-    ...tool,
-    function: tool.function,
-  }));
+  const tools = toolsArg
+    .map((tool) => ({
+      ...tool,
+      function: tool.function,
+    }))
+    .filter((tool) => node.data.tools?.includes(tool.function.name) ?? false);
 
-  const hasToolCallTransition = workflow.edges.some(
-    (edge) =>
-      edge.source === node.id && edge.data?.condition?.type === "tool-call"
-  );
   const systemPrompt = node.data.prompt
     ? Object.entries(state.variables).reduce((prompt, [key, value]) => {
         return prompt.replace(`{${key}}`, value);
@@ -113,7 +150,7 @@ async function executeAssistantNode({
     messages: systemPrompt
       ? [{ role: "system", content: systemPrompt }, ...state.messages]
       : state.messages,
-    tools: tools.length === 0 || !hasToolCallTransition ? undefined : tools,
+    tools: tools.length === 0 ? undefined : tools,
     stream: true,
   });
   onAbortController?.(completion.controller);
@@ -136,25 +173,8 @@ async function executeAssistantNode({
   }
   const choice = choices[0];
 
-  const nextNode = (() => {
-    for (const edge of workflow.edges) {
-      if (edge.source !== node.id) continue;
-      if (edge.data?.condition?.type === "regex") {
-        const regex = new RegExp(edge.data.condition.regex);
-        if (regex.test(choice.message.content ?? ""))
-          return findNode(workflow, edge.target);
-      } else if (edge.data?.condition?.type === "tool-call") {
-        if (choice.finish_reason === "tool_calls")
-          return findNode(workflow, edge.target);
-      } else {
-        return findNode(workflow, edge.target);
-      }
-    }
-    return findNextNode(workflow, node);
-  })();
-
   return {
-    node: nextNode,
+    node: findNextNode(workflow, node),
     messages: [...state.messages, choice.message],
     variables: state.variables,
   };
@@ -269,6 +289,8 @@ export async function executeWorkflowStep({
   switch (state.node.type) {
     case "start":
       return { ...state, node: findNextNode(workflow, state.node) };
+    case "decision":
+      return executeDecisionNode({ workflow, state });
     case "assistant":
       return executeAssistantNode({
         workflow,

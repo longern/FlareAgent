@@ -7,6 +7,14 @@ export interface StartNode extends BaseNode {
   type: "start";
 }
 
+export interface DecisionNode
+  extends BaseNode<{
+    label: string;
+    condition?: EdgeCondition;
+  }> {
+  type: "decision";
+}
+
 export interface UserInputNode extends BaseNode {
   type: "user-input";
 }
@@ -15,6 +23,7 @@ export interface AssistantNode
   extends BaseNode<{
     label: string;
     prompt?: string;
+    tools?: string[];
   }> {
   type: "assistant";
 }
@@ -33,6 +42,7 @@ export interface CodeNode
 
 export type Node =
   | StartNode
+  | DecisionNode
   | UserInputNode
   | AssistantNode
   | ToolCallNode
@@ -52,7 +62,7 @@ export interface Edge {
   source: string;
   target: string;
   data?: {
-    condition?: EdgeCondition;
+    condition?: boolean;
   };
 }
 

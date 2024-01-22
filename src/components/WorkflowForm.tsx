@@ -35,6 +35,14 @@ function NodeForm({
 }) {
   const { t } = useTranslation();
 
+  const allNodeItems = nodes
+    .filter((n) => n.type !== "start")
+    .map((n) => (
+      <MenuItem key={n.id} value={n.id}>
+        {n.data.label}
+      </MenuItem>
+    ));
+
   return (
     <Stack spacing={2} sx={{ py: 2 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -68,34 +76,118 @@ function NodeForm({
           });
         }}
       />
-      {node.type === "start" || node.type === "user-input" ? (
-        <FormControl>
-          <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
-          <Select
-            label={t("Next Node")}
-            labelId="next-node-label"
-            value={edges.find((edge) => edge.source === node.id)?.target ?? ""}
-            onChange={(e) => {
-              onEdgesChange([
-                ...edges.filter((edge) => edge.source !== node.id),
-                {
-                  id: `e-${node.id}-${e.target.value}`,
-                  source: node.id,
-                  target: e.target.value,
-                },
-              ]);
-            }}
-            inputProps={{ "aria-label": node.data.label }}
-          >
-            {nodes
-              .filter((n) => n.type !== "start")
-              .map((n) => (
-                <MenuItem key={n.id} value={n.id}>
-                  {n.data.label}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
+      {node.type === "decision" ? (
+        <>
+          <FormControl>
+            <InputLabel id="condition-type-label">
+              {t("Condition Type")}
+            </InputLabel>
+            <Select
+              label={t("Condition Type")}
+              labelId="condition-type-label"
+              value={node.data.condition?.type ?? ""}
+              onChange={(e) => {
+                switch (e.target.value) {
+                  case "tool-call":
+                    onUpdateNode({
+                      ...node,
+                      data: { ...node.data, condition: { type: "tool-call" } },
+                    });
+                    break;
+                  case "regex":
+                    onUpdateNode({
+                      ...node,
+                      data: {
+                        ...node.data,
+                        condition: { type: "regex", regex: "" },
+                      },
+                    });
+                    break;
+                }
+              }}
+              inputProps={{ "aria-label": node.data.label }}
+            >
+              <MenuItem value="" disabled>
+                &nbsp;
+              </MenuItem>
+              <MenuItem value="tool-call">{t("Tool Call")}</MenuItem>
+              <MenuItem value="regex">{t("Regex")}</MenuItem>
+            </Select>
+          </FormControl>
+          {node.data.condition?.type === "regex" && (
+            <TextField
+              label={t("Regex")}
+              value={node.data.condition.regex}
+              onChange={(e) => {
+                onUpdateNode({
+                  ...node,
+                  data: {
+                    ...node.data,
+                    condition: {
+                      type: "regex",
+                      regex: e.target.value,
+                    },
+                  },
+                });
+              }}
+            />
+          )}
+          <FormControl>
+            <InputLabel id="true-node-label">{t("True Node")}</InputLabel>
+            <Select
+              label={t("True Node")}
+              labelId="true-node-label"
+              value={
+                edges.find(
+                  (edge) => edge.source === node.id && edge.data?.condition
+                )?.target ?? ""
+              }
+              onChange={(e) => {
+                onEdgesChange([
+                  ...edges.filter(
+                    (edge) => edge.source !== node.id || !edge.data?.condition
+                  ),
+                  {
+                    id: `e-${node.id}-${e.target.value}`,
+                    source: node.id,
+                    target: e.target.value,
+                    data: { condition: true },
+                  },
+                ]);
+              }}
+              inputProps={{ "aria-label": node.data.label }}
+            >
+              {allNodeItems}
+            </Select>
+          </FormControl>
+          <FormControl>
+            <InputLabel id="false-node-label">{t("False Node")}</InputLabel>
+            <Select
+              label={t("False Node")}
+              labelId="false-node-label"
+              value={
+                edges.find(
+                  (edge) => edge.source === node.id && !edge.data?.condition
+                )?.target ?? ""
+              }
+              onChange={(e) => {
+                onEdgesChange([
+                  ...edges.filter(
+                    (edge) => edge.source !== node.id || edge.data?.condition
+                  ),
+                  {
+                    id: `e-${node.id}-${e.target.value}`,
+                    source: node.id,
+                    target: e.target.value,
+                  },
+                ]);
+              }}
+              inputProps={{ "aria-label": node.data.label }}
+            >
+              {allNodeItems}
+            </Select>
+          </FormControl>
+        </>
       ) : node.type === "assistant" ? (
         <TextField
           label={t("System Prompt")}
@@ -109,34 +201,6 @@ function NodeForm({
             });
           }}
         />
-      ) : node.type === "tool-call" ? (
-        <FormControl>
-          <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
-          <Select
-            label={t("Next Node")}
-            labelId="next-node-label"
-            value={edges.find((edge) => edge.source === node.id)?.target ?? ""}
-            onChange={(e) => {
-              onEdgesChange([
-                ...edges.filter((edge) => edge.source !== node.id),
-                {
-                  id: `e-${node.id}-${e.target.value}`,
-                  source: node.id,
-                  target: e.target.value,
-                },
-              ]);
-            }}
-            inputProps={{ "aria-label": node.data.label }}
-          >
-            {nodes
-              .filter((n) => n.type !== "start")
-              .map((n) => (
-                <MenuItem key={n.id} value={n.id}>
-                  {n.data.label}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
       ) : node.type === "code" ? (
         <TextField
           label={t("Code")}
@@ -152,6 +216,29 @@ function NodeForm({
           }}
         />
       ) : null}
+      {node.type !== "decision" && (
+        <FormControl>
+          <InputLabel id="next-node-label">{t("Next Node")}</InputLabel>
+          <Select
+            label={t("Next Node")}
+            labelId="next-node-label"
+            value={edges.find((edge) => edge.source === node.id)?.target ?? ""}
+            onChange={(e) => {
+              onEdgesChange([
+                ...edges.filter((edge) => edge.source !== node.id),
+                {
+                  id: `e-${node.id}-${e.target.value}`,
+                  source: node.id,
+                  target: e.target.value,
+                },
+              ]);
+            }}
+            inputProps={{ "aria-label": node.data.label }}
+          >
+            {allNodeItems}
+          </Select>
+        </FormControl>
+      )}
     </Stack>
   );
 }
@@ -160,10 +247,12 @@ function WorkflowForm({
   workflow,
   onWorkflowChange,
   onWorkflowDelete,
+  onUnsavedChanges,
 }: {
   workflow: Workflow;
   onWorkflowChange: (workflow: Workflow) => void;
   onWorkflowDelete: () => void;
+  onUnsavedChanges?: (unsavedChanges: boolean) => void;
 }) {
   const [name, setName] = React.useState<string>(workflow.name);
   const [nodes, setNodes] = React.useState<Node[]>(workflow.nodes);
@@ -171,6 +260,7 @@ function WorkflowForm({
   const [editingNode, setEditingNode] = React.useState<Node | undefined>(
     nodes[0]
   );
+  const onUnsavedChangesRef = React.useRef(onUnsavedChanges);
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -179,6 +269,7 @@ function WorkflowForm({
   const updateNode = useCallback((node: Node) => {
     setNodes((nodes) => nodes.map((n) => (n.id === node.id ? node : n)));
     setEditingNode(node);
+    onUnsavedChangesRef.current?.(true);
   }, []);
 
   const deleteNode = useCallback(
@@ -186,6 +277,7 @@ function WorkflowForm({
       setNodes((nodes) => nodes.filter((n) => n.id !== node.id));
       setEdges((edges) => edges.filter((edge) => edge.source !== node.id));
       setEditingNode(nodes[0]);
+      onUnsavedChangesRef.current?.(true);
     },
     [nodes]
   );
@@ -284,6 +376,14 @@ function WorkflowForm({
             }}
           >
             {t("Code")}
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              addNode("decision");
+              setAnchorEl(null);
+            }}
+          >
+            {t("Decision")}
           </MenuItem>
         </Menu>
       </Stack>
