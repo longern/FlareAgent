@@ -9,7 +9,7 @@
     "@mui/icons-material": "^5.15.2",
     "@mui/material": "^5.15.2",
     "hono": "^3.11.12",
-    "openai": "^4.24.1",
+    "openai": "^4.25.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^14.0.0",
