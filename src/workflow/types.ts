@@ -55,6 +55,12 @@ export type EdgeCondition =
   | {
       type: "regex";
       regex: string;
+    }
+  | {
+      type: "variable";
+      variable: string;
+      operator: "eq" | "neq" | "lt" | "lte" | "gt" | "gte";
+      rhs: string;
     };
 
 export interface Edge {

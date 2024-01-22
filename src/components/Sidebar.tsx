@@ -125,7 +125,7 @@ function Sidebar({
               )}
               <ListItem disablePadding>
                 <ListItemButton onClick={onNewWorkflow}>
-                  <ListItemText>New...</ListItemText>
+                  <ListItemText>{t("New...")}</ListItemText>
                 </ListItemButton>
               </ListItem>
             </List>

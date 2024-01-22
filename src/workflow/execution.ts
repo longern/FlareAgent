@@ -45,10 +45,34 @@ export async function executeDecisionNode({
   const isTrue = (() => {
     switch (node.data.condition?.type) {
       case "regex":
+        if (lastMessage.role !== "assistant") return false;
         const regex = new RegExp(node.data.condition.regex);
         return regex.test(lastMessage.content ?? "");
       case "tool-call":
+        if (lastMessage.role !== "assistant") return false;
         return lastMessage.tool_calls?.length > 0;
+      case "variable":
+        const variable = state.variables.get(node.data.condition.variable);
+        if (variable === undefined) return false;
+        const rhs = node.data.condition.rhs;
+        switch (node.data.condition.operator) {
+          case "eq":
+            return variable === rhs;
+          case "neq":
+            return variable !== rhs;
+          case "lt":
+            return Number(variable) < Number(rhs);
+          case "lte":
+            return Number(variable) <= Number(rhs);
+          case "gt":
+            return Number(variable) > Number(rhs);
+          case "gte":
+            return Number(variable) >= Number(rhs);
+          default:
+            throw new Error(
+              `Unknown operator: ${node.data.condition.operator}`
+            );
+        }
       default:
         throw new Error(`Unknown decision: ${node.data.condition}`);
     }

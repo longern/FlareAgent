@@ -16,7 +16,219 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
-import type { Edge, Node, Workflow } from "../workflow";
+import type { DecisionNode, Edge, Node, Workflow } from "../workflow";
+
+function DecisionForm({
+  node,
+  nodes,
+  onUpdateNode,
+  edges,
+  onEdgesChange,
+}: {
+  node: DecisionNode;
+  nodes: Node[];
+  onUpdateNode: (node: Node) => void;
+  edges: Edge[];
+  onEdgesChange: (edges: Edge[]) => void;
+}) {
+  const { t } = useTranslation();
+
+  const condition = node.data.condition;
+  const allNodeItems = nodes
+    .filter((n) => n.type !== "start")
+    .map((n) => (
+      <MenuItem key={n.id} value={n.id}>
+        {n.data.label}
+      </MenuItem>
+    ));
+
+  return (
+    <>
+      <FormControl>
+        <InputLabel id="condition-type-label">{t("Condition Type")}</InputLabel>
+        <Select
+          label={t("Condition Type")}
+          labelId="condition-type-label"
+          value={condition?.type ?? ""}
+          onChange={(e) => {
+            switch (e.target.value) {
+              case "tool-call":
+                onUpdateNode({
+                  ...node,
+                  data: { ...node.data, condition: { type: "tool-call" } },
+                });
+                break;
+              case "regex":
+                onUpdateNode({
+                  ...node,
+                  data: {
+                    ...node.data,
+                    condition: { type: "regex", regex: "" },
+                  },
+                });
+                break;
+              case "variable":
+                onUpdateNode({
+                  ...node,
+                  data: {
+                    ...node.data,
+                    condition: {
+                      type: "variable",
+                      variable: "",
+                      operator: "eq",
+                      rhs: "",
+                    },
+                  },
+                });
+                break;
+            }
+          }}
+          inputProps={{ "aria-label": node.data.label }}
+        >
+          <MenuItem value="" disabled>
+            &nbsp;
+          </MenuItem>
+          <MenuItem value="tool-call">{t("Tool Call")}</MenuItem>
+          <MenuItem value="regex">{t("Regex")}</MenuItem>
+          <MenuItem value="variable">{t("Variable")}</MenuItem>
+        </Select>
+      </FormControl>
+      {node.data.condition?.type === "regex" ? (
+        <TextField
+          label={t("Regex")}
+          value={node.data.condition.regex}
+          onChange={(e) => {
+            onUpdateNode({
+              ...node,
+              data: {
+                ...node.data,
+                condition: {
+                  type: "regex",
+                  regex: e.target.value,
+                },
+              },
+            });
+          }}
+        />
+      ) : condition?.type === "variable" ? (
+        <Stack direction="row" spacing={2}>
+          <TextField
+            label={t("Variable")}
+            value={condition.variable}
+            onChange={(e) => {
+              onUpdateNode({
+                ...node,
+                data: {
+                  ...node.data,
+                  condition: {
+                    ...condition,
+                    variable: e.target.value,
+                  },
+                },
+              });
+            }}
+            sx={{ flexGrow: 1 }}
+          />
+          <FormControl sx={{ minWidth: 64 }}>
+            <InputLabel id="operator-label">{t("Operator")}</InputLabel>
+            <Select
+              label={t("Operator")}
+              labelId="operator-label"
+              value={condition.operator}
+              onChange={(e) => {
+                const operator = e.target.value as typeof condition.operator;
+                onUpdateNode({
+                  ...node,
+                  data: {
+                    ...node.data,
+                    condition: { ...condition, operator },
+                  },
+                });
+              }}
+              inputProps={{ "aria-label": node.data.label }}
+            >
+              <MenuItem value="eq">=</MenuItem>
+              <MenuItem value="ne">≠</MenuItem>
+              <MenuItem value="gt">&gt;</MenuItem>
+              <MenuItem value="gte">≥</MenuItem>
+              <MenuItem value="lt">&lt;</MenuItem>
+              <MenuItem value="lte">≤</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            label={t("RHS")}
+            value={condition.rhs}
+            onChange={(e) => {
+              onUpdateNode({
+                ...node,
+                data: {
+                  ...node.data,
+                  condition: { ...condition, rhs: e.target.value },
+                },
+              });
+            }}
+            sx={{ flexGrow: 1 }}
+          />
+        </Stack>
+      ) : null}
+      <FormControl>
+        <InputLabel id="true-node-label">{t("True Node")}</InputLabel>
+        <Select
+          label={t("True Node")}
+          labelId="true-node-label"
+          value={
+            edges.find(
+              (edge) => edge.source === node.id && edge.data?.condition
+            )?.target ?? ""
+          }
+          onChange={(e) => {
+            onEdgesChange([
+              ...edges.filter(
+                (edge) => edge.source !== node.id || !edge.data?.condition
+              ),
+              {
+                id: `e-${node.id}-${e.target.value}`,
+                source: node.id,
+                target: e.target.value,
+                data: { condition: true },
+              },
+            ]);
+          }}
+          inputProps={{ "aria-label": node.data.label }}
+        >
+          {allNodeItems}
+        </Select>
+      </FormControl>
+      <FormControl>
+        <InputLabel id="false-node-label">{t("False Node")}</InputLabel>
+        <Select
+          label={t("False Node")}
+          labelId="false-node-label"
+          value={
+            edges.find(
+              (edge) => edge.source === node.id && !edge.data?.condition
+            )?.target ?? ""
+          }
+          onChange={(e) => {
+            onEdgesChange([
+              ...edges.filter(
+                (edge) => edge.source !== node.id || edge.data?.condition
+              ),
+              {
+                id: `e-${node.id}-${e.target.value}`,
+                source: node.id,
+                target: e.target.value,
+              },
+            ]);
+          }}
+          inputProps={{ "aria-label": node.data.label }}
+        >
+          {allNodeItems}
+        </Select>
+      </FormControl>
+    </>
+  );
+}
 
 function NodeForm({
   node,
@@ -77,117 +289,13 @@ function NodeForm({
         }}
       />
       {node.type === "decision" ? (
-        <>
-          <FormControl>
-            <InputLabel id="condition-type-label">
-              {t("Condition Type")}
-            </InputLabel>
-            <Select
-              label={t("Condition Type")}
-              labelId="condition-type-label"
-              value={node.data.condition?.type ?? ""}
-              onChange={(e) => {
-                switch (e.target.value) {
-                  case "tool-call":
-                    onUpdateNode({
-                      ...node,
-                      data: { ...node.data, condition: { type: "tool-call" } },
-                    });
-                    break;
-                  case "regex":
-                    onUpdateNode({
-                      ...node,
-                      data: {
-                        ...node.data,
-                        condition: { type: "regex", regex: "" },
-                      },
-                    });
-                    break;
-                }
-              }}
-              inputProps={{ "aria-label": node.data.label }}
-            >
-              <MenuItem value="" disabled>
-                &nbsp;
-              </MenuItem>
-              <MenuItem value="tool-call">{t("Tool Call")}</MenuItem>
-              <MenuItem value="regex">{t("Regex")}</MenuItem>
-            </Select>
-          </FormControl>
-          {node.data.condition?.type === "regex" && (
-            <TextField
-              label={t("Regex")}
-              value={node.data.condition.regex}
-              onChange={(e) => {
-                onUpdateNode({
-                  ...node,
-                  data: {
-                    ...node.data,
-                    condition: {
-                      type: "regex",
-                      regex: e.target.value,
-                    },
-                  },
-                });
-              }}
-            />
-          )}
-          <FormControl>
-            <InputLabel id="true-node-label">{t("True Node")}</InputLabel>
-            <Select
-              label={t("True Node")}
-              labelId="true-node-label"
-              value={
-                edges.find(
-                  (edge) => edge.source === node.id && edge.data?.condition
-                )?.target ?? ""
-              }
-              onChange={(e) => {
-                onEdgesChange([
-                  ...edges.filter(
-                    (edge) => edge.source !== node.id || !edge.data?.condition
-                  ),
-                  {
-                    id: `e-${node.id}-${e.target.value}`,
-                    source: node.id,
-                    target: e.target.value,
-                    data: { condition: true },
-                  },
-                ]);
-              }}
-              inputProps={{ "aria-label": node.data.label }}
-            >
-              {allNodeItems}
-            </Select>
-          </FormControl>
-          <FormControl>
-            <InputLabel id="false-node-label">{t("False Node")}</InputLabel>
-            <Select
-              label={t("False Node")}
-              labelId="false-node-label"
-              value={
-                edges.find(
-                  (edge) => edge.source === node.id && !edge.data?.condition
-                )?.target ?? ""
-              }
-              onChange={(e) => {
-                onEdgesChange([
-                  ...edges.filter(
-                    (edge) => edge.source !== node.id || edge.data?.condition
-                  ),
-                  {
-                    id: `e-${node.id}-${e.target.value}`,
-                    source: node.id,
-                    target: e.target.value,
-                  },
-                ]);
-              }}
-              inputProps={{ "aria-label": node.data.label }}
-            >
-              {allNodeItems}
-            </Select>
-          </FormControl>
-        </>
+        <DecisionForm
+          node={node}
+          nodes={nodes}
+          onUpdateNode={onUpdateNode}
+          edges={edges}
+          onEdgesChange={onEdgesChange}
+        />
       ) : node.type === "assistant" ? (
         <TextField
           label={t("System Prompt")}
