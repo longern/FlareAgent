@@ -5,6 +5,7 @@ Another ChatGPT front-end. Focus on tool calls and workflow management.
 ## Features
 
 - [x] Chat with GPT-3.5 and GPT-4
+- [x] Image input
 - [x] Markdown support
 - [x] LaTeX support
 - [x] Code Highlighting

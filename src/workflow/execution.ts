@@ -1,5 +1,6 @@
 import {
   ChatCompletion,
+  ChatCompletionContentPart,
   ChatCompletionMessage,
   ChatCompletionMessageParam,
   ChatCompletionToolMessageParam,
@@ -102,7 +103,7 @@ export async function executeUserInputNode({
 }: {
   workflow: Workflow;
   state: WorkflowExecutionState;
-  userInput: string;
+  userInput: string | ChatCompletionContentPart[];
 }): Promise<WorkflowExecutionState> {
   const node = state.node as UserInputNode;
   const nextNode = findNextNode(workflow, node);

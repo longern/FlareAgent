@@ -1,4 +1,5 @@
 import {
+  Badge,
   Collapse,
   IconButton,
   Stack,
@@ -7,6 +8,8 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
+import { ChatCompletionContentPart } from "openai/resources/index.mjs";
+
 import {
   Add as AddIcon,
   AttachFile as AttachFileIcon,
@@ -15,8 +18,13 @@ import {
 } from "@mui/icons-material";
 import { importFile } from "../python";
 
-function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
+function UserInput({
+  onSend,
+}: {
+  onSend: (userInput: string | ChatCompletionContentPart[]) => void;
+}) {
   const [userInput, setUserInput] = useState<string>("");
+  const [images, setImages] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<boolean>(false);
   const userInputRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,7 +34,24 @@ function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = async () => {};
+    input.multiple = true;
+    input.onchange = async () => {
+      if (input.files) {
+        const files = Array.from(input.files);
+        const images = await Promise.all(
+          files.map(
+            (file) =>
+              new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(file);
+              })
+          )
+        );
+        setImages(images);
+      }
+    };
     input.click();
   }, []);
 
@@ -42,6 +67,27 @@ function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
     };
     input.click();
   }, []);
+
+  const handleSend = useCallback(() => {
+    if (userInput === "" && !images.length) return;
+    if (images.length) {
+      onSend([
+        { type: "text", text: userInput },
+        ...images.map(
+          (image) =>
+            ({
+              type: "image_url",
+              image_url: { url: image },
+            } as ChatCompletionContentPart)
+        ),
+      ]);
+      setImages([]);
+    } else {
+      onSend(userInput);
+    }
+    setUserInput("");
+    userInputRef.current!.blur();
+  }, [userInput, images, onSend]);
 
   return (
     <>
@@ -61,10 +107,7 @@ function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
           onKeyDown={(e) => {
             if (matchesLg && e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
               e.preventDefault();
-              if (userInput === "") return;
-              onSend(userInput);
-              setUserInput("");
-              userInputRef.current!.blur();
+              handleSend();
             }
           }}
           inputProps={{ "aria-label": "user input" }}
@@ -75,11 +118,7 @@ function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
                 aria-label="send"
                 size="small"
                 disabled={userInput === ""}
-                onClick={() => {
-                  onSend(userInput);
-                  setUserInput("");
-                  userInputRef.current!.blur();
-                }}
+                onClick={handleSend}
                 sx={{ alignSelf: "flex-end" }}
               >
                 <SendIcon />
@@ -95,13 +134,19 @@ function UserInput({ onSend }: { onSend: (userInput: string) => void }) {
       </Stack>
       <Collapse in={expanded}>
         <Stack direction="row" spacing={1}>
-          <IconButton
-            aria-label="image"
-            size="small"
-            onClick={handleImportImage}
+          <Badge
+            badgeContent={images.length}
+            color="primary"
+            overlap="circular"
           >
-            <ImageIcon />
-          </IconButton>
+            <IconButton
+              aria-label="image"
+              size="small"
+              onClick={handleImportImage}
+            >
+              <ImageIcon />
+            </IconButton>
+          </Badge>
           <IconButton aria-label="file" size="small" onClick={handleImportFile}>
             <AttachFileIcon />
           </IconButton>

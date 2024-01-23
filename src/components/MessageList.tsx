@@ -199,7 +199,15 @@ function MessageList({
                   </Box>
                 ) : (
                   <Box sx={{ whiteSpace: "pre-wrap" }}>
-                    {message.content as string}
+                    {typeof message.content === "string"
+                      ? message.content
+                      : message.content.map((part, index) =>
+                          part.type === "text" ? (
+                            <span key={index}>{part.text}</span>
+                          ) : part.type === "image_url" ? (
+                            <img key={index} src={part.image_url.url} alt="" />
+                          ) : null
+                        )}
                   </Box>
                 )}
               </Box>
