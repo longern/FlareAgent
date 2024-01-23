@@ -150,8 +150,14 @@ function MessageList({
                 sx={{
                   padding: "0.5em 0.8em",
                   borderRadius: "14px",
-                  backgroundColor:
-                    message.role === "user" ? "#e0e0e0" : "#f5f5f5",
+                  backgroundColor: (theme) =>
+                    message.role === "user"
+                      ? theme.palette.mode === "dark"
+                        ? "#333333"
+                        : "#e0e0e0"
+                      : theme.palette.mode === "dark"
+                      ? "#1f1f1f"
+                      : "#f5f5f5",
                   "& img": { maxWidth: "100%" },
                   "& p": { margin: 0 },
                   "& pre": { margin: 0 },

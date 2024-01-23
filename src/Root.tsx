@@ -4,11 +4,10 @@ import {
   GlobalStyles,
   ThemeProvider,
   createTheme,
+  useMediaQuery,
 } from "@mui/material";
 
 import App from "./components/App";
-
-const theme = createTheme();
 
 const globalStyles = (
   <GlobalStyles
@@ -25,6 +24,18 @@ const globalStyles = (
 );
 
 function Root() {
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+
+  const theme = React.useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: prefersDarkMode ? "dark" : "light",
+        },
+      }),
+    [prefersDarkMode]
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

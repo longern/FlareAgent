@@ -93,6 +93,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const executeWorkflowStepCallback = async (
     workflow: Workflow,
@@ -197,12 +198,16 @@ function App() {
           sx={{ height: "100%", overflow: "auto" }}
           onScrollToBottomChange={setScrollToBottom}
         >
-          <Container maxWidth="md" sx={{ padding: 1 }}>
+          <Container
+            ref={messageContainerRef}
+            maxWidth="md"
+            sx={{ padding: 1 }}
+          >
             <MessageList messages={messages} />
           </Container>
         </ScrollToBottom>
       </Box>
-      <Container maxWidth="md">
+      <Container maxWidth="md" sx={{ paddingX: 1 }}>
         <UserInput
           onSend={(userInput) => {
             executeUserInputNode({
@@ -217,6 +222,14 @@ function App() {
               setCurrentNode(state.node);
               setMessages(state.messages);
             });
+          }}
+          onScreenshot={async () => {
+            const { toBlob } = await import("html-to-image");
+            const blob = await toBlob(messageContainerRef.current!, {
+              style: { margin: "0" },
+            });
+            const clipboardItem = new ClipboardItem({ [blob.type]: blob });
+            navigator.clipboard.write([clipboardItem]);
           }}
         />
       </Container>

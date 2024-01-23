@@ -14,14 +14,17 @@ import {
   Add as AddIcon,
   AttachFile as AttachFileIcon,
   Image as ImageIcon,
+  Screenshot as ScreenshotIcon,
   Send as SendIcon,
 } from "@mui/icons-material";
 import { importFile } from "../python";
 
 function UserInput({
   onSend,
+  onScreenshot,
 }: {
   onSend: (userInput: string | ChatCompletionContentPart[]) => void;
+  onScreenshot: () => void;
 }) {
   const [userInput, setUserInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
@@ -132,8 +135,8 @@ function UserInput({
           </IconButton>
         </Stack>
       </Stack>
-      <Collapse in={expanded}>
-        <Stack direction="row" spacing={1}>
+      <Collapse in={expanded} sx={{ marginTop: -0.5, marginBottom: 0.5 }}>
+        <Stack direction="row" justifyContent="space-around">
           <Badge
             badgeContent={images.length}
             color="primary"
@@ -149,6 +152,13 @@ function UserInput({
           </Badge>
           <IconButton aria-label="file" size="small" onClick={handleImportFile}>
             <AttachFileIcon />
+          </IconButton>
+          <IconButton
+            aria-label="screenshot"
+            size="small"
+            onClick={onScreenshot}
+          >
+            <ScreenshotIcon />
           </IconButton>
         </Stack>
       </Collapse>

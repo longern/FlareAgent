@@ -63,9 +63,12 @@ function ScrollToBottom({
   React.useEffect(() => {
     const component = componentRef.current!;
     function handler() {
-      const { scrollHeight, scrollTop, clientHeight } = componentRef.current!;
-      const scrollToBottom = scrollHeight - scrollTop - clientHeight <= 1;
-      onScrollToBottomChange(scrollToBottom);
+      // Make sure the scroll event is handled after the DOM is updated.
+      setTimeout(() => {
+        const { scrollHeight, scrollTop, clientHeight } = componentRef.current!;
+        const scrollToBottom = scrollHeight - scrollTop - clientHeight <= 1;
+        onScrollToBottomChange(scrollToBottom);
+      }, 0);
     }
     component.addEventListener("scroll", handler);
     return () => component.removeEventListener("scroll", handler);
