@@ -53,3 +53,20 @@ export function runPython(
     });
   });
 }
+
+export function importFile(file: File) {
+  if (!pythonWorker) {
+    pythonWorker = new Worker(new URL("./worker.ts", import.meta.url));
+  }
+
+  return new Promise((resolve) => {
+    function handleMessage(event: MessageEvent) {
+      if (event.data.file.name === file.name) {
+        pythonWorker!.removeEventListener("message", handleMessage);
+        resolve(void 0);
+      }
+    }
+    pythonWorker!.addEventListener("message", handleMessage);
+    pythonWorker!.postMessage({ file });
+  });
+}
