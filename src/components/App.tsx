@@ -11,7 +11,6 @@ import {
   Container,
   Dialog,
   DialogContent,
-  Fab,
   IconButton,
   MenuItem,
   Select,
@@ -22,12 +21,9 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import {
-  ArrowDownward as ArrowDownwardIcon,
-  Close as CloseIcon,
-  Stop as StopIcon,
-} from "@mui/icons-material";
+import { Close as CloseIcon } from "@mui/icons-material";
 
+import { ScrollToBottomButton, StopButton } from "./ActionButtons";
 import MessageList from "./MessageList";
 import MobileToolbar from "./MobileToolbar";
 import Sidebar from "./Sidebar";
@@ -252,38 +248,9 @@ function App() {
         message={error}
       />
       {!scrollToBottom && (
-        <Fab
-          size="small"
-          sx={{
-            position: "absolute",
-            bottom: 80,
-            right: 16,
-            zIndex: 1,
-          }}
-          onClick={() => {
-            setScrollToBottom(true);
-          }}
-        >
-          <ArrowDownwardIcon />
-        </Fab>
+        <ScrollToBottomButton onClick={() => setScrollToBottom(true)} />
       )}
-      {controller && (
-        <Fab
-          size="small"
-          sx={{
-            position: "absolute",
-            bottom: 64,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1,
-          }}
-          onClick={() => {
-            controller.abort();
-          }}
-        >
-          <StopIcon />
-        </Fab>
-      )}
+      {controller && <StopButton onClick={() => controller.abort()} />}
       <Dialog
         open={workflowDialogOpen}
         fullScreen

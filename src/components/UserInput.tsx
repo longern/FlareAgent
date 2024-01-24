@@ -1,23 +1,90 @@
 import {
+  AppBar,
   Badge,
   Collapse,
+  Dialog,
+  DialogContent,
   IconButton,
   Stack,
   TextField,
   Theme,
+  Toolbar,
+  Typography,
   useMediaQuery,
 } from "@mui/material";
-import React, { useCallback, useRef, useState } from "react";
+import React, { Suspense, useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChatCompletionContentPart } from "openai/resources/index.mjs";
 
 import {
   Add as AddIcon,
   AttachFile as AttachFileIcon,
+  Close as CloseIcon,
+  Extension as ExtensionIcon,
   Image as ImageIcon,
   Screenshot as ScreenshotIcon,
   Send as SendIcon,
 } from "@mui/icons-material";
 import { importFile } from "../python";
+
+const JsonEditor = React.lazy(async () => {
+  const [{ default: CodeMirror }, { json }] = await Promise.all([
+    import("@uiw/react-codemirror"),
+    import("@codemirror/lang-json"),
+  ]);
+  return {
+    default: ({
+      value,
+      onChange,
+    }: {
+      value: string;
+      onChange: (value: string) => void;
+    }) => (
+      <CodeMirror
+        value={value}
+        height="18em"
+        extensions={[json()]}
+        onChange={onChange}
+      />
+    ),
+  };
+});
+
+function ToolsDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [toolDefinition, setToolDefinition] = useState("");
+
+  return (
+    <Dialog open={open} fullScreen onClose={onClose}>
+      <AppBar position="relative">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={onClose}
+            aria-label="close"
+          >
+            <CloseIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+            {t("Tools")}
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <DialogContent>
+        <Suspense fallback={<div>Loading...</div>}>
+          <JsonEditor value={toolDefinition} onChange={setToolDefinition} />
+        </Suspense>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function UserInput({
   onSend,
@@ -29,6 +96,7 @@ function UserInput({
   const [userInput, setUserInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<boolean>(false);
+  const [toolsDialogOpen, setToolsDialogOpen] = useState<boolean>(false);
   const userInputRef = useRef<HTMLDivElement | null>(null);
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -160,8 +228,19 @@ function UserInput({
           >
             <ScreenshotIcon />
           </IconButton>
+          <IconButton
+            aria-label="tools"
+            size="small"
+            onClick={() => setToolsDialogOpen(true)}
+          >
+            <ExtensionIcon />
+          </IconButton>
         </Stack>
       </Collapse>
+      <ToolsDialog
+        open={toolsDialogOpen}
+        onClose={() => setToolsDialogOpen(false)}
+      />
     </>
   );
 }
