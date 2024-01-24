@@ -74,6 +74,18 @@ function ModelSelector({
   );
 }
 
+function useModel() {
+  const [model, setModel] = useState(
+    localStorage.getItem("OPENAI_MODEL") ?? "gpt-3.5-turbo"
+  );
+
+  React.useEffect(() => {
+    localStorage.setItem("OPENAI_MODEL", model);
+  }, [model]);
+
+  return [model, setModel] as const;
+}
+
 function App() {
   const tools = useTools();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
@@ -88,7 +100,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState<boolean>(false);
-  const [model, setModel] = useState<string>("gpt-3.5-turbo-1106");
+  const [model, setModel] = useModel();
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
