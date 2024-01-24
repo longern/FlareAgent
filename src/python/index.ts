@@ -1,4 +1,11 @@
-let pythonWorker: Worker | undefined;
+let _pythonWorker: Worker | undefined;
+
+function pythonWorker() {
+  return (
+    _pythonWorker ??
+    (_pythonWorker = new Worker(new URL("./worker.ts", import.meta.url)))
+  );
+}
 
 function generateRandomHexString(numBytes: number) {
   return Array.from(crypto.getRandomValues(new Uint8Array(numBytes)))
@@ -29,9 +36,7 @@ export function runPython(
   options = options ?? {};
   const { env, signal } = options;
 
-  if (!pythonWorker) {
-    pythonWorker = new Worker(new URL("./worker.ts", import.meta.url));
-  }
+  const worker = pythonWorker();
 
   const interruptBuffer = signalToInterruptBuffer(signal);
 
@@ -40,12 +45,12 @@ export function runPython(
     function handleMessage(event: MessageEvent) {
       if (event.data.id === id) {
         const { result, error, variables } = event.data;
-        pythonWorker!.removeEventListener("message", handleMessage);
+        worker.removeEventListener("message", handleMessage);
         error ? reject(new Error(error)) : resolve({ result, variables });
       }
     }
-    pythonWorker!.addEventListener("message", handleMessage);
-    pythonWorker!.postMessage({
+    worker.addEventListener("message", handleMessage);
+    worker.postMessage({
       id,
       code,
       interruptBuffer,
@@ -55,18 +60,15 @@ export function runPython(
 }
 
 export function importFile(file: File) {
-  if (!pythonWorker) {
-    pythonWorker = new Worker(new URL("./worker.ts", import.meta.url));
-  }
-
+  const worker = pythonWorker();
   return new Promise((resolve) => {
     function handleMessage(event: MessageEvent) {
       if (event.data.file.name === file.name) {
-        pythonWorker!.removeEventListener("message", handleMessage);
+        worker.removeEventListener("message", handleMessage);
         resolve(void 0);
       }
     }
-    pythonWorker!.addEventListener("message", handleMessage);
-    pythonWorker!.postMessage({ file });
+    worker.addEventListener("message", handleMessage);
+    worker.postMessage({ file });
   });
 }
