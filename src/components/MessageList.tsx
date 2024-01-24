@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense } from "react";
 import {
   Avatar,
   Box,
@@ -22,13 +22,7 @@ import {
 import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 
-const MarkdownModule = import("./Highlighter");
-const Highlighter = lazy(() =>
-  MarkdownModule.then((m) => ({ default: m.Highlighter }))
-);
-const MarkdownHighlighter = lazy(() =>
-  MarkdownModule.then((m) => ({ default: m.MarkdownHighlighter }))
-);
+import { Highlighter, MarkdownHighlighter } from "./Highlighter";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {

@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@codemirror/lang-python": "^6.1.3",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@mozilla/readability": "^0.5.0",
     "@mui/icons-material": "^5.15.2",
     "@mui/material": "^5.15.2",
+    "@uiw/react-codemirror": "^4.21.21",
     "hono": "^3.11.12",
     "html-to-image": "^1.11.11",
     "openai": "^4.25.0",

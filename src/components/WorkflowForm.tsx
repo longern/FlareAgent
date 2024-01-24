@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { Suspense, useCallback } from "react";
 import {
   Box,
   Button,
@@ -17,6 +17,29 @@ import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
 import type { DecisionNode, Edge, Node, Workflow } from "../workflow";
+
+const PythonEditor = React.lazy(async () => {
+  const [{ default: CodeMirror }, { python }] = await Promise.all([
+    import("@uiw/react-codemirror"),
+    import("@codemirror/lang-python"),
+  ]);
+  return {
+    default: ({
+      value,
+      onChange,
+    }: {
+      value: string;
+      onChange: (value: string) => void;
+    }) => (
+      <CodeMirror
+        value={value}
+        height="18em"
+        extensions={[python()]}
+        onChange={onChange}
+      />
+    ),
+  };
+});
 
 function DecisionForm({
   node,
@@ -310,19 +333,17 @@ function NodeForm({
           }}
         />
       ) : node.type === "code" ? (
-        <TextField
-          label={t("Code")}
-          value={node.data.code}
-          multiline
-          rows={8}
-          InputProps={{ sx: { fontFamily: "Consolas, Monaco, monospace" } }}
-          onChange={(e) => {
-            onUpdateNode({
-              ...node,
-              data: { ...node.data, code: e.target.value },
-            });
-          }}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <PythonEditor
+            value={node.data.code}
+            onChange={(value) => {
+              onUpdateNode({
+                ...node,
+                data: { ...node.data, code: value },
+              });
+            }}
+          />
+        </Suspense>
       ) : null}
       {node.type !== "decision" && (
         <FormControl>
