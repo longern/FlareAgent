@@ -19,6 +19,7 @@ import {
   Toolbar,
   Typography,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 
@@ -155,6 +156,7 @@ function App() {
   const setError = useSetError();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const theme = useTheme();
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const executeWorkflowStepCallback = async (
@@ -286,6 +288,7 @@ function App() {
           onScreenshot={async () => {
             const { toBlob } = await import("html-to-image");
             const blob = await toBlob(messageContainerRef.current!, {
+              backgroundColor: theme.palette.background.default,
               style: { margin: "0" },
             });
             const clipboardItem = new ClipboardItem({ [blob.type]: blob });
