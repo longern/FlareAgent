@@ -14,7 +14,6 @@ import {
   IconButton,
   MenuItem,
   Select,
-  Snackbar,
   Stack,
   Theme,
   Toolbar,
@@ -38,6 +37,7 @@ import {
   executeWorkflowStep,
 } from "../workflow/execution";
 import { useModels, useTools, useWorkflows } from "./hooks";
+import { ErrorDisplay, useSetError } from "./ErrorDisplay";
 
 function ModelSelector({
   model,
@@ -82,6 +82,60 @@ function useModel() {
   return [model, setModel] as const;
 }
 
+function WorkflowDialog({
+  workflow,
+  onClose,
+  onWorkflowChange,
+  onWorkflowDelete,
+}: {
+  workflow: Workflow | null;
+  onClose: () => void;
+  onWorkflowChange: (workflow: Workflow) => void;
+  onWorkflowDelete: () => void;
+}) {
+  const workflowRef = useRef(workflow);
+
+  useEffect(() => {
+    if (workflow !== null) workflowRef.current = workflow;
+  }, [workflow]);
+
+  const displayWorkflow = workflow ?? workflowRef.current;
+
+  return (
+    displayWorkflow && (
+      <Dialog
+        open={workflow !== null}
+        fullScreen
+        onClose={onClose}
+        onTransitionExited={() => (workflowRef.current = null)}
+      >
+        <AppBar position="relative">
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={onClose}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+              {displayWorkflow.name}
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <DialogContent>
+          <WorkflowForm
+            workflow={displayWorkflow}
+            onWorkflowChange={onWorkflowChange}
+            onWorkflowDelete={onWorkflowDelete}
+          />
+        </DialogContent>
+      </Dialog>
+    )
+  );
+}
+
 function App() {
   const tools = useTools();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
@@ -95,10 +149,9 @@ function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
-  const [workflowDialogOpen, setWorkflowDialogOpen] = useState<boolean>(false);
   const [model, setModel] = useModel();
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const setError = useSetError();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const messageContainerRef = useRef<HTMLDivElement>(null);
@@ -158,7 +211,7 @@ function App() {
       .catch((e) => {
         setError(e.message);
       });
-  }, [currentWorkflow, currentNode, setMessages]);
+  }, [currentWorkflow, currentNode, setError, setMessages]);
 
   const workflowsWithDefault = useMemo(
     () => (workflows === null ? null : [defaultWorkflow, ...workflows]),
@@ -182,7 +235,6 @@ function App() {
         onEditWorkflow={(workflow) => {
           if (workflow === defaultWorkflow) return;
           setEditWorkflow(workflow);
-          setWorkflowDialogOpen(true);
         }}
         currentWorkflow={currentWorkflow}
         onWorkflowChange={(workflow) => {
@@ -241,63 +293,35 @@ function App() {
           }}
         />
       </Container>
-      <Snackbar
-        color="error"
-        open={error !== null}
-        onClose={() => setError(null)}
-        message={error}
+      <WorkflowDialog
+        workflow={editWorkflow}
+        onClose={() => setEditWorkflow(null)}
+        onWorkflowChange={(workflow) => {
+          setWorkflows((workflows) =>
+            workflows!.map((w) => (w === editWorkflow ? workflow : w))
+          );
+          if (currentWorkflow === editWorkflow) {
+            setCurrentWorkflow(workflow);
+            handleNewChat();
+          }
+          setEditWorkflow(null);
+        }}
+        onWorkflowDelete={() => {
+          setWorkflows((workflows) =>
+            workflows!.filter((w) => w.name !== editWorkflow!.name)
+          );
+          if (currentWorkflow.name === editWorkflow!.name) {
+            setCurrentWorkflow(defaultWorkflow);
+            handleNewChat();
+          }
+          setEditWorkflow(null);
+        }}
       />
+      <ErrorDisplay />
       {!scrollToBottom && (
         <ScrollToBottomButton onClick={() => setScrollToBottom(true)} />
       )}
       {controller && <StopButton onClick={() => controller.abort()} />}
-      <Dialog
-        open={workflowDialogOpen}
-        fullScreen
-        onClose={() => setWorkflowDialogOpen(false)}
-        onTransitionExited={() => setEditWorkflow(null)}
-      >
-        <AppBar position="relative">
-          <Toolbar>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={() => setWorkflowDialogOpen(false)}
-              aria-label="close"
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
-              {editWorkflow?.name}
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <DialogContent>
-          <WorkflowForm
-            workflow={editWorkflow!}
-            onWorkflowChange={(workflow) => {
-              setWorkflows(
-                workflows!.map((w) => (w === editWorkflow ? workflow : w))
-              );
-              setWorkflowDialogOpen(false);
-              if (currentWorkflow === editWorkflow) {
-                setCurrentWorkflow(workflow);
-                handleNewChat();
-              }
-            }}
-            onWorkflowDelete={() => {
-              setWorkflows(
-                workflows!.filter((w) => w.name !== editWorkflow!.name)
-              );
-              setWorkflowDialogOpen(false);
-              if (currentWorkflow.name === editWorkflow!.name) {
-                setCurrentWorkflow(defaultWorkflow);
-                handleNewChat();
-              }
-            }}
-          />
-        </DialogContent>
-      </Dialog>
     </Stack>
   );
 }

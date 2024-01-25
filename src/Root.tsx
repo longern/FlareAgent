@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 
 import App from "./components/App";
+import AppProvider from "./components/AppProvider";
 
 const globalStyles = (
   <GlobalStyles
@@ -40,7 +41,9 @@ function Root() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       {globalStyles}
-      <App />
+      <AppProvider>
+        <App />
+      </AppProvider>
     </ThemeProvider>
   );
 }
