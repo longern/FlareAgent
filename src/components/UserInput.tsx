@@ -21,6 +21,38 @@ import {
 import { importFile } from "../python";
 import ToolsDialog from "./ToolsDialog";
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    return reader.readAsDataURL(blob);
+  });
+}
+
+async function pasteImages(): Promise<string[]> {
+  try {
+    const clipboardItems = await navigator.clipboard.read();
+    const dataUrls = await Promise.all(
+      clipboardItems.map(async (clipboardItem) => {
+        const imageTypes = clipboardItem.types?.filter((type) =>
+          type.startsWith("image/")
+        );
+        const dataUrls = await Promise.all(
+          imageTypes.map(async (imageType) => {
+            const blob = await clipboardItem.getType(imageType);
+            return await blobToDataUrl(blob);
+          })
+        );
+        return dataUrls;
+      })
+    );
+    return dataUrls.flat();
+  } catch (e) {
+    return [];
+  }
+}
+
 function UserInput({
   onSend,
   onScreenshot,
@@ -45,15 +77,7 @@ function UserInput({
       if (input.files) {
         const files = Array.from(input.files);
         const images = await Promise.all(
-          files.map(
-            (file) =>
-              new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = () => reject(reader.error);
-                reader.readAsDataURL(file);
-              })
-          )
+          files.map((file) => blobToDataUrl(file))
         );
         setImages(images);
       }
@@ -116,6 +140,10 @@ function UserInput({
               e.preventDefault();
               handleSend();
             }
+          }}
+          onPaste={async () => {
+            const pastedImages = await pasteImages();
+            setImages((images) => [...images, ...pastedImages]);
           }}
           inputProps={{ "aria-label": "user input" }}
           InputProps={{

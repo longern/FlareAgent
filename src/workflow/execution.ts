@@ -175,8 +175,14 @@ async function executeAssistantNode({
     messages: systemPrompt
       ? [{ role: "system", content: systemPrompt }, ...state.messages]
       : state.messages,
-    tools: tools.length === 0 ? undefined : tools,
+    // Hardcode tools to undefined for gpt-4-vision-preview
+    tools:
+      tools.length === 0 || model === "gpt-4-vision-preview"
+        ? undefined
+        : tools,
     stream: true,
+    // Hardcode max_tokens for gpt-4-vision-preview
+    max_tokens: model === "gpt-4-vision-preview" ? 4096 : undefined,
   });
   onAbortController?.(completion.controller);
 
