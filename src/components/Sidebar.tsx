@@ -18,7 +18,6 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 import React, { useCallback } from "react";
-import { OpenAPIV3 } from "openapi-types";
 import { Workflow } from "../workflow";
 import { useTranslation } from "react-i18next";
 import SettingsForm from "./SettingsForm";
@@ -28,7 +27,6 @@ function Sidebar({
   onClose,
   onNewChat,
   modelSelector,
-  tools,
   workflows,
   onNewWorkflow,
   onEditWorkflow,
@@ -39,7 +37,6 @@ function Sidebar({
   onClose: () => void;
   onNewChat: () => void;
   modelSelector?: React.ReactNode;
-  tools: OpenAPIV3.Document[];
   workflows: Workflow[] | null;
   onNewWorkflow: () => void;
   onEditWorkflow: (workflow: Workflow) => void;
@@ -128,25 +125,6 @@ function Sidebar({
                   <ListItemText>{t("New...")}</ListItemText>
                 </ListItemButton>
               </ListItem>
-            </List>
-          </Collapse>
-          <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => {
-                setExpanded(expanded === "tools" ? null : "tools");
-              }}
-            >
-              <ListItemText primary={t("Tools")} />
-              {expanded === "tools" ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </ListItemButton>
-          </ListItem>
-          <Collapse in={expanded === "tools"}>
-            <List sx={{ pl: 2 }} disablePadding>
-              {tools.map((tool) => (
-                <ListItem key={tool.info.title}>
-                  <ListItemText>{tool.info.title}</ListItemText>
-                </ListItem>
-              ))}
             </List>
           </Collapse>
         </List>

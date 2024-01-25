@@ -1,6 +1,7 @@
 {
   "en": {
     "translation": {
+      "Cancel": "Cancel",
       "Code": "Code",
       "Condition Type": "Condition Type",
       "Decision": "Decision",
@@ -31,6 +32,7 @@
   },
   "zh": {
     "translation": {
+      "Cancel": "取消",
       "Code": "代码",
       "Condition Type": "条件类型",
       "Decision": "分支",

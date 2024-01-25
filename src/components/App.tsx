@@ -36,8 +36,9 @@ import {
   executeUserInputNode,
   executeWorkflowStep,
 } from "../workflow/execution";
-import { useModels, useTools, useWorkflows } from "./hooks";
+import { useModels, useWorkflows } from "./hooks";
 import { ErrorDisplay, useSetError } from "./ErrorDisplay";
+import { useActionsState } from "./ActionsProvider";
 
 function ModelSelector({
   model,
@@ -137,7 +138,7 @@ function WorkflowDialog({
 }
 
 function App() {
-  const tools = useTools();
+  const [tools] = useActionsState();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
   const [messages, setMessages] = useMessages();
@@ -229,7 +230,6 @@ function App() {
             <ModelSelector model={model} onModelChange={setModel} />
           ) : undefined
         }
-        tools={tools}
         workflows={workflowsWithDefault}
         onNewWorkflow={newWorkflow}
         onEditWorkflow={(workflow) => {
