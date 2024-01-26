@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControl,
   FormControlLabel,
   IconButton,
@@ -369,7 +370,20 @@ function NodeForm({
           </Stack>
         </>
       ) : node.type === "code" ? (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense
+          fallback={
+            <Box
+              sx={{
+                display: "flex",
+                height: "18em",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          }
+        >
           <PythonEditor
             value={node.data.code}
             onChange={(value) => {

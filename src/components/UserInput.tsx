@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
   Screenshot as ScreenshotIcon,
   Send as SendIcon,
+  Timeline as TimelineIcon,
 } from "@mui/icons-material";
 import { importFile } from "../python";
 import ToolsDialog from "./ToolsDialog";
@@ -167,34 +168,32 @@ function UserInput({
           </IconButton>
         </Stack>
       </Stack>
-      <Collapse in={expanded} sx={{ marginTop: -0.5, marginBottom: 0.5 }}>
-        <Stack direction="row" justifyContent="space-around">
+      <Collapse in={expanded}>
+        <Stack
+          direction="row"
+          justifyContent="space-around"
+          sx={{ marginTop: -0.5, marginBottom: 0.5 }}
+        >
           <Badge
             badgeContent={images.length}
             color="primary"
             overlap="circular"
           >
-            <IconButton
-              aria-label="image"
-              size="small"
-              onClick={handleImportImage}
-            >
+            <IconButton aria-label="image" onClick={handleImportImage}>
               <ImageIcon />
             </IconButton>
           </Badge>
-          <IconButton aria-label="file" size="small" onClick={handleImportFile}>
+          <IconButton aria-label="file" onClick={handleImportFile}>
             <AttachFileIcon />
           </IconButton>
-          <IconButton
-            aria-label="screenshot"
-            size="small"
-            onClick={onScreenshot}
-          >
+          <IconButton aria-label="screenshot" onClick={onScreenshot}>
             <ScreenshotIcon />
+          </IconButton>
+          <IconButton aria-label="workflows">
+            <TimelineIcon />
           </IconButton>
           <IconButton
             aria-label="tools"
-            size="small"
             onClick={() => setToolsDialogOpen(true)}
           >
             <ExtensionIcon />
