@@ -1,6 +1,6 @@
 import aiohttp from "./aiohttp";
 
-importScripts("https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js");
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js");
 
 const HOME = "/root";
 
