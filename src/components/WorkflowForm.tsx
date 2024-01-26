@@ -326,7 +326,7 @@ function NodeForm({
         <>
           <TextField
             label={t("System Prompt")}
-            value={node.data.prompt}
+            value={node.data.prompt ?? ""}
             multiline
             rows={8}
             onChange={(e) => {
@@ -366,6 +366,50 @@ function NodeForm({
                   data: { ...node.data, pipeToVariable: e.target.value },
                 });
               }}
+            />
+          </Stack>
+          <Stack direction="row" spacing={2}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={(node.data.tools ?? []).includes("search")}
+                  onChange={(e) => {
+                    onUpdateNode({
+                      ...node,
+                      data: {
+                        ...node.data,
+                        tools: e.target.checked
+                          ? (node.data.tools ?? []).concat("search")
+                          : (node.data.tools ?? []).filter(
+                              (tool) => tool !== "search"
+                            ),
+                      },
+                    });
+                  }}
+                />
+              }
+              label={t("Search")}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={(node.data.tools ?? []).includes("python")}
+                  onChange={(e) => {
+                    onUpdateNode({
+                      ...node,
+                      data: {
+                        ...node.data,
+                        tools: e.target.checked
+                          ? (node.data.tools ?? []).concat("python")
+                          : (node.data.tools ?? []).filter(
+                              (tool) => tool !== "python"
+                            ),
+                      },
+                    });
+                  }}
+                />
+              }
+              label={t("Python")}
             />
           </Stack>
         </>
