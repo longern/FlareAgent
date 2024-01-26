@@ -165,11 +165,10 @@ async function executeAssistantNode({
     }))
     .filter((tool) => node.data.tools?.includes(tool.function.name) ?? false);
 
-  const systemPrompt = node.data.prompt
-    ? Object.entries(state.variables).reduce((prompt, [key, value]) => {
-        return prompt.replace(`{${key}}`, value);
-      }, node.data.prompt)
-    : undefined;
+  const systemPrompt = node.data.prompt?.replace(
+    /{([A-Za-z0-9_]+)}/g,
+    (match, variableName) => state.variables.get(variableName) ?? match
+  );
   const completion = await openai.chat.completions.create({
     model,
     messages: systemPrompt
