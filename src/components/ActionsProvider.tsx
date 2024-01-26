@@ -1,13 +1,19 @@
 import { OpenAPIV3 } from "openapi-types";
-import React, { useCallback } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
-const ActionsContext = React.createContext<OpenAPIV3.Document[] | null>(null);
-const SetActionsContext = React.createContext<React.Dispatch<
+const ActionsContext = createContext<OpenAPIV3.Document[] | null>(null);
+const SetActionsContext = createContext<React.Dispatch<
   React.SetStateAction<OpenAPIV3.Document[] | null>
 > | null>(null);
 
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
-  const [actions, setActions] = React.useState<OpenAPIV3.Document[]>([]);
+  const [actions, setActions] = useState<OpenAPIV3.Document[]>([]);
 
   const fetchActions = useCallback(async () => {
     await import("../tools/scheme");
@@ -28,7 +34,7 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
     setActions(tools);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchActions();
   }, [fetchActions]);
 
@@ -42,8 +48,8 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useActionsState() {
-  const actions = React.useContext(ActionsContext);
-  const setActions = React.useContext(SetActionsContext);
+  const actions = useContext(ActionsContext);
+  const setActions = useContext(SetActionsContext);
   if (setActions === null) throw new Error("No actions setter provider");
   return [actions, setActions] as const;
 }

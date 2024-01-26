@@ -194,7 +194,7 @@ async function executeAssistantNode({
       const choice = choices[index];
       choice.finish_reason = finish_reason!;
       choice.message = patchDelta(choice.message, delta);
-      onPartialMessage?.(choice.message);
+      if (!node.data.pipeToVariable) onPartialMessage?.(choice.message);
     }
   }
   onAbortController?.(undefined);
@@ -204,11 +204,20 @@ async function executeAssistantNode({
   }
   const choice = choices[0];
 
-  return {
-    node: findNextNode(workflow, node),
-    messages: [...state.messages, choice.message],
-    variables: state.variables,
-  };
+  return !node.data.pipeToVariable
+    ? {
+        node: findNextNode(workflow, node),
+        messages: [...state.messages, choice.message],
+        variables: state.variables,
+      }
+    : {
+        node: findNextNode(workflow, node),
+        messages: state.messages,
+        variables: state.variables.set(
+          node.data.pipeToVariable,
+          choice.message.content
+        ),
+      };
 }
 
 async function executeToolCallNode({

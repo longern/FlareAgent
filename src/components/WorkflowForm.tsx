@@ -2,7 +2,9 @@ import React, { Suspense, useCallback } from "react";
 import {
   Box,
   Button,
+  Checkbox,
   FormControl,
+  FormControlLabel,
   IconButton,
   InputLabel,
   Menu,
@@ -320,18 +322,52 @@ function NodeForm({
           onEdgesChange={onEdgesChange}
         />
       ) : node.type === "assistant" ? (
-        <TextField
-          label={t("System Prompt")}
-          value={node.data.prompt}
-          multiline
-          rows={8}
-          onChange={(e) => {
-            onUpdateNode({
-              ...node,
-              data: { ...node.data, prompt: e.target.value },
-            });
-          }}
-        />
+        <>
+          <TextField
+            label={t("System Prompt")}
+            value={node.data.prompt}
+            multiline
+            rows={8}
+            onChange={(e) => {
+              onUpdateNode({
+                ...node,
+                data: { ...node.data, prompt: e.target.value },
+              });
+            }}
+          />
+          <Stack direction="row" spacing={2}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={node.data.pipeToVariable !== undefined}
+                  onChange={(e) => {
+                    onUpdateNode({
+                      ...node,
+                      data: {
+                        ...node.data,
+                        pipeToVariable: e.target.checked ? "" : undefined,
+                      },
+                    });
+                  }}
+                />
+              }
+              label={t("Pipe to Variable")}
+              sx={{ flexShrink: 0 }}
+            />
+            <TextField
+              label={t("Variable Name")}
+              value={node.data.pipeToVariable ?? ""}
+              disabled={node.data.pipeToVariable === undefined}
+              fullWidth
+              onChange={(e) => {
+                onUpdateNode({
+                  ...node,
+                  data: { ...node.data, pipeToVariable: e.target.value },
+                });
+              }}
+            />
+          </Stack>
+        </>
       ) : node.type === "code" ? (
         <Suspense fallback={<div>Loading...</div>}>
           <PythonEditor

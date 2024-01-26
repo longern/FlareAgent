@@ -23,6 +23,7 @@ export interface AssistantNode
   extends BaseNode<{
     label: string;
     prompt?: string;
+    pipeToVariable?: string;
     tools?: string[];
   }> {
   type: "assistant";
