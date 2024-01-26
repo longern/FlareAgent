@@ -15,6 +15,7 @@
       "Node Label": "Node Label",
       "Node Type": "Node Type",
       "Operator": "Operator",
+      "Pipe to Variable": "Pipe to Variable",
       "Regex": "Regex",
       "RHS": "RHS",
       "Save": "Save",
@@ -26,6 +27,7 @@
       "True Node": "True Node",
       "User Input": "User Input",
       "Variable": "Variable",
+      "Variable Name": "Variable Name",
       "Workflow": "Workflow",
       "Workflow Name": "Workflow Name"
     }
@@ -46,6 +48,7 @@
       "Node Label": "节点名称",
       "Node Type": "节点类型",
       "Operator": "操作符",
+      "Pipe to Variable": "输送到变量",
       "Regex": "正则表达式",
       "RHS": "右操作数",
       "Save": "保存",
@@ -57,6 +60,7 @@
       "True Node": "是节点",
       "User Input": "用户输入",
       "Variable": "变量",
+      "Variable Name": "变量名称",
       "Workflow": "工作流",
       "Workflow Name": "工作流名称"
     }

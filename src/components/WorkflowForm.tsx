@@ -139,7 +139,7 @@ function DecisionForm({
       ) : condition?.type === "variable" ? (
         <Stack direction="row" spacing={2}>
           <TextField
-            label={t("Variable")}
+            label={t("Variable Name")}
             value={condition.variable}
             onChange={(e) => {
               onUpdateNode({
@@ -621,6 +621,34 @@ function WorkflowForm({
         />
       )}
       <Stack direction="row" spacing={2} justifyContent="end">
+        <Button
+          variant="outlined"
+          onClick={() => {
+            navigator.clipboard.writeText(
+              JSON.stringify({ name, nodes, edges }, null, 2)
+            );
+          }}
+        >
+          {t("Copy")}
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={async () => {
+            const text = await navigator.clipboard.readText();
+            try {
+              const { name, nodes, edges } = JSON.parse(text);
+              setName(name);
+              setNodes(nodes);
+              setEdges(edges);
+              setEditingNode(nodes[0]);
+              onUnsavedChanges?.(true);
+            } catch (e) {
+              console.error(e);
+            }
+          }}
+        >
+          {t("Paste")}
+        </Button>
         <Button
           variant="contained"
           onClick={() => {
