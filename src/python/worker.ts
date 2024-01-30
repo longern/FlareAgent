@@ -10,9 +10,15 @@ async function initPyodide() {
     packages: ["micropip"],
   });
 
-  pyodide.FS.mkdir(HOME);
-  pyodide.FS.mount(pyodide.FS.filesystems.IDBFS, { root: "." }, HOME);
-  pyodide.FS.chdir(HOME);
+  if (navigator.storage?.getDirectory) {
+    const dirHandle = await navigator.storage.getDirectory();
+    pyodide.mountNativeFS(HOME, dirHandle);
+    pyodide.FS.chdir(HOME);
+  } else {
+    pyodide.FS.mkdir(HOME);
+    pyodide.FS.mount(pyodide.FS.filesystems.IDBFS, { root: "." }, HOME);
+    pyodide.FS.chdir(HOME);
+  }
 
   pyodide.runPython(aiohttp, { filename: "aiohttp.py" });
 
