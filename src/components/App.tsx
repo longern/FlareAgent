@@ -1,27 +1,14 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  AppBar,
   Box,
   Container,
-  Dialog,
-  DialogContent,
-  IconButton,
   MenuItem,
   Select,
   Stack,
   Theme,
-  Toolbar,
-  Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
 
 import { ScrollToBottomButton, StopButton } from "./ActionButtons";
 import MessageList from "./MessageList";
@@ -32,13 +19,12 @@ import UserInput from "./UserInput";
 import { useMessages } from "../messages";
 import { apisToTool } from "../tools";
 import { Node, Workflow, defaultWorkflow } from "../workflow";
-import WorkflowForm from "./WorkflowForm";
 import {
   executeUserInputNode,
   executeWorkflowStep,
 } from "../workflow/execution";
-import { useModels, useWorkflows } from "./hooks";
-import { ErrorDisplay, useSetError } from "./ErrorDisplay";
+import { useModels } from "./hooks";
+import { useSetError } from "./ErrorDisplay";
 import { useActionsState } from "./ActionsProvider";
 
 function ModelSelector({
@@ -84,63 +70,8 @@ function useModel() {
   return [model, setModel] as const;
 }
 
-function WorkflowDialog({
-  workflow,
-  onClose,
-  onWorkflowChange,
-  onWorkflowDelete,
-}: {
-  workflow: Workflow | null;
-  onClose: () => void;
-  onWorkflowChange: (workflow: Workflow) => void;
-  onWorkflowDelete: () => void;
-}) {
-  const workflowRef = useRef(workflow);
-
-  useEffect(() => {
-    if (workflow !== null) workflowRef.current = workflow;
-  }, [workflow]);
-
-  const displayWorkflow = workflow ?? workflowRef.current;
-
-  return (
-    displayWorkflow && (
-      <Dialog
-        open={workflow !== null}
-        fullScreen
-        onClose={onClose}
-        onTransitionExited={() => (workflowRef.current = null)}
-      >
-        <AppBar position="relative">
-          <Toolbar>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={onClose}
-              aria-label="close"
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
-              {displayWorkflow.name}
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <DialogContent>
-          <WorkflowForm
-            workflow={displayWorkflow}
-            onWorkflowChange={onWorkflowChange}
-            onWorkflowDelete={onWorkflowDelete}
-          />
-        </DialogContent>
-      </Dialog>
-    )
-  );
-}
-
 function App() {
   const [tools] = useActionsState();
-  const [workflows, setWorkflows, newWorkflow] = useWorkflows();
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
   const [messages, setMessages] = useMessages();
   const [currentNode, setCurrentNode] = useState<Node | undefined | null>(null);
@@ -150,7 +81,6 @@ function App() {
   );
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [editWorkflow, setEditWorkflow] = useState<Workflow | null>(null);
   const [model, setModel] = useModel();
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const setError = useSetError();
@@ -192,6 +122,14 @@ function App() {
     }
   }, [setMessages, controller]);
 
+  const handleWorkflowChange = useCallback(
+    (workflow: Workflow) => {
+      setCurrentWorkflow(workflow);
+      handleNewChat();
+    },
+    [handleNewChat]
+  );
+
   useEffect(() => {
     if (currentWorkflow === null || messages === null) return;
     if (currentNode !== null) return;
@@ -216,11 +154,6 @@ function App() {
       });
   }, [currentWorkflow, currentNode, setError, setMessages]);
 
-  const workflowsWithDefault = useMemo(
-    () => (workflows === null ? null : [defaultWorkflow, ...workflows]),
-    [workflows]
-  );
-
   return (
     <Stack height="100%">
       <Sidebar
@@ -232,17 +165,8 @@ function App() {
             <ModelSelector model={model} onModelChange={setModel} />
           ) : undefined
         }
-        workflows={workflowsWithDefault}
-        onNewWorkflow={newWorkflow}
-        onEditWorkflow={(workflow) => {
-          if (workflow === defaultWorkflow) return;
-          setEditWorkflow(workflow);
-        }}
         currentWorkflow={currentWorkflow}
-        onWorkflowChange={(workflow) => {
-          setCurrentWorkflow(workflow);
-          handleNewChat();
-        }}
+        onWorkflowChange={handleWorkflowChange}
       />
       {!matchesLg && (
         <MobileToolbar
@@ -296,31 +220,6 @@ function App() {
           }}
         />
       </Container>
-      <WorkflowDialog
-        workflow={editWorkflow}
-        onClose={() => setEditWorkflow(null)}
-        onWorkflowChange={(workflow) => {
-          setWorkflows((workflows) =>
-            workflows!.map((w) => (w === editWorkflow ? workflow : w))
-          );
-          if (currentWorkflow === editWorkflow) {
-            setCurrentWorkflow(workflow);
-            handleNewChat();
-          }
-          setEditWorkflow(null);
-        }}
-        onWorkflowDelete={() => {
-          setWorkflows((workflows) =>
-            workflows!.filter((w) => w.name !== editWorkflow!.name)
-          );
-          if (currentWorkflow.name === editWorkflow!.name) {
-            setCurrentWorkflow(defaultWorkflow);
-            handleNewChat();
-          }
-          setEditWorkflow(null);
-        }}
-      />
-      <ErrorDisplay />
       {!scrollToBottom && (
         <ScrollToBottomButton onClick={() => setScrollToBottom(true)} />
       )}

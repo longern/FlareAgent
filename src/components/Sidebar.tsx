@@ -1,8 +1,5 @@
 import {
   Collapse,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   Drawer,
   List,
   ListItem,
@@ -17,19 +14,17 @@ import {
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
-import React, { useCallback } from "react";
-import { Workflow } from "../workflow";
+import React, { useCallback, useEffect } from "react";
+import { Workflow, defaultWorkflow } from "../workflow";
 import { useTranslation } from "react-i18next";
-import SettingsForm from "./SettingsForm";
+import { useGlobalComponents } from "./global/GlobalComponents";
+import { useWorkflowsState } from "./ActionsProvider";
 
 function Sidebar({
   open,
   onClose,
   onNewChat,
   modelSelector,
-  workflows,
-  onNewWorkflow,
-  onEditWorkflow,
   currentWorkflow,
   onWorkflowChange,
 }: {
@@ -37,15 +32,13 @@ function Sidebar({
   onClose: () => void;
   onNewChat: () => void;
   modelSelector?: React.ReactNode;
-  workflows: Workflow[] | null;
-  onNewWorkflow: () => void;
-  onEditWorkflow: (workflow: Workflow) => void;
   currentWorkflow: Workflow | null;
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
-  const [showSettings, setShowSettings] = React.useState<boolean>(false);
   const [expanded, setExpanded] = React.useState<string | null>(null);
+  const { workflows, newWorkflow } = useWorkflowsState();
 
+  const { SettingsDialog, WorkflowDialog } = useGlobalComponents();
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
 
@@ -53,6 +46,20 @@ function Sidebar({
     onNewChat();
     onClose();
   }, [onNewChat, onClose]);
+
+  useEffect(() => {
+    if (
+      workflows !== null &&
+      currentWorkflow !== null &&
+      currentWorkflow !== defaultWorkflow &&
+      !workflows.includes(currentWorkflow)
+    ) {
+      onWorkflowChange(defaultWorkflow);
+    }
+  }, [workflows, currentWorkflow, onWorkflowChange]);
+
+  const workflowsWithDefault =
+    workflows === null ? null : [defaultWorkflow, ...workflows];
 
   return (
     <Drawer
@@ -95,12 +102,12 @@ function Sidebar({
           </ListItem>
           <Collapse in={expanded === "workflow"}>
             <List sx={{ pl: 2 }} disablePadding>
-              {workflows === null ? (
+              {workflowsWithDefault === null ? (
                 <ListItem>
                   <ListItemText primary={t("Loading...")} />
                 </ListItem>
               ) : (
-                workflows.map((workflow) => (
+                workflowsWithDefault.map((workflow) => (
                   <ListItem
                     disablePadding
                     key={workflow.name}
@@ -114,14 +121,19 @@ function Sidebar({
                       />
                     }
                   >
-                    <ListItemButton onClick={() => onEditWorkflow(workflow)}>
+                    <ListItemButton
+                      onClick={() => {
+                        if (workflow === defaultWorkflow) return;
+                        WorkflowDialog.edit(workflow);
+                      }}
+                    >
                       <ListItemText>{workflow.name}</ListItemText>
                     </ListItemButton>
                   </ListItem>
                 ))
               )}
               <ListItem disablePadding>
-                <ListItemButton onClick={onNewWorkflow}>
+                <ListItemButton onClick={newWorkflow}>
                   <ListItemText>{t("New...")}</ListItemText>
                 </ListItemButton>
               </ListItem>
@@ -130,22 +142,12 @@ function Sidebar({
         </List>
         <List>
           <ListItem disablePadding>
-            <ListItemButton onClick={() => setShowSettings(true)}>
+            <ListItemButton onClick={SettingsDialog.open}>
               <ListItemText primary={t("Settings")} />
             </ListItemButton>
           </ListItem>
         </List>
       </Stack>
-      <Dialog
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        fullWidth
-      >
-        <DialogTitle>{t("Settings")}</DialogTitle>
-        <DialogContent>
-          <SettingsForm />
-        </DialogContent>
-      </Dialog>
     </Drawer>
   );
 }

@@ -20,7 +20,7 @@ import {
   Timeline as TimelineIcon,
 } from "@mui/icons-material";
 import { importFile } from "../python";
-import ToolsDialog from "./ToolsDialog";
+import { useGlobalComponents } from "./global/GlobalComponents";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -64,8 +64,8 @@ function UserInput({
   const [userInput, setUserInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<boolean>(false);
-  const [toolsDialogOpen, setToolsDialogOpen] = useState<boolean>(false);
   const userInputRef = useRef<HTMLDivElement | null>(null);
+  const { ToolsDialog } = useGlobalComponents();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
@@ -192,18 +192,11 @@ function UserInput({
           <IconButton aria-label="workflows">
             <TimelineIcon />
           </IconButton>
-          <IconButton
-            aria-label="tools"
-            onClick={() => setToolsDialogOpen(true)}
-          >
+          <IconButton aria-label="tools" onClick={ToolsDialog.open}>
             <ExtensionIcon />
           </IconButton>
         </Stack>
       </Collapse>
-      <ToolsDialog
-        open={toolsDialogOpen}
-        onClose={() => setToolsDialogOpen(false)}
-      />
     </>
   );
 }

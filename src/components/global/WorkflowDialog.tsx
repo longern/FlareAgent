@@ -1,9 +1,12 @@
-import React, { Suspense, useCallback } from "react";
+import React, { Suspense, useCallback, useEffect, useRef } from "react";
 import {
+  AppBar,
   Box,
   Button,
   Checkbox,
   CircularProgress,
+  Dialog,
+  DialogContent,
   FormControl,
   FormControlLabel,
   IconButton,
@@ -15,11 +18,18 @@ import {
   Tab,
   Tabs,
   TextField,
+  Toolbar,
+  Typography,
 } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  Add as AddIcon,
+  Close as CloseIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
-import type { DecisionNode, Edge, Node, Workflow } from "../workflow";
+import type { DecisionNode, Edge, Node, Workflow } from "../../workflow";
+import { useWorkflowsState } from "../ActionsProvider";
 
 const PythonEditor = React.lazy(async () => {
   const [{ default: CodeMirror }, { python }] = await Promise.all([
@@ -665,4 +675,72 @@ function WorkflowForm({
   );
 }
 
-export default WorkflowForm;
+function WorkflowDialog({
+  workflow,
+  onClose,
+}: {
+  workflow: Workflow | null;
+  onClose: () => void;
+}) {
+  const workflowRef = useRef(workflow);
+  const { setWorkflows } = useWorkflowsState();
+
+  useEffect(() => {
+    if (workflow !== null) workflowRef.current = workflow;
+  }, [workflow]);
+
+  const handleWorkflowChange = useCallback(
+    (workflow: Workflow) => {
+      setWorkflows((workflows) =>
+        workflows!.map((w) => (w === workflowRef.current ? workflow : w))
+      );
+      onClose();
+    },
+    [onClose, setWorkflows]
+  );
+
+  const handleWorkflowDelete = useCallback(() => {
+    setWorkflows((workflows) =>
+      workflows!.filter((w) => w.name !== workflowRef.current!.name)
+    );
+    onClose();
+  }, [onClose, setWorkflows]);
+
+  const displayWorkflow = workflow ?? workflowRef.current;
+
+  return (
+    displayWorkflow && (
+      <Dialog
+        open={workflow !== null}
+        fullScreen
+        onClose={onClose}
+        onTransitionExited={() => (workflowRef.current = null)}
+      >
+        <AppBar position="relative">
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={onClose}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+              {displayWorkflow.name}
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <DialogContent>
+          <WorkflowForm
+            workflow={displayWorkflow}
+            onWorkflowChange={handleWorkflowChange}
+            onWorkflowDelete={handleWorkflowDelete}
+          />
+        </DialogContent>
+      </Dialog>
+    )
+  );
+}
+
+export default WorkflowDialog;

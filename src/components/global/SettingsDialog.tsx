@@ -1,6 +1,14 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, IconButton, Stack, TextField } from "@mui/material";
+import {
+  Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { AirlineStops as AirlineStopsIcon } from "@mui/icons-material";
 
 function useApiKey() {
@@ -68,4 +76,23 @@ function SettingsForm() {
   );
 }
 
-export default SettingsForm;
+function SettingsDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth>
+      <DialogTitle>{t("Settings")}</DialogTitle>
+      <DialogContent>
+        <SettingsForm />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default SettingsDialog;

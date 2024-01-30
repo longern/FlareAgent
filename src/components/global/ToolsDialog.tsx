@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 
-import { useActionsState } from "./ActionsProvider";
+import { useActionsState } from "../ActionsProvider";
 
 const JsonEditor = React.lazy(async () => {
   const [{ default: CodeMirror }, { json }] = await Promise.all([
