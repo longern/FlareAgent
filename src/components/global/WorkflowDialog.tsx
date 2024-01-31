@@ -1,4 +1,10 @@
-import React, { Suspense, useCallback, useEffect, useRef } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   AppBar,
   Box,
@@ -487,15 +493,13 @@ function WorkflowForm({
   onWorkflowDelete: () => void;
   onUnsavedChanges?: (unsavedChanges: boolean) => void;
 }) {
-  const [name, setName] = React.useState<string>(workflow.name);
-  const [nodes, setNodes] = React.useState<Node[]>(workflow.nodes);
-  const [edges, setEdges] = React.useState<Edge[]>(workflow.edges);
-  const [editingNode, setEditingNode] = React.useState<Node | undefined>(
-    nodes[0]
-  );
-  const onUnsavedChangesRef = React.useRef(onUnsavedChanges);
+  const [name, setName] = useState<string>(workflow.name);
+  const [nodes, setNodes] = useState<Node[]>(workflow.nodes);
+  const [edges, setEdges] = useState<Edge[]>(workflow.edges);
+  const [editingNode, setEditingNode] = useState<Node | undefined>(nodes[0]);
+  const onUnsavedChangesRef = useRef(onUnsavedChanges);
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const { t } = useTranslation();
 

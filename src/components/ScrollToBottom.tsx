@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 const parentObserver = new ResizeObserver((entries) => {
   for (const entry of entries) {
@@ -33,10 +33,10 @@ function ScrollToBottom({
   [key: string]: any;
 }) {
   const Component = component || "div";
-  const componentRef = React.useRef<HTMLDivElement>(null);
-  const ref = React.useRef<HTMLDivElement>(null);
+  const componentRef = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const parent = componentRef.current!;
     const container = ref.current!;
 
@@ -60,7 +60,7 @@ function ScrollToBottom({
     };
   }, [scrollToBottom, onScrollToBottomChange]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const component = componentRef.current!;
     function handler() {
       // Make sure the scroll event is handled after the DOM is updated.
@@ -74,7 +74,7 @@ function ScrollToBottom({
     return () => component.removeEventListener("scroll", handler);
   }, [onScrollToBottomChange]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (scrollToBottom) {
       ref.current!.scrollIntoView({
         behavior: behavior || "auto",

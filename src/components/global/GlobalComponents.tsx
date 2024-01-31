@@ -1,4 +1,4 @@
-import React, { createContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 import { Workflow } from "../../workflow";
 import ToolsDialog from "./ToolsDialog";
@@ -23,10 +23,11 @@ export function GlobalComponentsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [toolsDialogOpen, setToolsDialogOpen] = React.useState(false);
-  const [settingsDialogOpen, setSettingsDialogOpen] = React.useState(false);
-  const [workflowDialogEdit, setWorkflowDialogEdit] =
-    React.useState<Workflow | null>(null);
+  const [toolsDialogOpen, setToolsDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [workflowDialogEdit, setWorkflowDialogEdit] = useState<Workflow | null>(
+    null
+  );
 
   return (
     <GlobalComponentsContext.Provider
@@ -63,7 +64,7 @@ export function GlobalComponentsProvider({
 }
 
 export function useGlobalComponents() {
-  const globalComponents = React.useContext(GlobalComponentsContext);
+  const globalComponents = useContext(GlobalComponentsContext);
   if (globalComponents === null)
     throw new Error("No global components provider");
   return globalComponents;

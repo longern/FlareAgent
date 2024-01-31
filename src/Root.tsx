@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   CssBaseline,
   GlobalStyles,
@@ -27,7 +27,7 @@ const globalStyles = (
 function Root() {
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
-  const theme = React.useMemo(
+  const theme = useMemo(
     () =>
       createTheme({
         palette: {

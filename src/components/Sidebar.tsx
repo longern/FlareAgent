@@ -14,7 +14,7 @@ import {
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Workflow, defaultWorkflow } from "../workflow";
 import { useTranslation } from "react-i18next";
 import { useGlobalComponents } from "./global/GlobalComponents";
@@ -35,7 +35,7 @@ function Sidebar({
   currentWorkflow: Workflow | null;
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
-  const [expanded, setExpanded] = React.useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const { workflows, newWorkflow } = useWorkflowsState();
 
   const { SettingsDialog, WorkflowDialog } = useGlobalComponents();

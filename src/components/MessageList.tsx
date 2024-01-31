@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import {
   Avatar,
   Box,
@@ -92,7 +92,7 @@ function MessageList({
 }: {
   messages: ChatCompletionMessageParam[] | null;
 }) {
-  const [selected, setSelected] = React.useState<number | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
 
   const { t } = useTranslation();
 

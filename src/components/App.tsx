@@ -63,7 +63,7 @@ function useModel() {
     localStorage.getItem("OPENAI_MODEL") ?? "gpt-3.5-turbo"
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem("OPENAI_MODEL", model);
   }, [model]);
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Box,
@@ -12,16 +12,16 @@ import {
 import { AirlineStops as AirlineStopsIcon } from "@mui/icons-material";
 
 function useApiKey() {
-  const [apiKey, setApiKey] = React.useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const apiKey = localStorage.getItem("OPENAI_API_KEY");
     if (apiKey) {
       setApiKey(apiKey);
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (apiKey) {
       localStorage.setItem("OPENAI_API_KEY", apiKey);
     } else {
@@ -34,7 +34,7 @@ function useApiKey() {
 
 function SettingsForm() {
   const [apiKey, setApiKey] = useApiKey();
-  const [baseUrl, setBaseUrl] = React.useState<string | null>(
+  const [baseUrl, setBaseUrl] = useState<string | null>(
     localStorage.getItem("OPENAI_BASE_URL") ?? null
   );
 
