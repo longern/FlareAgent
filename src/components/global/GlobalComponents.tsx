@@ -5,12 +5,16 @@ import ToolsDialog from "./ToolsDialog";
 import SettingsDialog from "./SettingsDialog";
 import WorkflowDialog from "./WorkflowDialog";
 import { ErrorDisplay } from "../ErrorDisplay";
+import FilesDialog from "./FilesDialog";
 
 const GlobalComponentsContext = createContext<{
-  ToolsDialog: {
+  FilesDialog: {
     open: () => void;
   };
   SettingsDialog: {
+    open: () => void;
+  };
+  ToolsDialog: {
     open: () => void;
   };
   WorkflowDialog: {
@@ -23,8 +27,9 @@ export function GlobalComponentsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [toolsDialogOpen, setToolsDialogOpen] = useState(false);
+  const [filesDialogOpen, setFilesDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [toolsDialogOpen, setToolsDialogOpen] = useState(false);
   const [workflowDialogEdit, setWorkflowDialogEdit] = useState<Workflow | null>(
     null
   );
@@ -32,11 +37,14 @@ export function GlobalComponentsProvider({
   return (
     <GlobalComponentsContext.Provider
       value={{
-        ToolsDialog: {
-          open: () => setToolsDialogOpen(true),
+        FilesDialog: {
+          open: () => setFilesDialogOpen(true),
         },
         SettingsDialog: {
           open: () => setSettingsDialogOpen(true),
+        },
+        ToolsDialog: {
+          open: () => setToolsDialogOpen(true),
         },
         WorkflowDialog: {
           edit: (workflow: Workflow) => {
@@ -46,6 +54,10 @@ export function GlobalComponentsProvider({
       }}
     >
       {children}
+      <FilesDialog
+        open={filesDialogOpen}
+        onClose={() => setFilesDialogOpen(false)}
+      />
       <ToolsDialog
         open={toolsDialogOpen}
         onClose={() => setToolsDialogOpen(false)}

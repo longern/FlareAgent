@@ -38,7 +38,7 @@ function Sidebar({
   const [expanded, setExpanded] = useState<string | null>(null);
   const { workflows, newWorkflow } = useWorkflowsState();
 
-  const { SettingsDialog, WorkflowDialog } = useGlobalComponents();
+  const { FilesDialog, SettingsDialog, WorkflowDialog } = useGlobalComponents();
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
 
@@ -141,6 +141,11 @@ function Sidebar({
           </Collapse>
         </List>
         <List>
+          <ListItem disablePadding>
+            <ListItemButton onClick={FilesDialog.open}>
+              <ListItemText primary={t("My Files")} />
+            </ListItemButton>
+          </ListItem>
           <ListItem disablePadding>
             <ListItemButton onClick={SettingsDialog.open}>
               <ListItemText primary={t("Settings")} />
