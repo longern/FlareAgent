@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import {
   AppBar,
   Box,
+  Breadcrumbs,
   Dialog,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemButton,
@@ -21,6 +23,7 @@ import {
   InsertDriveFile as InsertDriveFileIcon,
   MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
+import { DIRECTORY } from "../../fs/hooks";
 
 function humanFileSize(size: number) {
   var i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -124,6 +127,7 @@ function FilesDialog({
   const [dirHandle, setDirHandle] = useState<FileSystemDirectoryHandle | null>(
     null
   );
+  const [path, setPath] = useState<string[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const { t } = useTranslation();
@@ -146,14 +150,15 @@ function FilesDialog({
   useEffect(() => {
     if (dirHandle === null) return;
     readDirectory(dirHandle);
+    DIRECTORY.then((root) => {
+      root.resolve(dirHandle).then(setPath);
+    });
   }, [dirHandle, readDirectory]);
 
   useEffect(() => {
     if (!open) return;
     if (!navigator.storage) return setStorageNotSupported(true);
-    navigator.storage.getDirectory().then((root) => {
-      setDirHandle(root);
-    });
+    DIRECTORY.then(setDirHandle);
   }, [open]);
 
   return (
@@ -225,6 +230,40 @@ function FilesDialog({
           </Menu>
         </Toolbar>
       </AppBar>
+
+      <Breadcrumbs sx={{ px: 2, py: 1.5 }} maxItems={3} itemsAfterCollapse={2}>
+        <Link
+          component="button"
+          underline="none"
+          color={path.length === 0 ? "inherit" : undefined}
+          disabled={path.length === 0}
+          onClick={() => DIRECTORY.then(setDirHandle)}
+        >
+          {t("My Files")}
+        </Link>
+        {path.map((name, index) => (
+          <Link
+            key={index}
+            component="button"
+            underline="none"
+            color={index === path.length - 1 ? "inherit" : undefined}
+            disabled={index === path.length - 1}
+            onClick={() => {
+              const handle = path
+                .slice(0, index + 1)
+                .reduce(
+                  (handle, name) =>
+                    handle.then((handle) => handle.getDirectoryHandle(name)),
+                  DIRECTORY
+                );
+              handle.then(setDirHandle);
+            }}
+          >
+            {name}
+          </Link>
+        ))}
+      </Breadcrumbs>
+
       {storageNotSupported ? (
         <Box sx={{ display: "flex", justifyContent: "center" }}>
           {t("Storage not supported")}
@@ -234,7 +273,7 @@ function FilesDialog({
           {t("No files")}
         </Box>
       ) : (
-        <List disablePadding>
+        <List disablePadding sx={{ overflow: "auto" }}>
           {files.map((file) => {
             async function open() {
               if (file instanceof File) return;
