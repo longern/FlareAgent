@@ -58,17 +58,3 @@ export function runPython(
     });
   });
 }
-
-export function importFile(file: File) {
-  const worker = pythonWorker();
-  return new Promise((resolve) => {
-    function handleMessage(event: MessageEvent) {
-      if (event.data.file.name === file.name) {
-        worker.removeEventListener("message", handleMessage);
-        resolve(void 0);
-      }
-    }
-    worker.addEventListener("message", handleMessage);
-    worker.postMessage({ file });
-  });
-}

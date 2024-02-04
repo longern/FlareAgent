@@ -10,15 +10,9 @@ async function initPyodide() {
     packages: ["micropip"],
   });
 
-  if (navigator.storage?.getDirectory) {
-    const dirHandle = await navigator.storage.getDirectory();
-    pyodide.mountNativeFS(HOME, dirHandle);
-    pyodide.FS.chdir(HOME);
-  } else {
-    pyodide.FS.mkdir(HOME);
-    pyodide.FS.mount(pyodide.FS.filesystems.IDBFS, { root: "." }, HOME);
-    pyodide.FS.chdir(HOME);
-  }
+  const dirHandle = await navigator.storage.getDirectory();
+  pyodide.mountNativeFS(HOME, dirHandle);
+  pyodide.FS.chdir(HOME);
 
   pyodide.runPython(aiohttp, { filename: "aiohttp.py" });
 
@@ -83,36 +77,18 @@ async function handleCodeMessage({
   }
 }
 
-async function handleFileMessage({ file }: { file: File }) {
-  const pyodide = await pyodideReadyPromise;
-  await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
-  pyodide.FS.writeFile(
-    `${HOME}/${file.name}`,
-    new Uint8Array(await file.arrayBuffer())
-  );
-  await new Promise((resolve) => pyodide.FS.syncfs(false, resolve));
-  return { file };
-}
-
 // eslint-disable-next-line no-restricted-globals
 self.onmessage = function (
-  event: MessageEvent<
-    | {
-        id: string;
-        code: string;
-        env?: Map<string, string>;
-        interruptBuffer?: Uint8Array;
-      }
-    | {
-        file: File;
-      }
-  >
+  event: MessageEvent<{
+    id: string;
+    code: string;
+    env?: Map<string, string>;
+    interruptBuffer?: Uint8Array;
+  }>
 ) {
   let result: Promise<any>;
   if ("code" in event.data) {
     result = handleCodeMessage(event.data);
-  } else if ("file" in event.data) {
-    result = handleFileMessage(event.data);
   }
   result.then((data: any) => {
     // eslint-disable-next-line no-restricted-globals

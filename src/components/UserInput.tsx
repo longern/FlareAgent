@@ -19,7 +19,6 @@ import {
   Send as SendIcon,
   Timeline as TimelineIcon,
 } from "@mui/icons-material";
-import { importFile } from "../python";
 import { useGlobalComponents } from "./global/GlobalComponents";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -94,7 +93,15 @@ function UserInput({
     input.onchange = async () => {
       if (input.files) {
         const files = Array.from(input.files);
-        files.forEach((file) => importFile(file));
+        const dirHandle = await navigator.storage.getDirectory();
+        files.forEach(async (file) => {
+          const fileHandle = await dirHandle.getFileHandle(file.name, {
+            create: true,
+          });
+          const writable = await fileHandle.createWritable();
+          await writable.write(file);
+          await writable.close();
+        });
       }
     };
     input.click();
