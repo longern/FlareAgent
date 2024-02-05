@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 
 import { Highlighter, MarkdownHighlighter } from "./Highlighter";
+import { useAvatarUrl } from "./ActionsProvider";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {
@@ -93,6 +94,7 @@ function MessageList({
   messages: ChatCompletionMessageParam[] | null;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
+  const avatarUrl = useAvatarUrl();
 
   const { t } = useTranslation();
 
@@ -118,7 +120,7 @@ function MessageList({
             {message.role === "system" ? (
               <Avatar>S</Avatar>
             ) : message.role === "user" ? (
-              <Avatar>
+              <Avatar src={avatarUrl}>
                 <PersonIcon />
               </Avatar>
             ) : message.role === "assistant" ? (

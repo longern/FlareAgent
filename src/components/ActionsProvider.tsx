@@ -9,21 +9,23 @@ import React, {
 } from "react";
 import { Workflow } from "../workflow";
 import { useTranslation } from "react-i18next";
-import { useSyncFS } from "../fs/hooks";
+import { readFile, useSyncFS, writeFile } from "../fs/hooks";
 
 const ActionsContext = createContext<{
   actions: OpenAPIV3.Document[];
   workflows: Workflow[] | null;
+  avatar: File | null;
 } | null>(null);
 const SetActionsContext = createContext<{
   setActions: React.Dispatch<React.SetStateAction<OpenAPIV3.Document[] | null>>;
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[] | null>>;
   newWorkflow: () => void;
+  setAvatar: React.Dispatch<React.SetStateAction<File | null>>;
 } | null>(null);
 
 const fallbackWorkflows: Workflow[] = [];
 
-export function useWorkflows() {
+function useWorkflows() {
   const [workflows, setWorkflows] = useState<Workflow[] | null>(null);
   const { t } = useTranslation();
 
@@ -84,9 +86,32 @@ export function useWorkflows() {
   return [workflows, setWorkflows, newWorkflow] as const;
 }
 
+function useAvatarState() {
+  const [avatar, setAvatar] = useState<File | null>(null);
+
+  useEffect(() => {
+    readFile("/root/.flareagent/avatar.png", { home: "/root" })
+      .then(async (file) => {
+        const arrayBuffer = await file.arrayBuffer();
+        setAvatar(new File([arrayBuffer], file.name, { type: file.type }));
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (avatar === null) return;
+    writeFile("/root/.flareagent/avatar.png", avatar, { home: "/root" }).catch(
+      () => {}
+    );
+  }, [avatar]);
+
+  return [avatar, setAvatar] as const;
+}
+
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
   const [actions, setActions] = useState<OpenAPIV3.Document[]>([]);
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
+  const [avatar, setAvatar] = useAvatarState();
 
   const fetchActions = useCallback(async () => {
     await import("../tools/scheme");
@@ -116,12 +141,13 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
       setActions,
       setWorkflows,
       newWorkflow,
+      setAvatar,
     }),
-    [setActions, setWorkflows, newWorkflow]
+    [setActions, setWorkflows, newWorkflow, setAvatar]
   );
 
   return (
-    <ActionsContext.Provider value={{ actions, workflows }}>
+    <ActionsContext.Provider value={{ actions, workflows, avatar }}>
       <SetActionsContext.Provider value={dispatchers}>
         {children}
       </SetActionsContext.Provider>
@@ -139,4 +165,23 @@ export function useWorkflowsState() {
   const { workflows } = useContext(ActionsContext);
   const { setWorkflows, newWorkflow } = useContext(SetActionsContext);
   return { workflows, setWorkflows, newWorkflow } as const;
+}
+
+export function useAvatarUrl() {
+  const { avatar } = useContext(ActionsContext);
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (avatar === null) return;
+    const url = URL.createObjectURL(avatar);
+    setUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatar]);
+
+  return url;
+}
+
+export function useSetAvatar() {
+  const { setAvatar } = useContext(SetActionsContext);
+  return setAvatar;
 }
