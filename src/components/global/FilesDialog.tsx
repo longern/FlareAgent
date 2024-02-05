@@ -61,7 +61,7 @@ function FilesListItem({
   return (
     <ListItem key={file.name} disablePadding>
       {file instanceof File ? (
-        <ListItemButton onContextMenu={handleContextMenu}>
+        <ListItemButton onClick={onClick} onContextMenu={handleContextMenu}>
           <ListItemIcon>
             <InsertDriveFileIcon />
           </ListItemIcon>
@@ -142,6 +142,18 @@ function FilesDialog({
           value.kind === "file" ? await value.getFile() : { name: value.name }
         );
       }
+
+      // Put directories first and sort alphabetically
+      files.sort((a, b) =>
+        a instanceof File
+          ? b instanceof File
+            ? a.name.localeCompare(b.name)
+            : 1
+          : b instanceof File
+          ? -1
+          : a.name.localeCompare(b.name)
+      );
+
       setFiles(files);
     },
     []
@@ -276,7 +288,11 @@ function FilesDialog({
         <List disablePadding sx={{ overflow: "auto" }}>
           {files.map((file) => {
             async function open() {
-              if (file instanceof File) return;
+              if (file instanceof File) {
+                const url = URL.createObjectURL(file);
+                window.open(url);
+                return;
+              }
               const handle = await dirHandle?.getDirectoryHandle(file.name);
               if (handle) setDirHandle(handle);
             }
