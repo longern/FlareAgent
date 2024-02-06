@@ -1,6 +1,8 @@
 import {
+  Avatar,
   Collapse,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -18,7 +20,11 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Workflow, defaultWorkflow } from "../workflow";
 import { useTranslation } from "react-i18next";
 import { useGlobalComponents } from "./global/GlobalComponents";
-import { useWorkflowsState } from "./ActionsProvider";
+import {
+  useAvatarUrl,
+  useSetAvatar,
+  useWorkflowsState,
+} from "./ActionsProvider";
 
 function Sidebar({
   open,
@@ -39,6 +45,8 @@ function Sidebar({
   const { workflows, newWorkflow } = useWorkflowsState();
 
   const { FilesDialog, SettingsDialog, WorkflowDialog } = useGlobalComponents();
+  const avatarUrl = useAvatarUrl();
+  const setAvatar = useSetAvatar();
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
 
@@ -80,6 +88,21 @@ function Sidebar({
         {modelSelector ? (
           <Stack sx={{ px: 2, py: 1 }}>{modelSelector}</Stack>
         ) : null}
+        <Stack direction="row" p={2}>
+          <IconButton component="label" sx={{ p: 0 }}>
+            <Avatar src={avatarUrl} sx={{ width: 64, height: 64 }} />
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(event) => {
+                if (!event.target.files) return;
+                setAvatar(event.target.files[0]);
+                event.target.value = "";
+              }}
+            />
+          </IconButton>
+        </Stack>
         <List sx={{ flexGrow: 1, minHeight: 0 }}>
           <ListItem disablePadding>
             <ListItemButton onClick={handleNewChat}>

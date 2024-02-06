@@ -23,6 +23,35 @@ const SetActionsContext = createContext<{
   setAvatar: React.Dispatch<React.SetStateAction<File | null>>;
 } | null>(null);
 
+function useActions() {
+  const [actions, setActions] = useState<OpenAPIV3.Document[]>([]);
+
+  const fetchActions = useCallback(async () => {
+    await import("../tools/scheme");
+    const response = await fetch("tool://");
+    const data: { tools: string[] } = await response.json();
+    const toolsResult = await Promise.allSettled(
+      data.tools.map(async (url) => {
+        const response = await fetch(url);
+        const tool: OpenAPIV3.Document = await response.json();
+        return tool;
+      })
+    );
+    const tools = toolsResult
+      .map((result) => {
+        return result.status === "fulfilled" ? result.value : null;
+      })
+      .filter((tool) => tool !== null);
+    setActions(tools);
+  }, []);
+
+  useEffect(() => {
+    fetchActions();
+  }, [fetchActions]);
+
+  return [actions, setActions] as const;
+}
+
 const fallbackWorkflows: Workflow[] = [];
 
 function useWorkflows() {
@@ -109,32 +138,9 @@ function useAvatarState() {
 }
 
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
-  const [actions, setActions] = useState<OpenAPIV3.Document[]>([]);
+  const [actions, setActions] = useActions();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
   const [avatar, setAvatar] = useAvatarState();
-
-  const fetchActions = useCallback(async () => {
-    await import("../tools/scheme");
-    const response = await fetch("tool://");
-    const data: { tools: string[] } = await response.json();
-    const toolsResult = await Promise.allSettled(
-      data.tools.map(async (url) => {
-        const response = await fetch(url);
-        const tool: OpenAPIV3.Document = await response.json();
-        return tool;
-      })
-    );
-    const tools = toolsResult
-      .map((result) => {
-        return result.status === "fulfilled" ? result.value : null;
-      })
-      .filter((tool) => tool !== null);
-    setActions(tools);
-  }, []);
-
-  useEffect(() => {
-    fetchActions();
-  }, [fetchActions]);
 
   const dispatchers = useMemo(
     () => ({
