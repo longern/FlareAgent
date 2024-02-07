@@ -18,10 +18,14 @@ import {
   Toolbar,
 } from "@mui/material";
 import {
+  AudioFile as AudioFileIcon,
   Close as CloseIcon,
+  Description as DescriptionIcon,
   Folder as FolderIcon,
+  Image as ImageIcon,
   InsertDriveFile as InsertDriveFileIcon,
   MoreVert as MoreVertIcon,
+  VideoFile as VideoFileIcon,
 } from "@mui/icons-material";
 import { DIRECTORY } from "../../fs/hooks";
 
@@ -63,7 +67,17 @@ function FilesListItem({
       {file instanceof File ? (
         <ListItemButton onClick={onClick} onContextMenu={handleContextMenu}>
           <ListItemIcon>
-            <InsertDriveFileIcon />
+            {file.type.startsWith("audio/") ? (
+              <AudioFileIcon />
+            ) : file.type.startsWith("image/") ? (
+              <ImageIcon />
+            ) : file.type.startsWith("text/") ? (
+              <DescriptionIcon />
+            ) : file.type.startsWith("video/") ? (
+              <VideoFileIcon />
+            ) : (
+              <InsertDriveFileIcon />
+            )}
           </ListItemIcon>
           <ListItemText
             primary={file.name}
@@ -71,14 +85,11 @@ function FilesListItem({
               sx: { overflowWrap: "anywhere" },
             }}
             secondary={
-              <Stack direction="row" spacing={2}>
+              <Stack component="span" direction="row" spacing={2}>
                 <span>{new Date(file.lastModified).toLocaleString()}</span>
                 <span>{humanFileSize(file.size)}</span>
               </Stack>
             }
-            secondaryTypographyProps={{
-              component: "div",
-            }}
           />
         </ListItemButton>
       ) : (
@@ -253,27 +264,31 @@ function FilesDialog({
         >
           {t("My Files")}
         </Link>
-        {path.map((name, index) => (
-          <Link
-            key={index}
-            component="button"
-            underline="none"
-            color={index === path.length - 1 ? "inherit" : undefined}
-            disabled={index === path.length - 1}
-            onClick={() => {
-              const handle = path
-                .slice(0, index + 1)
-                .reduce(
-                  (handle, name) =>
-                    handle.then((handle) => handle.getDirectoryHandle(name)),
-                  DIRECTORY
-                );
-              handle.then(setDirHandle);
-            }}
-          >
-            {name}
-          </Link>
-        ))}
+        {path.map((name, index) =>
+          index === path.length - 1 ? (
+            <Box key={index} component="span">
+              {name}
+            </Box>
+          ) : (
+            <Link
+              key={index}
+              component="button"
+              underline="none"
+              onClick={() => {
+                const handle = path
+                  .slice(0, index + 1)
+                  .reduce(
+                    (handle, name) =>
+                      handle.then((handle) => handle.getDirectoryHandle(name)),
+                    DIRECTORY
+                  );
+                handle.then(setDirHandle);
+              }}
+            >
+              {name}
+            </Link>
+          )
+        )}
       </Breadcrumbs>
 
       {storageNotSupported ? (
