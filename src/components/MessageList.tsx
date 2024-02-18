@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import {
   Avatar,
   Box,
@@ -88,15 +88,161 @@ function AssistantToolCallMessasge({
   );
 }
 
+function MessageListItemContent({
+  message,
+}: {
+  message: ChatCompletionMessageParam;
+}) {
+  const { t } = useTranslation();
+
+  return message.role === "assistant" ? (
+    <>
+      {message.content && (
+        <Suspense fallback={message.content}>
+          <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
+        </Suspense>
+      )}
+      {Array.isArray(message.tool_calls) && message.tool_calls.length > 0 && (
+        <>
+          <div>{t("Calling functions:")}</div>
+          {message.tool_calls.map((tool_call) => (
+            <AssistantToolCallMessasge
+              key={tool_call.id}
+              tool_call={tool_call}
+            />
+          ))}
+        </>
+      )}
+    </>
+  ) : message.role === "tool" ? (
+    <Box
+      sx={{
+        maxHeight: "12rem",
+        overflow: "auto",
+        fontSize: "0.8rem",
+      }}
+    >
+      {message.content ? (
+        <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
+      ) : (
+        <Typography variant="body2" color="text.secondary">
+          {t("No output")}
+        </Typography>
+      )}
+    </Box>
+  ) : (
+    <Box sx={{ whiteSpace: "pre-wrap" }}>
+      {typeof message.content === "string"
+        ? message.content
+        : message.content.map((part, index) =>
+            part.type === "text" ? (
+              <span key={index}>{part.text}</span>
+            ) : part.type === "image_url" ? (
+              <img key={index} src={part.image_url.url} alt="" />
+            ) : null
+          )}
+    </Box>
+  );
+}
+
+function MessageListItem({
+  message,
+  selected,
+  onSelect,
+  onUnselect,
+}: {
+  message: ChatCompletionMessageParam;
+  selected: boolean;
+  onSelect: () => void;
+  onUnselect: () => void;
+}) {
+  const avatarUrl = useAvatarUrl();
+
+  const content = useMemo(() => {
+    return <MessageListItemContent message={message} />;
+  }, [message]);
+
+  return (
+    <Stack
+      direction={message.role === "user" ? "row-reverse" : "row"}
+      spacing={1}
+    >
+      {message.role === "system" ? (
+        <Avatar>S</Avatar>
+      ) : message.role === "user" ? (
+        <Avatar src={avatarUrl}>
+          <PersonIcon />
+        </Avatar>
+      ) : message.role === "assistant" ? (
+        <Avatar sx={{ backgroundColor: "#19c37d" }}>
+          <SmartToyIcon />
+        </Avatar>
+      ) : message.role === "tool" ? (
+        <Avatar>
+          <BuildIcon />
+        </Avatar>
+      ) : (
+        <Avatar>?</Avatar>
+      )}
+      <Box
+        sx={{
+          minWidth: 0,
+          overflow: "hidden",
+          overflowWrap: "break-word",
+        }}
+      >
+        <Box
+          sx={{
+            padding: "0.5em 0.8em",
+            borderRadius: "14px",
+            backgroundColor: (theme) =>
+              message.role === "user"
+                ? theme.palette.mode === "dark"
+                  ? "#333333"
+                  : "#e0e0e0"
+                : theme.palette.mode === "dark"
+                ? "#1f1f1f"
+                : "#f5f5f5",
+            "& img": { maxWidth: "100%" },
+            "& p": { margin: 0 },
+            "& pre": { margin: 0 },
+            "& pre>code": { whiteSpace: "pre-wrap" },
+          }}
+          onClick={() => (selected ? onUnselect() : onSelect())}
+        >
+          {content}
+        </Box>
+
+        <Collapse in={selected}>
+          <Stack
+            direction="row"
+            sx={{ fontSize: "0.8rem", color: "text.secondary" }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => {
+                navigator.clipboard.writeText(message.content as string);
+              }}
+            >
+              <ContentCopyIcon />
+            </IconButton>
+            <IconButton size="small" onClick={onUnselect}>
+              <ReplayIcon />
+            </IconButton>
+          </Stack>
+        </Collapse>
+      </Box>
+      <Box flexShrink={0} width={48} />
+    </Stack>
+  );
+}
+
 function MessageList({
   messages,
 }: {
   messages: ChatCompletionMessageParam[] | null;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
-  const avatarUrl = useAvatarUrl();
-
-  const { t } = useTranslation();
 
   return (
     <Stack spacing={2}>
@@ -112,134 +258,13 @@ function MessageList({
         </Box>
       ) : (
         messages.map((message, index) => (
-          <Stack
+          <MessageListItem
             key={index}
-            direction={message.role === "user" ? "row-reverse" : "row"}
-            spacing={1}
-          >
-            {message.role === "system" ? (
-              <Avatar>S</Avatar>
-            ) : message.role === "user" ? (
-              <Avatar src={avatarUrl}>
-                <PersonIcon />
-              </Avatar>
-            ) : message.role === "assistant" ? (
-              <Avatar sx={{ backgroundColor: "#19c37d" }}>
-                <SmartToyIcon />
-              </Avatar>
-            ) : message.role === "tool" ? (
-              <Avatar>
-                <BuildIcon />
-              </Avatar>
-            ) : (
-              <Avatar>?</Avatar>
-            )}
-            <Box
-              sx={{
-                minWidth: 0,
-                overflow: "hidden",
-                overflowWrap: "break-word",
-              }}
-            >
-              <Box
-                key={index}
-                sx={{
-                  padding: "0.5em 0.8em",
-                  borderRadius: "14px",
-                  backgroundColor: (theme) =>
-                    message.role === "user"
-                      ? theme.palette.mode === "dark"
-                        ? "#333333"
-                        : "#e0e0e0"
-                      : theme.palette.mode === "dark"
-                      ? "#1f1f1f"
-                      : "#f5f5f5",
-                  "& img": { maxWidth: "100%" },
-                  "& p": { margin: 0 },
-                  "& pre": { margin: 0 },
-                  "& pre>code": { whiteSpace: "pre-wrap" },
-                }}
-                onClick={() => setSelected(selected === index ? null : index)}
-              >
-                {message.role === "assistant" ? (
-                  <>
-                    {message.content && (
-                      <Suspense fallback={message.content}>
-                        <MarkdownHighlighter>
-                          {message.content}
-                        </MarkdownHighlighter>
-                      </Suspense>
-                    )}
-                    {Array.isArray(message.tool_calls) &&
-                      message.tool_calls.length > 0 && (
-                        <>
-                          <div>{t("Calling functions:")}</div>
-                          {message.tool_calls.map((tool_call) => (
-                            <AssistantToolCallMessasge
-                              key={tool_call.id}
-                              tool_call={tool_call}
-                            />
-                          ))}
-                        </>
-                      )}
-                  </>
-                ) : message.role === "tool" ? (
-                  <Box
-                    sx={{
-                      maxHeight: "12rem",
-                      overflow: "auto",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    {message.content ? (
-                      <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        {t("No output")}
-                      </Typography>
-                    )}
-                  </Box>
-                ) : (
-                  <Box sx={{ whiteSpace: "pre-wrap" }}>
-                    {typeof message.content === "string"
-                      ? message.content
-                      : message.content.map((part, index) =>
-                          part.type === "text" ? (
-                            <span key={index}>{part.text}</span>
-                          ) : part.type === "image_url" ? (
-                            <img key={index} src={part.image_url.url} alt="" />
-                          ) : null
-                        )}
-                  </Box>
-                )}
-              </Box>
-
-              <Collapse in={selected === index}>
-                <Stack
-                  direction="row"
-                  sx={{ fontSize: "0.8rem", color: "text.secondary" }}
-                >
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      navigator.clipboard.writeText(message.content as string);
-                    }}
-                  >
-                    <ContentCopyIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      setSelected(null);
-                    }}
-                  >
-                    <ReplayIcon />
-                  </IconButton>
-                </Stack>
-              </Collapse>
-            </Box>
-            <Box flexShrink={0} width={48} />
-          </Stack>
+            message={message}
+            selected={selected === index}
+            onSelect={() => setSelected(index)}
+            onUnselect={() => setSelected(null)}
+          />
         ))
       )}
     </Stack>
