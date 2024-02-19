@@ -4,6 +4,7 @@ import {
   Box,
   Card,
   DialogContent,
+  Divider,
   IconButton,
   List,
   ListItem,
@@ -13,6 +14,7 @@ import {
   Stack,
   TextField,
   Theme,
+  styled,
   useMediaQuery,
 } from "@mui/material";
 import {
@@ -22,7 +24,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Help as HelpIcon,
   NavigateNext as NavigateNextIcon,
-  Shield as ShieldIcon,
+  Lock as LockIcon,
 } from "@mui/icons-material";
 import { HistoryDialog } from "./HistoryDialog";
 
@@ -46,6 +48,11 @@ function useApiKey() {
 
   return [apiKey, setApiKey] as const;
 }
+
+const SparseList = styled(List)(() => ({
+  padding: 0,
+  "& .MuiListItemButton-root": { minHeight: 60 },
+}));
 
 function AccountContent() {
   const [apiKey, setApiKey] = useApiKey();
@@ -169,7 +176,7 @@ function PermissionsContent() {
 
   return (
     <Card elevation={0}>
-      <List disablePadding>
+      <SparseList>
         {Object.entries(permissions).map(
           ([name, state]: [PermissionName, PermissionState | null]) => (
             <ListItem key={name} disablePadding>
@@ -188,7 +195,7 @@ function PermissionsContent() {
             </ListItem>
           )
         )}
-      </List>
+      </SparseList>
     </Card>
   );
 }
@@ -207,7 +214,7 @@ function SettingsForm() {
 
   const tabs = (
     <Card elevation={0}>
-      <List disablePadding>
+      <SparseList>
         <ListItem disablePadding>
           <ListItemButton
             selected={activeTab === "Account"}
@@ -220,19 +227,20 @@ function SettingsForm() {
             <NavigateNextIcon />
           </ListItemButton>
         </ListItem>
+        <Divider variant="inset" component="li" />
         <ListItem disablePadding>
           <ListItemButton
             selected={activeTab === "Permissions"}
             onClick={() => setActiveTab("Permissions")}
           >
             <ListItemIcon>
-              <ShieldIcon />
+              <LockIcon />
             </ListItemIcon>
             <ListItemText primary={t("Permissions")} />
             <NavigateNextIcon />
           </ListItemButton>
         </ListItem>
-      </List>
+      </SparseList>
     </Card>
   );
 
