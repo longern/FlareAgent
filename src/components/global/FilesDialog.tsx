@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   Box,
   Breadcrumbs,
-  Dialog,
   IconButton,
   Link,
   List,
@@ -14,11 +13,9 @@ import {
   Menu,
   MenuItem,
   Stack,
-  Toolbar,
 } from "@mui/material";
 import {
   AudioFile as AudioFileIcon,
-  Close as CloseIcon,
   Description as DescriptionIcon,
   Folder as FolderIcon,
   Image as ImageIcon,
@@ -28,7 +25,7 @@ import {
 } from "@mui/icons-material";
 
 import { DIRECTORY } from "../../fs/hooks";
-import { SlideLeft } from "./SlideLeft";
+import { HistoryDialog } from "./HistoryDialog";
 
 function humanFileSize(size: number) {
   var i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -214,56 +211,46 @@ function FilesDialog({
   }, [open]);
 
   return (
-    <Dialog
+    <HistoryDialog
+      hash="files"
+      title={t("My Files")}
+      endAdornment={
+        <>
+          <IconButton
+            size="large"
+            color="inherit"
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+            aria-label="menu"
+          >
+            <MoreVertIcon />
+          </IconButton>
+          <Menu
+            open={Boolean(anchorEl)}
+            onClose={() => setAnchorEl(null)}
+            anchorEl={anchorEl}
+            MenuListProps={{ disablePadding: true }}
+          >
+            <MenuItem
+              onClick={async () => {
+                const name = window.prompt(t("Directory name"));
+                if (!name) return;
+                await dirHandle?.getDirectoryHandle(name, { create: true });
+                setAnchorEl(null);
+                await readDirectory(dirHandle!);
+              }}
+            >
+              {t("New directory")}
+            </MenuItem>
+            <MenuItem component="label">
+              {t("Import file")}
+              <input type="file" hidden multiple onChange={handleImportFile} />
+            </MenuItem>
+          </Menu>
+        </>
+      }
       open={open}
       onClose={onClose}
-      fullScreen
-      TransitionComponent={SlideLeft}
     >
-      <Toolbar>
-        <IconButton
-          edge="start"
-          color="inherit"
-          onClick={onClose}
-          aria-label="close"
-        >
-          <CloseIcon />
-        </IconButton>
-        <Box flexGrow={1} textAlign="center">
-          {t("My Files")}
-        </Box>
-        <IconButton
-          edge="end"
-          color="inherit"
-          onClick={(event) => setAnchorEl(event.currentTarget)}
-          aria-label="menu"
-        >
-          <MoreVertIcon />
-        </IconButton>
-        <Menu
-          open={Boolean(anchorEl)}
-          onClose={() => setAnchorEl(null)}
-          anchorEl={anchorEl}
-          MenuListProps={{ disablePadding: true }}
-        >
-          <MenuItem
-            onClick={async () => {
-              const name = window.prompt(t("Directory name"));
-              if (!name) return;
-              await dirHandle?.getDirectoryHandle(name, { create: true });
-              setAnchorEl(null);
-              await readDirectory(dirHandle!);
-            }}
-          >
-            {t("New directory")}
-          </MenuItem>
-          <MenuItem component="label">
-            {t("Import file")}
-            <input type="file" hidden multiple onChange={handleImportFile} />
-          </MenuItem>
-        </Menu>
-      </Toolbar>
-
       <Breadcrumbs sx={{ px: 2, py: 1.5 }} maxItems={3} itemsAfterCollapse={2}>
         <Link
           component="button"
@@ -344,7 +331,7 @@ function FilesDialog({
           })}
         </List>
       )}
-    </Dialog>
+    </HistoryDialog>
   );
 }
 

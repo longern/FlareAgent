@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import {
   Box,
   Card,
-  Dialog,
   DialogContent,
   IconButton,
   List,
@@ -14,7 +13,6 @@ import {
   Stack,
   TextField,
   Theme,
-  Toolbar,
   useMediaQuery,
 } from "@mui/material";
 import {
@@ -22,12 +20,11 @@ import {
   AirlineStops as AirlineStopsIcon,
   Cancel as CancelIcon,
   CheckCircle as CheckCircleIcon,
-  Close as CloseIcon,
   Help as HelpIcon,
   NavigateNext as NavigateNextIcon,
   Shield as ShieldIcon,
 } from "@mui/icons-material";
-import { SlideLeft } from "./SlideLeft";
+import { HistoryDialog } from "./HistoryDialog";
 
 function useApiKey() {
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -254,34 +251,14 @@ function SettingsForm() {
   ) : (
     <>
       {tabs}
-      <Dialog
+      <HistoryDialog
+        hash={activeTab || ""}
+        title={t(activeTab || "Settings")}
         open={activeTab !== null}
         onClose={() => setActiveTab(null)}
-        fullScreen
-        TransitionComponent={SlideLeft}
-        PaperProps={{
-          sx: {
-            backgroundColor: (theme) =>
-              theme.palette.mode === "dark" ? "#050505" : "#fafafa",
-          },
-        }}
       >
-        <Toolbar disableGutters>
-          <IconButton
-            size="large"
-            color="inherit"
-            onClick={() => setActiveTab(null)}
-            aria-label="close"
-          >
-            <CloseIcon />
-          </IconButton>
-          <Box flexGrow={1} textAlign="center">
-            {t(activeTab || "Settings")}
-          </Box>
-          <Box width={48} />
-        </Toolbar>
         <DialogContent sx={{ p: 2 }}>{content}</DialogContent>
-      </Dialog>
+      </HistoryDialog>
     </>
   );
 }
@@ -296,36 +273,16 @@ function SettingsDialog({
   const { t } = useTranslation();
 
   return (
-    <Dialog
+    <HistoryDialog
+      hash="settings"
+      title={t("Settings")}
       open={open}
       onClose={onClose}
-      fullScreen
-      TransitionComponent={SlideLeft}
-      PaperProps={{
-        sx: {
-          backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "#050505" : "#fafafa",
-        },
-      }}
     >
-      <Toolbar disableGutters>
-        <IconButton
-          size="large"
-          color="inherit"
-          onClick={onClose}
-          aria-label="close"
-        >
-          <CloseIcon />
-        </IconButton>
-        <Box flexGrow={1} textAlign="center">
-          {t("Settings")}
-        </Box>
-        <Box width={48} />
-      </Toolbar>
       <DialogContent sx={{ p: 2 }}>
         <SettingsForm />
       </DialogContent>
-    </Dialog>
+    </HistoryDialog>
   );
 }
 
