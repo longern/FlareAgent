@@ -20,7 +20,10 @@ import {
 import {
   AccountCircle as AccountCircleIcon,
   AirlineStops as AirlineStopsIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
   Close as CloseIcon,
+  Help as HelpIcon,
   NavigateNext as NavigateNextIcon,
   Shield as ShieldIcon,
 } from "@mui/icons-material";
@@ -47,7 +50,7 @@ function useApiKey() {
   return [apiKey, setApiKey] as const;
 }
 
-function AccountDialogContent() {
+function AccountContent() {
   const [apiKey, setApiKey] = useApiKey();
   const [baseUrl, setBaseUrl] = useState<string | null>(
     localStorage.getItem("OPENAI_BASE_URL") ?? null
@@ -91,6 +94,108 @@ function AccountDialogContent() {
   );
 }
 
+function PermissionIcon({ state }: { state: PermissionState | null }) {
+  switch (state) {
+    case "granted":
+      return <CheckCircleIcon color="success" />;
+    case "denied":
+      return <CancelIcon color="error" />;
+    case "prompt":
+      return <HelpIcon color="primary" />;
+    default:
+      return null;
+  }
+}
+
+const PERMISSIONS = [
+  "geolocation",
+  "notifications",
+  "camera",
+  "microphone",
+  "accelerometer",
+  "magnetometer",
+  "clipboard-read",
+  "clipboard-write",
+] as PermissionName[];
+
+const PERMISSION_REQUESTERS = {
+  geolocation: () => navigator.geolocation.getCurrentPosition(() => {}),
+  notifications: () => Notification.requestPermission(),
+  camera: () =>
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => stream.getTracks().forEach((track) => track.stop())),
+  microphone: () =>
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => stream.getTracks().forEach((track) => track.stop())),
+  "clipboard-read": () => navigator.clipboard.readText(),
+};
+
+function PermissionsContent() {
+  const [permissions, setPermissions] = useState<
+    Partial<Record<PermissionName, PermissionState | null>>
+  >(Object.fromEntries(PERMISSIONS.map((name) => [name, null] as const)));
+
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    Promise.allSettled(
+      PERMISSIONS.map(async (name: PermissionName) => {
+        const status = await navigator.permissions.query({ name });
+        return [name, status.state] as const;
+      })
+    ).then((results) => {
+      setPermissions(
+        Object.fromEntries(
+          results.flatMap((result) =>
+            result.status === "fulfilled" ? [result.value] : []
+          )
+        )
+      );
+    });
+  }, []);
+
+  function requestPermission(name: PermissionName) {
+    if (!(name in PERMISSION_REQUESTERS)) return;
+    PERMISSION_REQUESTERS[name]()
+      .catch(() => {})
+      .finally(() => {
+        navigator.permissions.query({ name }).then((status) => {
+          setPermissions((permissions) => ({
+            ...permissions,
+            [name]: status.state,
+          }));
+        });
+      });
+  }
+
+  return (
+    <Card elevation={0}>
+      <List disablePadding>
+        {Object.entries(permissions).map(
+          ([name, state]: [PermissionName, PermissionState | null]) => (
+            <ListItem key={name} disablePadding>
+              <ListItemButton
+                onClick={() => state === "prompt" && requestPermission(name)}
+              >
+                <ListItemText
+                  primary={t(
+                    name
+                      .replaceAll("-", " ")
+                      .replace(/^./, (ch) => ch.toUpperCase())
+                  )}
+                />
+                <PermissionIcon state={state} />
+              </ListItemButton>
+            </ListItem>
+          )
+        )}
+      </List>
+    </Card>
+  );
+}
+
 function SettingsForm() {
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
@@ -119,7 +224,10 @@ function SettingsForm() {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton>
+          <ListItemButton
+            selected={activeTab === "Permissions"}
+            onClick={() => setActiveTab("Permissions")}
+          >
             <ListItemIcon>
               <ShieldIcon />
             </ListItemIcon>
@@ -131,7 +239,12 @@ function SettingsForm() {
     </Card>
   );
 
-  const content = activeTab === "Account" ? <AccountDialogContent /> : null;
+  const content =
+    activeTab === "Account" ? (
+      <AccountContent />
+    ) : activeTab === "Permissions" ? (
+      <PermissionsContent />
+    ) : null;
 
   return matchesLg ? (
     <Stack direction="row" spacing={2}>
@@ -146,6 +259,12 @@ function SettingsForm() {
         onClose={() => setActiveTab(null)}
         fullScreen
         TransitionComponent={SlideLeft}
+        PaperProps={{
+          sx: {
+            backgroundColor: (theme) =>
+              theme.palette.mode === "dark" ? "#050505" : "#fafafa",
+          },
+        }}
       >
         <Toolbar disableGutters>
           <IconButton
@@ -161,7 +280,7 @@ function SettingsForm() {
           </Box>
           <Box width={48} />
         </Toolbar>
-        <DialogContent>{content}</DialogContent>
+        <DialogContent sx={{ p: 2 }}>{content}</DialogContent>
       </Dialog>
     </>
   );
