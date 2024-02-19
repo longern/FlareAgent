@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  AppBar,
   Box,
   Breadcrumbs,
   Dialog,
@@ -27,7 +26,9 @@ import {
   MoreVert as MoreVertIcon,
   VideoFile as VideoFileIcon,
 } from "@mui/icons-material";
+
 import { DIRECTORY } from "../../fs/hooks";
+import { SlideLeft } from "./SlideLeft";
 
 function humanFileSize(size: number) {
   var i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -35,6 +36,20 @@ function humanFileSize(size: number) {
     Number((size / Math.pow(1024, i)).toFixed(2)) +
     " " +
     ["B", "kB", "MB", "GB", "TB"][i]
+  );
+}
+
+function FileTypeIcon({ fileType }: { fileType: string }) {
+  return fileType.startsWith("audio/") ? (
+    <AudioFileIcon />
+  ) : fileType.startsWith("image/") ? (
+    <ImageIcon />
+  ) : fileType.startsWith("text/") ? (
+    <DescriptionIcon />
+  ) : fileType.startsWith("video/") ? (
+    <VideoFileIcon />
+  ) : (
+    <InsertDriveFileIcon />
   );
 }
 
@@ -67,17 +82,7 @@ function FilesListItem({
       {file instanceof File ? (
         <ListItemButton onClick={onClick} onContextMenu={handleContextMenu}>
           <ListItemIcon>
-            {file.type.startsWith("audio/") ? (
-              <AudioFileIcon />
-            ) : file.type.startsWith("image/") ? (
-              <ImageIcon />
-            ) : file.type.startsWith("text/") ? (
-              <DescriptionIcon />
-            ) : file.type.startsWith("video/") ? (
-              <VideoFileIcon />
-            ) : (
-              <InsertDriveFileIcon />
-            )}
+            <FileTypeIcon fileType={file.type} />
           </ListItemIcon>
           <ListItemText
             primary={file.name}
@@ -126,6 +131,30 @@ function FilesListItem({
   );
 }
 
+async function listDirectory(dirHandle: FileSystemDirectoryHandle) {
+  const files = [];
+  for await (const [, value] of dirHandle as unknown as AsyncGenerator<
+    [string, FileSystemFileHandle | FileSystemDirectoryHandle]
+  >) {
+    files.push(
+      value.kind === "file" ? await value.getFile() : { name: value.name }
+    );
+  }
+
+  // Put directories first and sort alphabetically
+  files.sort((a, b) =>
+    a instanceof File
+      ? b instanceof File
+        ? a.name.localeCompare(b.name)
+        : 1
+      : b instanceof File
+      ? -1
+      : a.name.localeCompare(b.name)
+  );
+
+  return files;
+}
+
 function FilesDialog({
   open,
   onClose,
@@ -144,30 +173,30 @@ function FilesDialog({
   const { t } = useTranslation();
 
   const readDirectory = useCallback(
-    async (dirHandle: FileSystemDirectoryHandle) => {
-      const files = [];
-      for await (const [, value] of dirHandle as unknown as AsyncGenerator<
-        [string, FileSystemFileHandle | FileSystemDirectoryHandle]
-      >) {
-        files.push(
-          value.kind === "file" ? await value.getFile() : { name: value.name }
-        );
-      }
+    (dirHandle: FileSystemDirectoryHandle) =>
+      listDirectory(dirHandle).then(setFiles),
+    []
+  );
 
-      // Put directories first and sort alphabetically
-      files.sort((a, b) =>
-        a instanceof File
-          ? b instanceof File
-            ? a.name.localeCompare(b.name)
-            : 1
-          : b instanceof File
-          ? -1
-          : a.name.localeCompare(b.name)
+  const handleImportFile = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!dirHandle) return;
+      const input = e.target as HTMLInputElement;
+      if (!input.files) return;
+      await Promise.all(
+        Array.from(input.files).map(async (file) => {
+          const fileHandle = await dirHandle.getFileHandle(file.name, {
+            create: true,
+          });
+          const writable = await fileHandle.createWritable();
+          await writable.write(file);
+          await writable.close();
+        })
       );
-
+      const files = await listDirectory(dirHandle);
       setFiles(files);
     },
-    []
+    [dirHandle]
   );
 
   useEffect(() => {
@@ -185,74 +214,55 @@ function FilesDialog({
   }, [open]);
 
   return (
-    <Dialog open={open} onClose={onClose} fullScreen>
-      <AppBar position="relative">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={onClose}
-            aria-label="close"
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen
+      TransitionComponent={SlideLeft}
+    >
+      <Toolbar>
+        <IconButton
+          edge="start"
+          color="inherit"
+          onClick={onClose}
+          aria-label="close"
+        >
+          <CloseIcon />
+        </IconButton>
+        <Box flexGrow={1} textAlign="center">
+          {t("My Files")}
+        </Box>
+        <IconButton
+          edge="end"
+          color="inherit"
+          onClick={(event) => setAnchorEl(event.currentTarget)}
+          aria-label="menu"
+        >
+          <MoreVertIcon />
+        </IconButton>
+        <Menu
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          anchorEl={anchorEl}
+          MenuListProps={{ disablePadding: true }}
+        >
+          <MenuItem
+            onClick={async () => {
+              const name = window.prompt(t("Directory name"));
+              if (!name) return;
+              await dirHandle?.getDirectoryHandle(name, { create: true });
+              setAnchorEl(null);
+              await readDirectory(dirHandle!);
+            }}
           >
-            <CloseIcon />
-          </IconButton>
-          <Box flexGrow={1} textAlign="center">
-            {t("My Files")}
-          </Box>
-          <IconButton
-            edge="end"
-            color="inherit"
-            onClick={(event) => setAnchorEl(event.currentTarget)}
-            aria-label="menu"
-          >
-            <MoreVertIcon />
-          </IconButton>
-          <Menu
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
-            anchorEl={anchorEl}
-          >
-            <MenuItem
-              onClick={async () => {
-                const name = window.prompt(t("Directory name"));
-                if (!name) return;
-                await dirHandle?.getDirectoryHandle(name, { create: true });
-                setAnchorEl(null);
-                await readDirectory(dirHandle!);
-              }}
-            >
-              {t("New directory")}
-            </MenuItem>
-            <MenuItem
-              onClick={async () => {
-                if (!dirHandle) return;
-                const input = document.createElement("input");
-                input.type = "file";
-                input.multiple = true;
-                input.onchange = async () => {
-                  if (!input.files) return;
-                  await Promise.all(
-                    Array.from(input.files).map(async (file) => {
-                      const fileHandle = await dirHandle.getFileHandle(
-                        file.name,
-                        { create: true }
-                      );
-                      const writable = await fileHandle.createWritable();
-                      await writable.write(file);
-                      await writable.close();
-                    })
-                  );
-                  await readDirectory(dirHandle);
-                };
-                input.click();
-                setAnchorEl(null);
-              }}
-            >
-              {t("Import file")}
-            </MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
+            {t("New directory")}
+          </MenuItem>
+          <MenuItem component="label">
+            {t("Import file")}
+            <input type="file" hidden multiple onChange={handleImportFile} />
+          </MenuItem>
+        </Menu>
+      </Toolbar>
 
       <Breadcrumbs sx={{ px: 2, py: 1.5 }} maxItems={3} itemsAfterCollapse={2}>
         <Link

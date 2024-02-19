@@ -2,14 +2,29 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Box,
+  Card,
   Dialog,
   DialogContent,
-  DialogTitle,
   IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Stack,
   TextField,
+  Theme,
+  Toolbar,
+  useMediaQuery,
 } from "@mui/material";
-import { AirlineStops as AirlineStopsIcon } from "@mui/icons-material";
+import {
+  AccountCircle as AccountCircleIcon,
+  AirlineStops as AirlineStopsIcon,
+  Close as CloseIcon,
+  NavigateNext as NavigateNextIcon,
+  Shield as ShieldIcon,
+} from "@mui/icons-material";
+import { SlideLeft } from "./SlideLeft";
 
 function useApiKey() {
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -32,7 +47,7 @@ function useApiKey() {
   return [apiKey, setApiKey] as const;
 }
 
-function SettingsForm() {
+function AccountDialogContent() {
   const [apiKey, setApiKey] = useApiKey();
   const [baseUrl, setBaseUrl] = useState<string | null>(
     localStorage.getItem("OPENAI_BASE_URL") ?? null
@@ -47,7 +62,7 @@ function SettingsForm() {
   }, [baseUrl]);
 
   return (
-    <Stack spacing={2} py={2}>
+    <Stack spacing={2}>
       <TextField
         label={t("API Key")}
         value={apiKey ?? ""}
@@ -76,6 +91,82 @@ function SettingsForm() {
   );
 }
 
+function SettingsForm() {
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+
+  const { t } = useTranslation();
+  const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+
+  useEffect(() => {
+    if (activeTab === null && matchesLg) {
+      setActiveTab("Account");
+    }
+  }, [activeTab, matchesLg]);
+
+  const tabs = (
+    <Card elevation={0}>
+      <List disablePadding>
+        <ListItem disablePadding>
+          <ListItemButton
+            selected={activeTab === "Account"}
+            onClick={() => setActiveTab("Account")}
+          >
+            <ListItemIcon>
+              <AccountCircleIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("Account")} />
+            <NavigateNextIcon />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <ShieldIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("Permissions")} />
+            <NavigateNextIcon />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </Card>
+  );
+
+  const content = activeTab === "Account" ? <AccountDialogContent /> : null;
+
+  return matchesLg ? (
+    <Stack direction="row" spacing={2}>
+      <Box width={300}>{tabs}</Box>
+      <Box flexGrow={1}>{content}</Box>
+    </Stack>
+  ) : (
+    <>
+      {tabs}
+      <Dialog
+        open={activeTab !== null}
+        onClose={() => setActiveTab(null)}
+        fullScreen
+        TransitionComponent={SlideLeft}
+      >
+        <Toolbar disableGutters>
+          <IconButton
+            size="large"
+            color="inherit"
+            onClick={() => setActiveTab(null)}
+            aria-label="close"
+          >
+            <CloseIcon />
+          </IconButton>
+          <Box flexGrow={1} textAlign="center">
+            {t(activeTab || "Settings")}
+          </Box>
+          <Box width={48} />
+        </Toolbar>
+        <DialogContent>{content}</DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function SettingsDialog({
   open,
   onClose,
@@ -86,9 +177,33 @@ function SettingsDialog({
   const { t } = useTranslation();
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>{t("Settings")}</DialogTitle>
-      <DialogContent>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen
+      TransitionComponent={SlideLeft}
+      PaperProps={{
+        sx: {
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "#050505" : "#fafafa",
+        },
+      }}
+    >
+      <Toolbar disableGutters>
+        <IconButton
+          size="large"
+          color="inherit"
+          onClick={onClose}
+          aria-label="close"
+        >
+          <CloseIcon />
+        </IconButton>
+        <Box flexGrow={1} textAlign="center">
+          {t("Settings")}
+        </Box>
+        <Box width={48} />
+      </Toolbar>
+      <DialogContent sx={{ p: 2 }}>
         <SettingsForm />
       </DialogContent>
     </Dialog>
