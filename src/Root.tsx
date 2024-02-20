@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   CssBaseline,
   GlobalStyles,
@@ -36,6 +36,12 @@ function Root() {
       }),
     [prefersDarkMode]
   );
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.history.state !== null) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  });
 
   return (
     <ThemeProvider theme={theme}>
