@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Box,
   Card,
+  Container,
   DialogContent,
   Divider,
   IconButton,
@@ -21,10 +22,12 @@ import {
   AccountCircle as AccountCircleIcon,
   AirlineStops as AirlineStopsIcon,
   Cancel as CancelIcon,
+  Check as CheckIcon,
   CheckCircle as CheckCircleIcon,
   Help as HelpIcon,
-  NavigateNext as NavigateNextIcon,
   Lock as LockIcon,
+  NavigateNext as NavigateNextIcon,
+  Tune as TuneIcon,
 } from "@mui/icons-material";
 import { HistoryDialog } from "./HistoryDialog";
 
@@ -95,6 +98,79 @@ function AccountContent() {
         </Box>
       </Stack>
     </Stack>
+  );
+}
+
+function GeneralContent() {
+  const [languageOpen, setLanguageOpen] = useState(false);
+
+  const { t, i18n } = useTranslation();
+
+  function getDisplayName(code: string, locale: string) {
+    try {
+      return new Intl.DisplayNames([locale], { type: "language" }).of(code);
+    } catch (e) {
+      return code;
+    }
+  }
+
+  const handleLanguageClose = useCallback(() => {
+    setLanguageOpen(false);
+  }, []);
+
+  return (
+    <>
+      <Card elevation={0}>
+        <SparseList>
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => setLanguageOpen(true)}>
+              <ListItemText
+                primary={t("Language")}
+                secondary={
+                  i18n.language.endsWith("-default")
+                    ? t("System default")
+                    : getDisplayName(i18n.language, i18n.language)
+                }
+              />
+              <NavigateNextIcon />
+            </ListItemButton>
+          </ListItem>
+        </SparseList>
+      </Card>
+      <HistoryDialog
+        hash="language"
+        title={t("Language")}
+        open={languageOpen}
+        onClose={handleLanguageClose}
+      >
+        <DialogContent>
+          <Card elevation={0}>
+            <SparseList>
+              <ListItem disablePadding>
+                <ListItemButton onClick={() => i18n.changeLanguage()}>
+                  <ListItemText primary={t("System default")} />
+                  {i18n.language.endsWith("-default") && (
+                    <CheckIcon color="success" />
+                  )}
+                </ListItemButton>
+              </ListItem>
+              {Object.keys(i18n.options.resources).map((language) => (
+                <ListItem key={language} disablePadding>
+                  <ListItemButton onClick={() => i18n.changeLanguage(language)}>
+                    <ListItemText
+                      primary={getDisplayName(language, language)}
+                    />
+                    {i18n.language === language && (
+                      <CheckIcon color="success" />
+                    )}
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </SparseList>
+          </Card>
+        </DialogContent>
+      </HistoryDialog>
+    </>
   );
 }
 
@@ -201,7 +277,8 @@ function PermissionsContent() {
 }
 
 function SettingsForm() {
-  const [activeTab, setActiveTab] = useState<string | null>(null);
+  type TabName = "Account" | "Permissions" | "General";
+  const [activeTab, setActiveTab] = useState<TabName | null>(null);
 
   const { t } = useTranslation();
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -211,6 +288,10 @@ function SettingsForm() {
       setActiveTab("Account");
     }
   }, [activeTab, matchesLg]);
+
+  const handleTabClose = useCallback(() => {
+    setActiveTab(null);
+  }, []);
 
   const tabs = (
     <Card elevation={0}>
@@ -224,6 +305,19 @@ function SettingsForm() {
               <AccountCircleIcon />
             </ListItemIcon>
             <ListItemText primary={t("Account")} />
+            <NavigateNextIcon />
+          </ListItemButton>
+        </ListItem>
+        <Divider variant="inset" component="li" />
+        <ListItem disablePadding>
+          <ListItemButton
+            selected={activeTab === "General"}
+            onClick={() => setActiveTab("General")}
+          >
+            <ListItemIcon>
+              <TuneIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("General")} />
             <NavigateNextIcon />
           </ListItemButton>
         </ListItem>
@@ -247,6 +341,8 @@ function SettingsForm() {
   const content =
     activeTab === "Account" ? (
       <AccountContent />
+    ) : activeTab === "General" ? (
+      <GeneralContent />
     ) : activeTab === "Permissions" ? (
       <PermissionsContent />
     ) : null;
@@ -254,7 +350,9 @@ function SettingsForm() {
   return matchesLg ? (
     <Stack direction="row" spacing={2}>
       <Box width={300}>{tabs}</Box>
-      <Box flexGrow={1}>{content}</Box>
+      <Box flexGrow={1}>
+        <Container maxWidth="md">{content}</Container>
+      </Box>
     </Stack>
   ) : (
     <>
@@ -263,7 +361,7 @@ function SettingsForm() {
         hash={activeTab || ""}
         title={t(activeTab || "Settings")}
         open={activeTab !== null}
-        onClose={() => setActiveTab(null)}
+        onClose={handleTabClose}
       >
         <DialogContent sx={{ p: 2 }}>{content}</DialogContent>
       </HistoryDialog>

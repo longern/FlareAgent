@@ -59,7 +59,7 @@ export function HistoryDialog({
   title?: React.ReactNode;
   open: boolean;
   onClose: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   endAdornment?: React.ReactNode;
 }) {
   return (
