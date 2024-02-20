@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 import { Workflow } from "../../workflow";
 import ToolsDialog from "./ToolsDialog";
@@ -34,6 +34,12 @@ export function GlobalComponentsProvider({
     null
   );
 
+  const closeFilesDialog = useCallback(() => setFilesDialogOpen(false), []);
+  const closeSettingsDialog = useCallback(
+    () => setSettingsDialogOpen(false),
+    []
+  );
+
   return (
     <GlobalComponentsContext.Provider
       value={{
@@ -54,18 +60,12 @@ export function GlobalComponentsProvider({
       }}
     >
       {children}
-      <FilesDialog
-        open={filesDialogOpen}
-        onClose={() => setFilesDialogOpen(false)}
-      />
+      <FilesDialog open={filesDialogOpen} onClose={closeFilesDialog} />
       <ToolsDialog
         open={toolsDialogOpen}
         onClose={() => setToolsDialogOpen(false)}
       />
-      <SettingsDialog
-        open={settingsDialogOpen}
-        onClose={() => setSettingsDialogOpen(false)}
-      />
+      <SettingsDialog open={settingsDialogOpen} onClose={closeSettingsDialog} />
       <WorkflowDialog
         workflow={workflowDialogEdit}
         onClose={() => setWorkflowDialogEdit(null)}

@@ -30,6 +30,7 @@ import {
   Tune as TuneIcon,
 } from "@mui/icons-material";
 import { HistoryDialog } from "./HistoryDialog";
+import { useColorMode } from "./ColorModeContext";
 
 function useApiKey() {
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -101,8 +102,138 @@ function AccountContent() {
   );
 }
 
+function LanguageDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+
+  const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(
+    i18n.language.endsWith("-default") ? undefined : i18n.language
+  );
+
+  function getDisplayName(code: string, locale: string) {
+    try {
+      return new Intl.DisplayNames([locale], { type: "language" }).of(code);
+    } catch (e) {
+      return code;
+    }
+  }
+
+  return (
+    <HistoryDialog
+      hash="language"
+      title={t("Language")}
+      open={open}
+      onClose={onClose}
+      endAdornment={({ onClose }) => (
+        <IconButton
+          aria-label={t("Save")}
+          size="large"
+          color="inherit"
+          onClick={() => {
+            i18n.changeLanguage(selectedLanguage);
+            onClose();
+          }}
+        >
+          <CheckIcon />
+        </IconButton>
+      )}
+    >
+      <DialogContent>
+        <Card elevation={0}>
+          <SparseList>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => setSelectedLanguage(undefined)}>
+                <ListItemText primary={t("System default")} />
+                {selectedLanguage === undefined && (
+                  <CheckIcon color="success" />
+                )}
+              </ListItemButton>
+            </ListItem>
+            {Object.keys(i18n.options.resources).map((language) => (
+              <ListItem key={language} disablePadding>
+                <ListItemButton onClick={() => setSelectedLanguage(language)}>
+                  <ListItemText primary={getDisplayName(language, language)} />
+                  {selectedLanguage === language && (
+                    <CheckIcon color="success" />
+                  )}
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </SparseList>
+        </Card>
+      </DialogContent>
+    </HistoryDialog>
+  );
+}
+
+function DarkModeDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [darkMode, setDarkMode] = useState<"light" | "dark" | null>(null);
+  const setColorMode = useColorMode();
+
+  const { t } = useTranslation();
+
+  return (
+    <HistoryDialog
+      hash="dark-mode"
+      title={t("Dark Mode")}
+      open={open}
+      onClose={onClose}
+      endAdornment={({ onClose }) => (
+        <IconButton
+          size="large"
+          color="inherit"
+          aria-label={t("Save")}
+          onClick={() => {
+            setColorMode(darkMode);
+            onClose();
+          }}
+        >
+          <CheckIcon />
+        </IconButton>
+      )}
+    >
+      <DialogContent>
+        <Card elevation={0}>
+          <SparseList>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => setDarkMode(null)}>
+                <ListItemText primary={t("System default")} />
+                {darkMode === null && <CheckIcon color="success" />}
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => setDarkMode("light")}>
+                <ListItemText primary={t("Light Mode")} />
+                {darkMode === "light" && <CheckIcon color="success" />}
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => setDarkMode("dark")}>
+                <ListItemText primary={t("Dark Mode")} />
+                {darkMode === "dark" && <CheckIcon color="success" />}
+              </ListItemButton>
+            </ListItem>
+          </SparseList>
+        </Card>
+      </DialogContent>
+    </HistoryDialog>
+  );
+}
+
 function GeneralContent() {
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [darkModeOpen, setDarkModeOpen] = useState(false);
 
   const { t, i18n } = useTranslation();
 
@@ -116,6 +247,10 @@ function GeneralContent() {
 
   const handleLanguageClose = useCallback(() => {
     setLanguageOpen(false);
+  }, []);
+
+  const handleDarkModeClose = useCallback(() => {
+    setDarkModeOpen(false);
   }, []);
 
   return (
@@ -135,41 +270,17 @@ function GeneralContent() {
               <NavigateNextIcon />
             </ListItemButton>
           </ListItem>
+          <Divider component="li" />
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => setDarkModeOpen(true)}>
+              <ListItemText primary={t("Dark Mode")} />
+              <NavigateNextIcon />
+            </ListItemButton>
+          </ListItem>
         </SparseList>
       </Card>
-      <HistoryDialog
-        hash="language"
-        title={t("Language")}
-        open={languageOpen}
-        onClose={handleLanguageClose}
-      >
-        <DialogContent>
-          <Card elevation={0}>
-            <SparseList>
-              <ListItem disablePadding>
-                <ListItemButton onClick={() => i18n.changeLanguage()}>
-                  <ListItemText primary={t("System default")} />
-                  {i18n.language.endsWith("-default") && (
-                    <CheckIcon color="success" />
-                  )}
-                </ListItemButton>
-              </ListItem>
-              {Object.keys(i18n.options.resources).map((language) => (
-                <ListItem key={language} disablePadding>
-                  <ListItemButton onClick={() => i18n.changeLanguage(language)}>
-                    <ListItemText
-                      primary={getDisplayName(language, language)}
-                    />
-                    {i18n.language === language && (
-                      <CheckIcon color="success" />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </SparseList>
-          </Card>
-        </DialogContent>
-      </HistoryDialog>
+      <LanguageDialog open={languageOpen} onClose={handleLanguageClose} />
+      <DarkModeDialog open={darkModeOpen} onClose={handleDarkModeClose} />
     </>
   );
 }

@@ -220,7 +220,7 @@ function FilesDialog({
             size="large"
             color="inherit"
             onClick={(event) => setAnchorEl(event.currentTarget)}
-            aria-label="menu"
+            aria-label={t("More")}
           >
             <MoreVertIcon />
           </IconButton>

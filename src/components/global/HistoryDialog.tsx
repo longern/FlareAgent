@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect } from "react";
 import { Box, Dialog, IconButton, Slide, Toolbar } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
-import { Close as CloseIcon } from "@mui/icons-material";
+import { NavigateBefore as NavigateBeforeIcon } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 export const SlideLeft = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -60,8 +61,12 @@ export function HistoryDialog({
   open: boolean;
   onClose: () => void;
   children?: React.ReactNode;
-  endAdornment?: React.ReactNode;
+  endAdornment?:
+    | React.ReactNode
+    | ((props: { onClose: () => void }) => React.ReactNode);
 }) {
+  const { t } = useTranslation();
+
   return (
     <HistoryModal hash={hash} open={open} onClose={onClose}>
       {(onClose) => (
@@ -79,17 +84,19 @@ export function HistoryDialog({
         >
           <Toolbar disableGutters>
             <IconButton
+              aria-label={t("Back")}
               size="large"
               color="inherit"
               onClick={onClose}
-              aria-label="close"
             >
-              <CloseIcon />
+              <NavigateBeforeIcon />
             </IconButton>
             <Box flexGrow={1} textAlign="center">
               {title}
             </Box>
-            {endAdornment ?? <Box width={48} />}
+            {typeof endAdornment === "function"
+              ? endAdornment({ onClose })
+              : endAdornment ?? <Box width={48} />}
           </Toolbar>
           {children}
         </Dialog>
