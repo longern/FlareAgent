@@ -30,7 +30,7 @@ import {
   Tune as TuneIcon,
 } from "@mui/icons-material";
 import { HistoryDialog } from "./HistoryDialog";
-import { useColorMode } from "./ColorModeContext";
+import { useSetSettings, useSettings } from "../ActionsProvider";
 
 function useApiKey() {
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -110,10 +110,16 @@ function LanguageDialog({
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
-
   const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(
     i18n.language.endsWith("-default") ? undefined : i18n.language
   );
+  const setSettings = useSetSettings();
+
+  const handleChangeLanguage = useCallback(() => {
+    setSettings((settings) => ({ ...settings, language: selectedLanguage }));
+    i18n.changeLanguage(selectedLanguage);
+    onClose();
+  }, [selectedLanguage, i18n, onClose, setSettings]);
 
   function getDisplayName(code: string, locale: string) {
     try {
@@ -135,7 +141,7 @@ function LanguageDialog({
           size="large"
           color="inherit"
           onClick={() => {
-            i18n.changeLanguage(selectedLanguage);
+            handleChangeLanguage();
             onClose();
           }}
         >
@@ -178,8 +184,8 @@ function DarkModeDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const [darkMode, setDarkMode] = useState<"light" | "dark" | null>(null);
-  const setColorMode = useColorMode();
+  const [settings, setSettings] = [useSettings(), useSetSettings()];
+  const [darkMode, setDarkMode] = useState(settings.darkMode);
 
   const { t } = useTranslation();
 
@@ -195,7 +201,7 @@ function DarkModeDialog({
           color="inherit"
           aria-label={t("Save")}
           onClick={() => {
-            setColorMode(darkMode);
+            setSettings((settings) => ({ ...settings, darkMode }));
             onClose();
           }}
         >
@@ -207,9 +213,9 @@ function DarkModeDialog({
         <Card elevation={0}>
           <SparseList>
             <ListItem disablePadding>
-              <ListItemButton onClick={() => setDarkMode(null)}>
+              <ListItemButton onClick={() => setDarkMode(undefined)}>
                 <ListItemText primary={t("System default")} />
-                {darkMode === null && <CheckIcon color="success" />}
+                {darkMode === undefined && <CheckIcon color="success" />}
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
@@ -235,6 +241,7 @@ function GeneralContent() {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [darkModeOpen, setDarkModeOpen] = useState(false);
 
+  const settings = useSettings();
   const { t, i18n } = useTranslation();
 
   function getDisplayName(code: string, locale: string) {
@@ -273,7 +280,16 @@ function GeneralContent() {
           <Divider component="li" />
           <ListItem disablePadding>
             <ListItemButton onClick={() => setDarkModeOpen(true)}>
-              <ListItemText primary={t("Dark Mode")} />
+              <ListItemText
+                primary={t("Dark Mode")}
+                secondary={
+                  settings?.darkMode === undefined
+                    ? t("System default")
+                    : settings.darkMode === "light"
+                    ? t("Light Mode")
+                    : t("Dark Mode")
+                }
+              />
               <NavigateNextIcon />
             </ListItemButton>
           </ListItem>

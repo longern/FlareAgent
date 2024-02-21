@@ -10,17 +10,25 @@ import React, {
 import { Workflow } from "../workflow";
 import { useTranslation } from "react-i18next";
 import { readFile, useSyncFS, writeFile } from "../fs/hooks";
+import { PaletteMode } from "@mui/material";
+
+export type Settings = {
+  darkMode?: PaletteMode;
+  language?: string;
+};
 
 const ActionsContext = createContext<{
   actions: OpenAPIV3.Document[];
   workflows: Workflow[] | null;
   avatar: File | null;
+  settings: Settings | null;
 } | null>(null);
 const SetActionsContext = createContext<{
   setActions: React.Dispatch<React.SetStateAction<OpenAPIV3.Document[] | null>>;
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[] | null>>;
   newWorkflow: () => void;
   setAvatar: React.Dispatch<React.SetStateAction<File | null>>;
+  setSettings: React.Dispatch<React.SetStateAction<Settings | null>>;
 } | null>(null);
 
 function useActions() {
@@ -137,10 +145,26 @@ function useAvatarState() {
   return [avatar, setAvatar] as const;
 }
 
+function useSettingsState() {
+  const [settings, setSettings] = useState<Settings | null>(null);
+
+  const fallbackValue = useMemo(() => ({}), []);
+
+  useSyncFS({
+    path: "/root/.flareagent/settings.json",
+    value: settings,
+    setValue: setSettings,
+    fallbackValue,
+  });
+
+  return [settings, setSettings] as const;
+}
+
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
   const [actions, setActions] = useActions();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
   const [avatar, setAvatar] = useAvatarState();
+  const [settings, setSettings] = useSettingsState();
 
   const dispatchers = useMemo(
     () => ({
@@ -148,12 +172,13 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
       setWorkflows,
       newWorkflow,
       setAvatar,
+      setSettings,
     }),
-    [setActions, setWorkflows, newWorkflow, setAvatar]
+    [setActions, setWorkflows, newWorkflow, setAvatar, setSettings]
   );
 
   return (
-    <ActionsContext.Provider value={{ actions, workflows, avatar }}>
+    <ActionsContext.Provider value={{ actions, workflows, avatar, settings }}>
       <SetActionsContext.Provider value={dispatchers}>
         {children}
       </SetActionsContext.Provider>
@@ -190,4 +215,14 @@ export function useAvatarUrl() {
 export function useSetAvatar() {
   const { setAvatar } = useContext(SetActionsContext);
   return setAvatar;
+}
+
+export function useSettings() {
+  const { settings } = useContext(ActionsContext);
+  return settings;
+}
+
+export function useSetSettings() {
+  const { setSettings } = useContext(SetActionsContext);
+  return setSettings;
 }
