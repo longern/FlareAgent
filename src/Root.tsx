@@ -11,10 +11,20 @@ import App from "./components/App";
 import AppProvider from "./components/AppProvider";
 import { ColorModeProvider } from "./components/global/ColorModeContext";
 
+if ("virtualKeyboard" in window.navigator) {
+  (window.navigator as any).virtualKeyboard.overlaysContent = true;
+}
+
 const globalStyles = (
   <GlobalStyles
     styles={{
-      "html, body, #root": {
+      html: {
+        position: "relative",
+        height: "calc(100% - env(keyboard-inset-height, 0px))",
+        transition: "height 0.2s",
+      },
+
+      "body, #root": {
         height: "100%",
       },
 
