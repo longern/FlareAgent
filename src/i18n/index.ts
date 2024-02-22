@@ -8,11 +8,7 @@ i18n
     type: "languageDetector",
     async: true,
     detect: (cb: (lang: string) => void) =>
-      cb(
-        typeof window !== "undefined"
-          ? window.navigator.language + "-default"
-          : "en"
-      ),
+      cb(typeof window !== "undefined" ? window.navigator.language : "en"),
     init: () => {},
     cacheUserLanguage: () => {},
   })

@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import "./i18n";
-import Root from "./Root";
+import Root from "./components/Root";
 import "./scheme";
 
 const root = ReactDOM.createRoot(document.getElementById("root")!);

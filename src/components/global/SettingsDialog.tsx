@@ -110,10 +110,8 @@ function LanguageDialog({
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
-  const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(
-    i18n.language.endsWith("-default") ? undefined : i18n.language
-  );
-  const setSettings = useSetSettings();
+  const [settings, setSettings] = [useSettings(), useSetSettings()];
+  const [selectedLanguage, setSelectedLanguage] = useState(settings.language);
 
   const handleChangeLanguage = useCallback(() => {
     setSettings((settings) => ({ ...settings, language: selectedLanguage }));
@@ -269,9 +267,9 @@ function GeneralContent() {
               <ListItemText
                 primary={t("Language")}
                 secondary={
-                  i18n.language.endsWith("-default")
+                  settings.language === undefined
                     ? t("System default")
-                    : getDisplayName(i18n.language, i18n.language)
+                    : getDisplayName(settings.language, i18n.language)
                 }
               />
               <NavigateNextIcon />

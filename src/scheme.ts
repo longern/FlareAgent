@@ -1,3 +1,5 @@
+"use client";
+
 export type SchemeHandler = (
   url: RequestInfo | URL,
   options?: RequestInit
@@ -7,7 +9,7 @@ const schemeHandlers: {
   [key: string]: SchemeHandler;
 } = {};
 
-if (typeof window !== "undefined") {
+function hijackFetch() {
   const oldFetch = window.fetch;
   window.fetch = async (url: RequestInfo | URL, options?: RequestInit) => {
     const scheme = typeof url === "string" ? url.split(":")[0] : "";
@@ -21,3 +23,5 @@ if (typeof window !== "undefined") {
 export function registerSchemeHandler(scheme: string, handler: SchemeHandler) {
   schemeHandlers[scheme] = handler;
 }
+
+hijackFetch();
