@@ -165,6 +165,19 @@ async function executeAssistantNode({
     }))
     .filter((tool) => node.data.tools?.includes(tool.function.name) ?? false);
 
+  if (tools.find((tool) => tool.function.name === "setMemory")) {
+    await fetch("tool://memories")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Failed to fetch memories");
+        const memories = (await response.json()) as string[];
+        state.variables.set(
+          "MEMORIES",
+          memories.map((memory, index) => `[${index}] ${memory}\n`).join("")
+        );
+      })
+      .catch(() => state.variables.set("MEMORIES", ""));
+  }
+
   const systemPrompt = node.data.prompt?.replace(
     /{([A-Za-z0-9_]+)}/g,
     (match, variableName) => state.variables.get(variableName) ?? match

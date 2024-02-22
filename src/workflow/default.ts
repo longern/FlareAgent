@@ -21,8 +21,9 @@ export const defaultWorkflow: Workflow = {
       id: "assistant",
       type: "assistant",
       data: {
+        prompt: "{MEMORIES}",
         label: "Assistant",
-        tools: ["search", "crawl", "python"],
+        tools: ["setMemory", "deleteMemory", "search", "crawl", "python"],
       },
     },
     {
