@@ -30,6 +30,7 @@ import {
   Lock as LockIcon,
   NavigateNext as NavigateNextIcon,
   Tune as TuneIcon,
+  Psychology as PsychologyIcon,
 } from "@mui/icons-material";
 import { HistoryDialog } from "./HistoryDialog";
 import { useSetSettings, useSettings } from "../ActionsProvider";
@@ -490,7 +491,7 @@ function SettingsForm() {
             onClick={() => setActiveTab("Account")}
           >
             <ListItemIcon>
-              <AccountCircleIcon />
+              <AccountCircleIcon fontSize="large" />
             </ListItemIcon>
             <ListItemText primary={t("Account")} />
             <NavigateNextIcon />
@@ -503,7 +504,7 @@ function SettingsForm() {
             onClick={() => setActiveTab("General")}
           >
             <ListItemIcon>
-              <TuneIcon />
+              <TuneIcon fontSize="large" />
             </ListItemIcon>
             <ListItemText primary={t("General")} />
             <NavigateNextIcon />
@@ -516,7 +517,7 @@ function SettingsForm() {
             onClick={() => setActiveTab("Personalization")}
           >
             <ListItemIcon>
-              <PsychologyIcon />
+              <PsychologyIcon fontSize="large" />
             </ListItemIcon>
             <ListItemText primary={t("Personalization")} />
             <NavigateNextIcon />
@@ -529,7 +530,7 @@ function SettingsForm() {
             onClick={() => setActiveTab("Permissions")}
           >
             <ListItemIcon>
-              <LockIcon />
+              <LockIcon fontSize="large" />
             </ListItemIcon>
             <ListItemText primary={t("Permissions")} />
             <NavigateNextIcon />
