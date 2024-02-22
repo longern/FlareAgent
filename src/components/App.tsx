@@ -25,7 +25,7 @@ import {
 } from "../workflow/execution";
 import { useModels } from "./hooks";
 import { useSetError } from "./ErrorDisplay";
-import { useActionsState } from "./ActionsProvider";
+import { useActionsState, useSettings } from "./ActionsProvider";
 
 function ModelSelector({
   model,
@@ -84,6 +84,7 @@ function App() {
   const [model, setModel] = useModel();
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const setError = useSetError();
+  const settings = useSettings();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const theme = useTheme();
@@ -93,6 +94,20 @@ function App() {
     workflow: Workflow,
     node: Node
   ) => {
+    variables.set("MEMORIES", "");
+    if (!settings.disableMemory) {
+      await fetch("tool://memories")
+        .then(async (response) => {
+          if (!response.ok) throw new Error("Failed to fetch memories");
+          const memories = (await response.json()) as string[];
+          variables.set(
+            "MEMORIES",
+            memories.map((memory, index) => `[${index}] ${memory}\n`).join("")
+          );
+        })
+        .catch(() => {});
+    }
+
     const state = await executeWorkflowStep({
       workflow: workflow,
       state: {
@@ -101,7 +116,11 @@ function App() {
         variables: variables,
       },
       model: model,
-      tools: apisToTool(tools),
+      tools: apisToTool(
+        tools.filter(
+          (tool) => !settings.disableMemory || tool.info.title !== "Memory"
+        )
+      ),
       onPartialMessage: (message) => setMessages([...messages!, message]),
       onAbortController: (controller) => setController(controller),
     });

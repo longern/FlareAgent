@@ -1,3 +1,4 @@
+import OpenAI from "openai";
 import {
   ChatCompletion,
   ChatCompletionContentPart,
@@ -5,6 +6,7 @@ import {
   ChatCompletionMessageParam,
   ChatCompletionToolMessageParam,
 } from "openai/resources/index";
+
 import {
   AssistantNode,
   CodeNode,
@@ -13,8 +15,7 @@ import {
   ToolCallNode,
   UserInputNode,
   Workflow,
-} from ".";
-import OpenAI from "openai";
+} from "./types";
 import { Tool } from "../tools";
 import { runPython } from "../python";
 
@@ -164,19 +165,6 @@ async function executeAssistantNode({
       function: tool.function,
     }))
     .filter((tool) => node.data.tools?.includes(tool.function.name) ?? false);
-
-  if (tools.find((tool) => tool.function.name === "setMemory")) {
-    await fetch("tool://memories")
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Failed to fetch memories");
-        const memories = (await response.json()) as string[];
-        state.variables.set(
-          "MEMORIES",
-          memories.map((memory, index) => `[${index}] ${memory}\n`).join("")
-        );
-      })
-      .catch(() => state.variables.set("MEMORIES", ""));
-  }
 
   const systemPrompt = node.data.prompt?.replace(
     /{([A-Za-z0-9_]+)}/g,

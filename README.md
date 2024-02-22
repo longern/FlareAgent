@@ -19,6 +19,7 @@ Another ChatGPT front-end. Focus on tool calls and workflow management.
   - [x] Dalle-3 image generation
 - [x] Proxy OpenAI requests
 - [x] Workflow management
+- [x] Memory management
 
 ## Usage
 

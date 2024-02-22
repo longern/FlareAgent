@@ -15,6 +15,7 @@ import { PaletteMode } from "@mui/material";
 export type Settings = {
   darkMode?: PaletteMode;
   language?: string;
+  disableMemory?: boolean;
 };
 
 const ActionsContext = createContext<{

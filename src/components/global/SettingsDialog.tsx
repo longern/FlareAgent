@@ -13,6 +13,7 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
+  Switch,
   TextField,
   Theme,
   styled,
@@ -24,6 +25,7 @@ import {
   Cancel as CancelIcon,
   Check as CheckIcon,
   CheckCircle as CheckCircleIcon,
+  Delete as DeleteIcon,
   Help as HelpIcon,
   Lock as LockIcon,
   NavigateNext as NavigateNextIcon,
@@ -299,6 +301,67 @@ function GeneralContent() {
   );
 }
 
+function PersonalizationContent() {
+  const [memories, setMemories] = useState<string[]>([]);
+
+  const [settings, setSettings] = [useSettings(), useSetSettings()];
+  const { t } = useTranslation();
+
+  const fetchMemories = useCallback(async () => {
+    const response = await fetch("tool://memories");
+    setMemories((await response.json()) ?? []);
+  }, []);
+
+  const deleteMemory = useCallback(
+    (index: number) => {
+      fetch("tool://memories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index }),
+      }).then(fetchMemories);
+    },
+    [fetchMemories]
+  );
+
+  useEffect(() => {
+    fetchMemories();
+  }, [fetchMemories]);
+
+  return (
+    <Stack height="100%">
+      <SparseList>
+        <ListItem disablePadding>
+          <ListItemButton component="label" disableRipple>
+            <ListItemText primary={t("Memory")} />
+            <Switch
+              color="primary"
+              checked={!settings.disableMemory}
+              onChange={(event) => {
+                setSettings((settings) => ({
+                  ...settings,
+                  disableMemory: !event.target.checked || undefined,
+                }));
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      </SparseList>
+      <Card variant="outlined" sx={{ flexGrow: 1, overflow: "auto" }}>
+        <SparseList>
+          {memories.map((memory, index) => (
+            <ListItem key={memory}>
+              <ListItemText primary={memory} />
+              <IconButton onClick={() => deleteMemory(index)}>
+                <DeleteIcon />
+              </IconButton>
+            </ListItem>
+          ))}
+        </SparseList>
+      </Card>
+    </Stack>
+  );
+}
+
 function PermissionIcon({ state }: { state: PermissionState | null }) {
   switch (state) {
     case "granted":
@@ -402,7 +465,7 @@ function PermissionsContent() {
 }
 
 function SettingsForm() {
-  type TabName = "Account" | "Permissions" | "General";
+  type TabName = "Account" | "General" | "Personalization" | "Permissions";
   const [activeTab, setActiveTab] = useState<TabName | null>(null);
 
   const { t } = useTranslation();
@@ -449,6 +512,19 @@ function SettingsForm() {
         <Divider variant="inset" component="li" />
         <ListItem disablePadding>
           <ListItemButton
+            selected={activeTab === "Personalization"}
+            onClick={() => setActiveTab("Personalization")}
+          >
+            <ListItemIcon>
+              <PsychologyIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("Personalization")} />
+            <NavigateNextIcon />
+          </ListItemButton>
+        </ListItem>
+        <Divider variant="inset" component="li" />
+        <ListItem disablePadding>
+          <ListItemButton
             selected={activeTab === "Permissions"}
             onClick={() => setActiveTab("Permissions")}
           >
@@ -468,15 +544,19 @@ function SettingsForm() {
       <AccountContent />
     ) : activeTab === "General" ? (
       <GeneralContent />
+    ) : activeTab === "Personalization" ? (
+      <PersonalizationContent />
     ) : activeTab === "Permissions" ? (
       <PermissionsContent />
     ) : null;
 
   return matchesLg ? (
-    <Stack direction="row" spacing={2}>
+    <Stack direction="row" spacing={2} sx={{ height: "100%" }}>
       <Box width={300}>{tabs}</Box>
       <Box flexGrow={1}>
-        <Container maxWidth="md">{content}</Container>
+        <Container maxWidth="md" sx={{ height: "100%" }}>
+          {content}
+        </Container>
       </Box>
     </Stack>
   ) : (

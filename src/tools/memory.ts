@@ -32,31 +32,37 @@ app.get("/", async () => {
 
     const file = await fileHandle.getFile();
     const text = await file.text();
-    const memory = text ? JSON.parse(text) : null;
-    return Response.json(memory);
+    if (!text) throw new Error("No memory found");
+    return new Response(text);
   } catch (e) {
     return Response.json(null, { status: 404 });
   }
 });
 
 app.delete("/", async (context) => {
-  const root = await DIRECTORY;
+  try {
+    const root = await DIRECTORY;
 
-  const directory = await root.getDirectoryHandle(".flareagent");
-  const fileHandle = await directory.getFileHandle("memory.json", {
-    create: true,
-  });
+    const directory = await root.getDirectoryHandle(".flareagent");
+    const fileHandle = await directory.getFileHandle("memory.json");
 
-  const file = await fileHandle.getFile();
-  const text = await file.text();
-  const memory = text ? (JSON.parse(text) as Array<string>) : [];
-  const body = await context.req.json();
-  memory.splice(body.index, 1);
-  const writer = await fileHandle.createWritable();
-  await writer.write(JSON.stringify(memory));
-  await writer.close();
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    const memory = JSON.parse(text) as Array<string>;
+    const body = await context.req.json();
+    memory.splice(body.index, 1);
+    if (memory.length === 0) {
+      await directory.removeEntry("memory.json");
+      return Response.json({ success: true });
+    }
+    const writer = await fileHandle.createWritable();
+    await writer.write(JSON.stringify(memory));
+    await writer.close();
 
-  return Response.json({ success: true });
+    return Response.json({ success: true });
+  } catch (e) {
+    return Response.json({ success: false }, { status: 400 });
+  }
 });
 
 const DEFINITION = {
@@ -79,7 +85,7 @@ const DEFINITION = {
                 properties: {
                   value: {
                     type: "string",
-                    description: "Memory expressed in text",
+                    description: "Memory expressed in whole sentences",
                     required: true,
                   },
                 },
