@@ -49,8 +49,13 @@ app.delete("/", async (context) => {
     const file = await fileHandle.getFile();
     const text = await file.text();
     const memory = JSON.parse(text) as Array<string>;
-    const body = await context.req.json();
-    memory.splice(body.index, 1);
+    const body = await context.req.text();
+    if (!body) {
+      memory.splice(0, memory.length);
+    } else {
+      const { index } = JSON.parse(body);
+      memory.splice(index, 1);
+    }
     if (memory.length === 0) {
       await directory.removeEntry("memory.json");
       return Response.json({ success: true });

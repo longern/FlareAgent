@@ -84,7 +84,7 @@ function App() {
   const [model, setModel] = useModel();
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const setError = useSetError();
-  const settings = useSettings();
+  const settings = useSettings() ?? {};
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const theme = useTheme();

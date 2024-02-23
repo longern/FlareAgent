@@ -84,6 +84,11 @@ export function GlobalComponentsProvider({
               ? "dark"
               : "light",
         },
+        typography: {
+          button: {
+            textTransform: "none",
+          },
+        },
       }),
     [settings.darkMode, prefersDarkMode]
   );

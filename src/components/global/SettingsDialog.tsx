@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Box,
+  Button,
   Card,
   Container,
   DialogContent,
@@ -305,7 +306,7 @@ function GeneralContent() {
 function PersonalizationContent() {
   const [memories, setMemories] = useState<string[]>([]);
 
-  const [settings, setSettings] = [useSettings(), useSetSettings()];
+  const [settings, setSettings] = [useSettings() ?? {}, useSetSettings()];
   const { t } = useTranslation();
 
   const fetchMemories = useCallback(async () => {
@@ -329,7 +330,7 @@ function PersonalizationContent() {
   }, [fetchMemories]);
 
   return (
-    <Stack height="100%">
+    <Stack height="100%" spacing={1}>
       <SparseList>
         <ListItem disablePadding>
           <ListItemButton component="label" disableRipple>
@@ -359,6 +360,17 @@ function PersonalizationContent() {
           ))}
         </SparseList>
       </Card>
+      <Box>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={() => {
+            fetch("tool://memories", { method: "DELETE" }).then(fetchMemories);
+          }}
+        >
+          {t("Clear memory")}
+        </Button>
+      </Box>
     </Stack>
   );
 }
