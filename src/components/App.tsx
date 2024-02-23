@@ -174,7 +174,7 @@ function App() {
   }, [currentWorkflow, currentNode, setError, setMessages]);
 
   return (
-    <Stack height="100%">
+    <Stack direction="row" height="100%">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -187,58 +187,60 @@ function App() {
         currentWorkflow={currentWorkflow}
         onWorkflowChange={handleWorkflowChange}
       />
-      {!matchesLg && (
-        <MobileToolbar
-          modelSelector={
-            <ModelSelector model={model} onModelChange={setModel} />
-          }
-          onMenuClick={() => setSidebarOpen(true)}
-          onCreateThread={handleNewChat}
-        />
-      )}
-      <Box sx={{ minHeight: 0, flexGrow: 1 }}>
-        <ScrollToBottom
-          scrollToBottom={scrollToBottom}
-          component={Box}
-          sx={{ height: "100%", overflow: "auto" }}
-          onScrollToBottomChange={setScrollToBottom}
-        >
-          <Container
-            ref={messageContainerRef}
-            maxWidth="md"
-            sx={{ padding: 1 }}
+      <Stack minWidth={0} flexGrow={1}>
+        {!matchesLg && (
+          <MobileToolbar
+            modelSelector={
+              <ModelSelector model={model} onModelChange={setModel} />
+            }
+            onMenuClick={() => setSidebarOpen(true)}
+            onCreateThread={handleNewChat}
+          />
+        )}
+        <Box sx={{ minHeight: 0, flexGrow: 1 }}>
+          <ScrollToBottom
+            scrollToBottom={scrollToBottom}
+            component={Box}
+            sx={{ height: "100%", overflow: "auto" }}
+            onScrollToBottomChange={setScrollToBottom}
           >
-            <MessageList messages={messages} />
-          </Container>
-        </ScrollToBottom>
-      </Box>
-      <Container maxWidth="md" sx={{ paddingX: 1 }}>
-        <UserInput
-          onSend={(userInput) => {
-            executeUserInputNode({
-              workflow: currentWorkflow,
-              state: {
-                node: currentNode!,
-                messages: messages!,
-                variables: variables,
-              },
-              userInput: userInput,
-            }).then((state) => {
-              setCurrentNode(state.node);
-              setMessages(state.messages);
-            });
-          }}
-          onScreenshot={async () => {
-            const { toBlob } = await import("html-to-image");
-            const blob = await toBlob(messageContainerRef.current!, {
-              backgroundColor: theme.palette.background.default,
-              style: { margin: "0" },
-            });
-            const clipboardItem = new ClipboardItem({ [blob.type]: blob });
-            navigator.clipboard.write([clipboardItem]);
-          }}
-        />
-      </Container>
+            <Container
+              ref={messageContainerRef}
+              maxWidth="md"
+              sx={{ padding: 1 }}
+            >
+              <MessageList messages={messages} />
+            </Container>
+          </ScrollToBottom>
+        </Box>
+        <Container maxWidth="md" sx={{ paddingX: 1 }}>
+          <UserInput
+            onSend={(userInput) => {
+              executeUserInputNode({
+                workflow: currentWorkflow,
+                state: {
+                  node: currentNode!,
+                  messages: messages!,
+                  variables: variables,
+                },
+                userInput: userInput,
+              }).then((state) => {
+                setCurrentNode(state.node);
+                setMessages(state.messages);
+              });
+            }}
+            onScreenshot={async () => {
+              const { toBlob } = await import("html-to-image");
+              const blob = await toBlob(messageContainerRef.current!, {
+                backgroundColor: theme.palette.background.default,
+                style: { margin: "0" },
+              });
+              const clipboardItem = new ClipboardItem({ [blob.type]: blob });
+              navigator.clipboard.write([clipboardItem]);
+            }}
+          />
+        </Container>
+      </Stack>
       {!scrollToBottom && (
         <ScrollToBottomButton onClick={() => setScrollToBottom(true)} />
       )}
