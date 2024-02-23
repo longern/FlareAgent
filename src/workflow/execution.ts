@@ -17,7 +17,6 @@ import {
   Workflow,
 } from "./types";
 import { Tool } from "../tools";
-import { runPython } from "../python";
 
 interface WorkflowExecutionState {
   node: Node | undefined;
@@ -294,6 +293,7 @@ export async function executeCodeNode({
   onAbortController?.(controller);
   const env = new Map(state.variables);
   env.set("MESSAGES", JSON.stringify(state.messages));
+  const { runPython } = await import("../python");
   const { variables } = await runPython(node.data.code!, {
     env,
     signal: controller.signal,

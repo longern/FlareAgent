@@ -1,4 +1,5 @@
 import React, {
+  Suspense,
   createContext,
   useCallback,
   useContext,
@@ -6,14 +7,6 @@ import React, {
   useMemo,
   useState,
 } from "react";
-
-import { Workflow } from "../../workflow";
-import ToolsDialog from "./ToolsDialog";
-import SettingsDialog from "./SettingsDialog";
-import WorkflowDialog from "./WorkflowDialog";
-import { ErrorDisplay } from "../ErrorDisplay";
-import FilesDialog from "./FilesDialog";
-import { useSettings } from "../ActionsProvider";
 import {
   CssBaseline,
   GlobalStyles,
@@ -22,6 +15,15 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+
+import { Workflow } from "../../workflow";
+import { ErrorDisplay } from "../ErrorDisplay";
+import { useSettings } from "../ActionsProvider";
+
+const FilesDialog = React.lazy(() => import("./FilesDialog"));
+const SettingsDialog = React.lazy(() => import("./SettingsDialog"));
+const ToolsDialog = React.lazy(() => import("./ToolsDialog"));
+const WorkflowDialog = React.lazy(() => import("./WorkflowDialog"));
 
 const globalStyles = (
   <GlobalStyles
@@ -126,19 +128,27 @@ export function GlobalComponentsProvider({
         <CssBaseline />
         {globalStyles}
         {children}
-        <FilesDialog open={filesDialogOpen} onClose={closeFilesDialog} />
-        <ToolsDialog
-          open={toolsDialogOpen}
-          onClose={() => setToolsDialogOpen(false)}
-        />
-        <SettingsDialog
-          open={settingsDialogOpen}
-          onClose={closeSettingsDialog}
-        />
-        <WorkflowDialog
-          workflow={workflowDialogEdit}
-          onClose={() => setWorkflowDialogEdit(null)}
-        />
+        <Suspense>
+          <FilesDialog open={filesDialogOpen} onClose={closeFilesDialog} />
+        </Suspense>
+        <Suspense>
+          <ToolsDialog
+            open={toolsDialogOpen}
+            onClose={() => setToolsDialogOpen(false)}
+          />
+        </Suspense>
+        <Suspense>
+          <SettingsDialog
+            open={settingsDialogOpen}
+            onClose={closeSettingsDialog}
+          />
+        </Suspense>
+        <Suspense>
+          <WorkflowDialog
+            workflow={workflowDialogEdit}
+            onClose={() => setWorkflowDialogEdit(null)}
+          />
+        </Suspense>
         <ErrorDisplay />
       </ThemeProvider>
     </GlobalComponentsContext.Provider>
