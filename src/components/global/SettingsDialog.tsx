@@ -388,7 +388,10 @@ const PERMISSIONS = [
 ] as PermissionName[];
 
 const PERMISSION_REQUESTERS = {
-  geolocation: () => navigator.geolocation.getCurrentPosition(() => {}),
+  geolocation: () =>
+    new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    }),
   notifications: () => Notification.requestPermission(),
   camera: () =>
     navigator.mediaDevices
