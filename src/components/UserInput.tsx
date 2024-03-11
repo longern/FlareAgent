@@ -155,7 +155,7 @@ function UserInput({
           }}
           inputProps={{ "aria-label": "user input" }}
           InputProps={{
-            sx: { borderRadius: "9999px" },
+            sx: { borderRadius: "26px" },
             endAdornment: (
               <IconButton
                 aria-label="send"
