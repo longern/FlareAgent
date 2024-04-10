@@ -59,6 +59,7 @@ function FilesListItem({
   onClick: () => void;
   contextMenu?: {
     label: string;
+    disabled?: boolean;
     onClick: () => void;
   }[];
 }) {
@@ -115,6 +116,8 @@ function FilesListItem({
         {contextMenu?.map((item) => (
           <MenuItem
             key={item.label}
+            disabled={item.disabled}
+            sx={{ minWidth: 160 }}
             onClick={() => {
               item.onClick();
               setMenuPosition(null);
@@ -316,6 +319,24 @@ function FilesDialog({
                 onClick={open}
                 contextMenu={[
                   { label: t("Open"), onClick: open },
+                  {
+                    label: t("Rename"),
+                    disabled: !(file instanceof File),
+                    onClick: async () => {
+                      if (!(file instanceof File) || !dirHandle) return;
+                      const name = window.prompt(t("New name"), file.name);
+                      if (!name || name === file.name) return;
+                      const newFileHandle = await dirHandle.getFileHandle(
+                        name,
+                        { create: true }
+                      );
+                      const writable = await newFileHandle.createWritable();
+                      await writable.write(file);
+                      await writable.close();
+                      await dirHandle.removeEntry(file.name);
+                      await readDirectory(dirHandle);
+                    },
+                  },
                   {
                     label: t("Delete"),
                     onClick: async () => {
