@@ -159,10 +159,7 @@ async function executeAssistantNode({
     dangerouslyAllowBrowser: true,
   });
   const tools = toolsArg
-    .map((tool) => ({
-      ...tool,
-      function: tool.function,
-    }))
+    .map(({ type, function: func }) => ({ type, function: func }))
     .filter((tool) => node.data.tools?.includes(tool.function.name) ?? false);
 
   const systemPrompt = node.data.prompt?.replace(
