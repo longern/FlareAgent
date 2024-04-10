@@ -16,7 +16,9 @@ import {
 } from "@mui/material";
 import {
   AudioFile as AudioFileIcon,
+  CreateNewFolder as CreateNewFolderIcon,
   Description as DescriptionIcon,
+  FileUpload as FileUploadIcon,
   Folder as FolderIcon,
   Image as ImageIcon,
   InsertDriveFile as InsertDriveFileIcon,
@@ -242,9 +244,15 @@ function FilesDialog({
                 await readDirectory(dirHandle!);
               }}
             >
+              <ListItemIcon>
+                <CreateNewFolderIcon />
+              </ListItemIcon>
               {t("New directory")}
             </MenuItem>
             <MenuItem component="label">
+              <ListItemIcon>
+                <FileUploadIcon />
+              </ListItemIcon>
               {t("Import file")}
               <input type="file" hidden multiple onChange={handleImportFile} />
             </MenuItem>
