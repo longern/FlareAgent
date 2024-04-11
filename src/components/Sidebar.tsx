@@ -26,6 +26,71 @@ import {
   useWorkflowsState,
 } from "./ActionsProvider";
 
+function WorkflowList({
+  currentWorkflow,
+  onWorkflowChange,
+}: {
+  currentWorkflow: Workflow | null;
+  onWorkflowChange: (workflow: Workflow) => void;
+}) {
+  const { workflows, newWorkflow } = useWorkflowsState();
+  const { WorkflowDialog } = useGlobalComponents();
+  const { t } = useTranslation();
+  const workflowsWithDefault =
+    workflows === null ? null : [defaultWorkflow, ...workflows];
+
+  useEffect(() => {
+    if (
+      workflows !== null &&
+      currentWorkflow !== null &&
+      currentWorkflow !== defaultWorkflow &&
+      !workflows.includes(currentWorkflow)
+    ) {
+      onWorkflowChange(defaultWorkflow);
+    }
+  }, [workflows, currentWorkflow, onWorkflowChange]);
+
+  return (
+    <List sx={{ pl: 2 }} disablePadding>
+      {workflowsWithDefault === null ? (
+        <ListItem>
+          <ListItemText primary={t("Loading...")} />
+        </ListItem>
+      ) : (
+        workflowsWithDefault.map((workflow) => (
+          <ListItem
+            disablePadding
+            key={workflow.name}
+            secondaryAction={
+              <Radio
+                checked={currentWorkflow?.name === workflow.name}
+                onChange={() => onWorkflowChange(workflow)}
+                value={workflow.name}
+                name="workflow"
+                inputProps={{ "aria-label": workflow.name }}
+              />
+            }
+          >
+            <ListItemButton
+              onClick={() => {
+                if (workflow === defaultWorkflow) return;
+                WorkflowDialog.edit(workflow);
+              }}
+            >
+              <ListItemText>{workflow.name}</ListItemText>
+            </ListItemButton>
+          </ListItem>
+        ))
+      )}
+      <ListItem disablePadding>
+        <ListItemButton onClick={newWorkflow}>
+          <ListItemText>{t("New...")}</ListItemText>
+        </ListItemButton>
+      </ListItem>
+    </List>
+  );
+}
+
 function Sidebar({
   open,
   onClose,
@@ -42,9 +107,8 @@ function Sidebar({
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const { workflows, newWorkflow } = useWorkflowsState();
 
-  const { FilesDialog, SettingsDialog, WorkflowDialog } = useGlobalComponents();
+  const { FilesDialog, SettingsDialog } = useGlobalComponents();
   const avatarUrl = useAvatarUrl();
   const setAvatar = useSetAvatar();
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -54,20 +118,6 @@ function Sidebar({
     onNewChat();
     onClose();
   }, [onNewChat, onClose]);
-
-  useEffect(() => {
-    if (
-      workflows !== null &&
-      currentWorkflow !== null &&
-      currentWorkflow !== defaultWorkflow &&
-      !workflows.includes(currentWorkflow)
-    ) {
-      onWorkflowChange(defaultWorkflow);
-    }
-  }, [workflows, currentWorkflow, onWorkflowChange]);
-
-  const workflowsWithDefault =
-    workflows === null ? null : [defaultWorkflow, ...workflows];
 
   return (
     <Drawer
@@ -124,43 +174,10 @@ function Sidebar({
             </ListItemButton>
           </ListItem>
           <Collapse in={expanded === "workflow"}>
-            <List sx={{ pl: 2 }} disablePadding>
-              {workflowsWithDefault === null ? (
-                <ListItem>
-                  <ListItemText primary={t("Loading...")} />
-                </ListItem>
-              ) : (
-                workflowsWithDefault.map((workflow) => (
-                  <ListItem
-                    disablePadding
-                    key={workflow.name}
-                    secondaryAction={
-                      <Radio
-                        checked={currentWorkflow?.name === workflow.name}
-                        onChange={() => onWorkflowChange(workflow)}
-                        value={workflow.name}
-                        name="workflow"
-                        inputProps={{ "aria-label": workflow.name }}
-                      />
-                    }
-                  >
-                    <ListItemButton
-                      onClick={() => {
-                        if (workflow === defaultWorkflow) return;
-                        WorkflowDialog.edit(workflow);
-                      }}
-                    >
-                      <ListItemText>{workflow.name}</ListItemText>
-                    </ListItemButton>
-                  </ListItem>
-                ))
-              )}
-              <ListItem disablePadding>
-                <ListItemButton onClick={newWorkflow}>
-                  <ListItemText>{t("New...")}</ListItemText>
-                </ListItemButton>
-              </ListItem>
-            </List>
+            <WorkflowList
+              currentWorkflow={currentWorkflow}
+              onWorkflowChange={onWorkflowChange}
+            />
           </Collapse>
         </List>
         <List>

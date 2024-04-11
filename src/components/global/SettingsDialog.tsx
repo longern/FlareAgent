@@ -77,7 +77,7 @@ function AccountContent() {
   }, [baseUrl]);
 
   return (
-    <Stack spacing={2}>
+    <Card elevation={0} component={Stack} spacing={2} sx={{ padding: 2 }}>
       <TextField
         label={t("API Key")}
         value={apiKey ?? ""}
@@ -102,7 +102,7 @@ function AccountContent() {
           </IconButton>
         </Box>
       </Stack>
-    </Stack>
+    </Card>
   );
 }
 

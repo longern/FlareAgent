@@ -1,7 +1,6 @@
 import React, {
   Suspense,
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -95,12 +94,6 @@ export function GlobalComponentsProvider({
     [settings.darkMode, prefersDarkMode]
   );
 
-  const closeFilesDialog = useCallback(() => setFilesDialogOpen(false), []);
-  const closeSettingsDialog = useCallback(
-    () => setSettingsDialogOpen(false),
-    []
-  );
-
   useEffect(() => {
     i18n.changeLanguage(settings.language);
   }, [i18n, settings.language]);
@@ -129,7 +122,10 @@ export function GlobalComponentsProvider({
         {globalStyles}
         {children}
         <Suspense>
-          <FilesDialog open={filesDialogOpen} onClose={closeFilesDialog} />
+          <FilesDialog
+            open={filesDialogOpen}
+            onClose={() => setFilesDialogOpen(false)}
+          />
         </Suspense>
         <Suspense>
           <ToolsDialog
@@ -140,7 +136,7 @@ export function GlobalComponentsProvider({
         <Suspense>
           <SettingsDialog
             open={settingsDialogOpen}
-            onClose={closeSettingsDialog}
+            onClose={() => setSettingsDialogOpen(false)}
           />
         </Suspense>
         <Suspense>

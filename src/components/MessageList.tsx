@@ -203,7 +203,7 @@ function MessageListItem({
                 : theme.palette.mode === "dark"
                 ? "#1f1f1f"
                 : "#f5f5f5",
-            "& img": { maxWidth: "100%" },
+            "& img": { display: "block", maxWidth: "100%" },
             "& p": { margin: 0 },
             "& pre": { margin: 0 },
             "& pre>code": { whiteSpace: "pre-wrap" },

@@ -24,6 +24,12 @@ export function HistoryModal({
   onClose: () => void;
   children: (onClose: () => void) => React.ReactNode;
 }) {
+  const onCloseRef = React.useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) return;
     window.history.pushState(
@@ -33,13 +39,13 @@ export function HistoryModal({
     );
     const handlePopState = (event: PopStateEvent) => {
       const stack = (event.state as string[] | null) ?? [];
-      if (!stack.includes(hash)) onClose();
+      if (!stack.includes(hash)) onCloseRef.current();
     };
     window.addEventListener("popstate", handlePopState);
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [hash, open, onClose]);
+  }, [hash, open]);
 
   const handleClose = useCallback(() => {
     window.history.back();
