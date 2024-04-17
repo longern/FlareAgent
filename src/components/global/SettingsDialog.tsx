@@ -62,6 +62,74 @@ const SparseList = styled(List)(() => ({
   "& .MuiListItemButton-root": { minHeight: 60 },
 }));
 
+function authenticate(
+  challenge: string,
+  providerOrigin: string,
+  options?: { timeout?: number }
+) {
+  return new Promise<{
+    name: string;
+    id: string;
+    response: {
+      clientDataJSON: string;
+      signature: string;
+      publicKey: string;
+    };
+  }>((resolve, reject) => {
+    const timeout = options?.timeout;
+    const childWindow = window.open(providerOrigin);
+    if (!childWindow) return;
+    const interval = setInterval(() => {
+      if (childWindow.closed) {
+        clearInterval(interval);
+        window.removeEventListener("message", messageHandler);
+        reject(new Error("Window closed"));
+      }
+      childWindow.postMessage(
+        { publicKey: { challenge, origin: window.location.origin } },
+        "*"
+      );
+    }, 500);
+
+    const messageHandler = async (event: MessageEvent) => {
+      if (event.origin !== providerOrigin) return;
+      if (event.data.type === "public-key") {
+        clearInterval(interval);
+        window.removeEventListener("message", messageHandler);
+        resolve(event.data);
+      }
+    };
+
+    window.addEventListener("message", messageHandler);
+
+    if (!timeout) return;
+    setTimeout(() => {
+      if (childWindow.closed) return;
+      childWindow.close();
+      clearInterval(interval);
+      window.removeEventListener("message", messageHandler);
+      reject(new Error("Timeout"));
+    }, timeout * 1000);
+  });
+}
+
+(window as any).auth = async function () {
+  const challengeResponse = await fetch("/auth/challenge", {
+    method: "POST",
+  });
+  const challengeJson = await challengeResponse.json();
+  const { challenge } = challengeJson as { challenge: string };
+  const cred = await authenticate(challenge, "https://auth.longern.com");
+  const tokenResponse = await fetch("/auth/verify", {
+    method: "POST",
+    body: JSON.stringify(cred),
+  });
+  const tokenJson = await tokenResponse.json();
+  const { token } = tokenJson as { token: string };
+  localStorage.setItem("OPENAI_API_KEY", token);
+  localStorage.setItem("OPENAI_BASE_URL", `${window.location.origin}/openai`);
+};
+
 function AccountContent() {
   const [apiKey, setApiKey] = useApiKey();
   const [baseUrl, setBaseUrl] = useState<string | null>(
