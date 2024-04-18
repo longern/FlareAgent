@@ -83,8 +83,10 @@ async function challengeAuthenticate() {
     method: "POST",
     body: JSON.stringify(cred),
   });
-  const tokenJson = await tokenResponse.json();
-  const { token } = tokenJson as { token: string };
+  const tokenJson: { token: string } | { error: string } =
+    await tokenResponse.json();
+  if ("error" in tokenJson) return alert(tokenJson.error);
+  const { token } = tokenJson;
   localStorage.setItem("OPENAI_API_KEY", token);
   localStorage.setItem("OPENAI_BASE_URL", `${window.location.origin}/openai`);
 }
