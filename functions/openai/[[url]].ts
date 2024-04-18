@@ -1,17 +1,8 @@
-import jwt from "@tsndr/cloudflare-worker-jwt";
+import { verifyJwt } from "../auth/utils";
 
 interface Env {
   OPENAI_API_KEY?: string;
   SECRET_KEY?: string;
-}
-
-function verifyJwt(context: { request: Request; env: Env }): Promise<boolean> {
-  const { request, env } = context;
-  if (!env.SECRET_KEY) return Promise.resolve(true);
-  const authorization = request.headers.get("Authorization");
-  const token = authorization?.split("Bearer ")[1];
-  if (!token) return Promise.resolve(false);
-  return jwt.verify(token, env.SECRET_KEY).catch(() => false);
 }
 
 export const onRequest: PagesFunction<Env> = async function (context) {

@@ -15,14 +15,12 @@ import {
   ListItemText,
   Stack,
   Switch,
-  TextField,
   Theme,
   styled,
   useMediaQuery,
 } from "@mui/material";
 import {
   AccountCircle as AccountCircleIcon,
-  AirlineStops as AirlineStopsIcon,
   Cancel as CancelIcon,
   Check as CheckIcon,
   CheckCircle as CheckCircleIcon,
@@ -33,146 +31,14 @@ import {
   Tune as TuneIcon,
   Psychology as PsychologyIcon,
 } from "@mui/icons-material";
+import AccountDialogContent from "./AccountDialogContent";
 import { HistoryDialog } from "./HistoryDialog";
 import { useSetSettings, useSettings } from "../ActionsProvider";
-
-function useApiKey() {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    const apiKey = localStorage.getItem("OPENAI_API_KEY");
-    if (apiKey) {
-      setApiKey(apiKey);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem("OPENAI_API_KEY", apiKey);
-    } else {
-      localStorage.removeItem("OPENAI_API_KEY");
-    }
-  }, [apiKey]);
-
-  return [apiKey, setApiKey] as const;
-}
 
 const SparseList = styled(List)(() => ({
   padding: 0,
   "& .MuiListItemButton-root": { minHeight: 60 },
 }));
-
-function authenticate(
-  challenge: string,
-  providerOrigin: string,
-  options?: { timeout?: number }
-) {
-  return new Promise<{
-    name: string;
-    id: string;
-    response: {
-      clientDataJSON: string;
-      signature: string;
-      publicKey: string;
-    };
-  }>((resolve, reject) => {
-    const timeout = options?.timeout;
-    const childWindow = window.open(providerOrigin);
-    if (!childWindow) return;
-    const interval = setInterval(() => {
-      if (childWindow.closed) {
-        clearInterval(interval);
-        window.removeEventListener("message", messageHandler);
-        reject(new Error("Window closed"));
-      }
-      childWindow.postMessage(
-        { publicKey: { challenge, origin: window.location.origin } },
-        "*"
-      );
-    }, 500);
-
-    const messageHandler = async (event: MessageEvent) => {
-      if (event.origin !== providerOrigin) return;
-      if (event.data.type === "public-key") {
-        clearInterval(interval);
-        window.removeEventListener("message", messageHandler);
-        resolve(event.data);
-      }
-    };
-
-    window.addEventListener("message", messageHandler);
-
-    if (!timeout) return;
-    setTimeout(() => {
-      if (childWindow.closed) return;
-      childWindow.close();
-      clearInterval(interval);
-      window.removeEventListener("message", messageHandler);
-      reject(new Error("Timeout"));
-    }, timeout * 1000);
-  });
-}
-
-(window as any).auth = async function () {
-  const challengeResponse = await fetch("/auth/challenge", {
-    method: "POST",
-  });
-  const challengeJson = await challengeResponse.json();
-  const { challenge } = challengeJson as { challenge: string };
-  const cred = await authenticate(challenge, "https://auth.longern.com");
-  const tokenResponse = await fetch("/auth/verify", {
-    method: "POST",
-    body: JSON.stringify(cred),
-  });
-  const tokenJson = await tokenResponse.json();
-  const { token } = tokenJson as { token: string };
-  localStorage.setItem("OPENAI_API_KEY", token);
-  localStorage.setItem("OPENAI_BASE_URL", `${window.location.origin}/openai`);
-};
-
-function AccountContent() {
-  const [apiKey, setApiKey] = useApiKey();
-  const [baseUrl, setBaseUrl] = useState<string | null>(
-    localStorage.getItem("OPENAI_BASE_URL") ?? null
-  );
-
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    baseUrl
-      ? localStorage.setItem("OPENAI_BASE_URL", baseUrl)
-      : localStorage.removeItem("OPENAI_BASE_URL");
-  }, [baseUrl]);
-
-  return (
-    <Card elevation={0} component={Stack} spacing={2} sx={{ padding: 2 }}>
-      <TextField
-        label={t("API Key")}
-        value={apiKey ?? ""}
-        onChange={(e) => setApiKey(e.target.value)}
-      />
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <TextField
-          label={t("Base URL")}
-          value={baseUrl ?? ""}
-          fullWidth
-          onChange={(e) => setBaseUrl(e.target.value)}
-        />
-        <Box>
-          <IconButton
-            aria-label="proxy"
-            onClick={() => {
-              const proxyUrl = new URL("/openai", window.location.href);
-              setBaseUrl(proxyUrl.toString());
-            }}
-          >
-            <AirlineStopsIcon />
-          </IconButton>
-        </Box>
-      </Stack>
-    </Card>
-  );
-}
 
 function LanguageDialog({
   open,
@@ -625,7 +491,7 @@ function SettingsForm() {
 
   const content =
     activeTab === "Account" ? (
-      <AccountContent />
+      <AccountDialogContent />
     ) : activeTab === "General" ? (
       <GeneralContent />
     ) : activeTab === "Personalization" ? (

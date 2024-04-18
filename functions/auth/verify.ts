@@ -1,5 +1,6 @@
 import jwt from "@tsndr/cloudflare-worker-jwt";
 import { secp256k1 } from "@noble/curves/secp256k1";
+import base58 from "bs58";
 
 interface Env {
   SECRET_KEY?: string;
@@ -60,8 +61,13 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
   for (const key of authorizedKeys) {
     const publicKey = Uint8Array.from(atob(key), (c) => c.charCodeAt(0));
     if (secp256k1.verify(signatureArray, digest, publicKey)) {
+      const hash = await crypto.subtle.digest("SHA-256", publicKey.buffer);
+      const fingerprint = base58.encode(new Uint8Array(hash.slice(0, 20)));
       const token = await jwt.sign(
-        { key, exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 },
+        {
+          id: fingerprint,
+          exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+        },
         context.env.SECRET_KEY
       );
       return Response.json({ token });
