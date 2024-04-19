@@ -118,7 +118,8 @@ function patchDelta(obj: any, delta: any) {
   if (Array.isArray(delta)) {
     const newObj = obj ? [...obj] : [];
     delta.forEach((item: { index: number; [key: string]: any }) => {
-      newObj[item.index] = patchDelta(newObj[item.index], item);
+      const { index, ...rest } = item;
+      newObj[index] = patchDelta(newObj[index], rest);
     });
     return newObj;
   } else if (delta === null) {
