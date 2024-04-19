@@ -18,11 +18,10 @@ export function useModels() {
       models.data
         .filter(
           (model) =>
-            (model.owned_by === "system" &&
-              model.id.startsWith("gpt-") &&
-              !model.id.includes("instruct")) ||
-            model.id === "gpt-3.5-turbo" ||
-            model.id === "gpt-4"
+            model.owned_by === "system" &&
+            ((model.id.startsWith("gpt-") && !model.id.includes("instruct")) ||
+              model.id.startsWith("llama-") ||
+              model.id.startsWith("qwen"))
         )
         .map((model) => model.id)
     );
