@@ -1,4 +1,5 @@
 import { verifyJwt } from "../../auth/utils";
+import { openaiResponseStream } from "../../meta/chat/completions";
 
 interface Env {
   AI: any;
@@ -21,11 +22,11 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
     stream: boolean;
   }>();
   const { model, messages, stream } = body;
-  const answer = await env.AI.run(`@cf/qwen/${model}`, {
+  const answer: ReadableStream = await env.AI.run(`@cf/qwen/${model}`, {
     messages,
     stream,
   });
-  return new Response(answer, {
+  return new Response(answer.pipeThrough(openaiResponseStream()), {
     headers: {
       "Content-Type": stream ? "text/event-stream" : "application/json",
     },
