@@ -40,6 +40,15 @@ export const MarkdownHighlighter = React.lazy(async () => {
       return (
         <Markdown
           components={{
+            a: ({ node, children, ...props }) => {
+              let url = new URL(props.href ?? "", window.location.href);
+              if (url.origin !== window.location.origin) {
+                props.target = "_blank";
+                props.rel = "noopener noreferrer";
+              }
+
+              return <a {...props}>{children}</a>;
+            },
             code(props) {
               const { children, className, node, ...rest } = props;
               const match = /language-(\w+)/.exec(className || "");
