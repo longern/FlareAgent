@@ -88,7 +88,10 @@ async function challengeAuthenticate() {
   if ("error" in tokenJson) return alert(tokenJson.error);
   const { token } = tokenJson;
   localStorage.setItem("OPENAI_API_KEY", token);
-  localStorage.setItem("OPENAI_BASE_URL", `${window.location.origin}/openai`);
+  localStorage.setItem(
+    "OPENAI_BASE_URL",
+    `${window.location.origin}/openai/v1`
+  );
 }
 
 function useApiKey() {
@@ -180,7 +183,7 @@ function AccountContent() {
               <IconButton
                 aria-label="proxy"
                 onClick={() => {
-                  const proxyUrl = new URL("/openai", window.location.href);
+                  const proxyUrl = new URL("/openai/v1", window.location.href);
                   setBaseUrl(proxyUrl.toString());
                 }}
               >

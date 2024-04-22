@@ -1,4 +1,4 @@
-import { verifyJwt } from "../auth/utils";
+import { verifyJwt } from "../../auth/utils";
 
 interface Env {
   OPENAI_API_KEY?: string;
