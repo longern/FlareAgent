@@ -1,4 +1,4 @@
-import { verifyJwt } from "../../auth/utils";
+import { verifyJwt } from "../../../auth/utils";
 
 interface Env {
   AI: any;
@@ -41,6 +41,16 @@ export function openaiResponseStream() {
   });
 }
 
+export const onRequestOptions: PagesFunction = async function () {
+  return new Response(null, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Methods": "POST",
+    },
+  });
+};
+
 export const onRequestPost: PagesFunction<Env> = async function (context) {
   const { request, env } = context;
 
@@ -64,6 +74,8 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
   return new Response(answer.pipeThrough(openaiResponseStream()), {
     headers: {
       "Content-Type": stream ? "text/event-stream" : "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "*",
     },
   });
 };
