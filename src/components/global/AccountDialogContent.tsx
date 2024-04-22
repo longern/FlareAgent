@@ -12,6 +12,10 @@ import {
   Avatar,
   ListItemText,
   ListItemButton,
+  FormControl,
+  MenuItem,
+  Select,
+  InputLabel,
 } from "@mui/material";
 import {
   AirlineStops as AirlineStopsIcon,
@@ -128,6 +132,11 @@ function AccountContent() {
   const [baseUrl, setBaseUrl] = useState<string | null>(
     localStorage.getItem("OPENAI_BASE_URL") ?? null
   );
+  const [modelProvider, setModelProvider] = useState<string | null>(
+    baseUrl.startsWith(window.location.origin)
+      ? baseUrl.slice(window.location.origin.length + 1).replace(/\/v1\/?$/, "")
+      : ""
+  );
 
   const { t } = useTranslation();
 
@@ -139,7 +148,11 @@ function AccountContent() {
 
   const avatarUrl = useAvatarUrl();
 
-  const userId = decodeToken(apiKey ?? "")?.id;
+  const decodedToken = decodeToken(apiKey ?? "");
+  const userId =
+    decodedToken?.exp === undefined || decodedToken.exp >= Date.now() / 1000
+      ? decodedToken?.id
+      : undefined;
 
   return (
     <Stack spacing={2}>
@@ -156,42 +169,77 @@ function AccountContent() {
         </ListItem>
       </Card>
       <Card elevation={0} component={List}>
-        <ListItem>
-          <TextField
-            variant="standard"
-            label={t("API Key")}
-            value={apiKey ?? ""}
-            fullWidth
-            onChange={(e) => setApiKey(e.target.value)}
-          />
-        </ListItem>
-        <ListItem>
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1}
-            sx={{ width: "100%" }}
-          >
-            <TextField
-              variant="standard"
-              label={t("Base URL")}
-              value={baseUrl ?? ""}
-              fullWidth
-              onChange={(e) => setBaseUrl(e.target.value)}
-            />
-            <Box>
-              <IconButton
-                aria-label="proxy"
-                onClick={() => {
-                  const proxyUrl = new URL("/openai/v1", window.location.href);
-                  setBaseUrl(proxyUrl.toString());
+        {userId && (
+          <ListItem>
+            <FormControl variant="standard" fullWidth>
+              <InputLabel id="model-provider-label">
+                {t("Model provider")}
+              </InputLabel>
+              <Select
+                labelId="model-provider-label"
+                id="model-provider"
+                value={modelProvider}
+                onChange={(e) => {
+                  setModelProvider(e.target.value as string);
+                  if (e.target.value !== "") {
+                    setBaseUrl(
+                      `${window.location.origin}/${e.target.value}/v1`
+                    );
+                  }
                 }}
+                label={t("Model provider")}
               >
-                <AirlineStopsIcon />
-              </IconButton>
-            </Box>
-          </Stack>
-        </ListItem>
+                <MenuItem value={""}>{t("Custom model")}</MenuItem>
+                <MenuItem value="openai">openai</MenuItem>
+                <MenuItem value="meta">meta</MenuItem>
+                <MenuItem value="qwen">qwen</MenuItem>
+              </Select>
+            </FormControl>
+          </ListItem>
+        )}
+        {!modelProvider && (
+          <React.Fragment>
+            <ListItem>
+              <TextField
+                variant="standard"
+                label={t("API Key")}
+                value={apiKey ?? ""}
+                fullWidth
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+            </ListItem>
+            <ListItem>
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                sx={{ width: "100%" }}
+              >
+                <TextField
+                  variant="standard"
+                  label={t("Base URL")}
+                  value={baseUrl ?? ""}
+                  fullWidth
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                />
+                <Box>
+                  <IconButton
+                    aria-label="proxy"
+                    onClick={() => {
+                      const proxyUrl = new URL(
+                        "/openai/v1",
+                        window.location.href
+                      );
+                      setBaseUrl(proxyUrl.toString());
+                    }}
+                  >
+                    <AirlineStopsIcon />
+                  </IconButton>
+                </Box>
+              </Stack>
+            </ListItem>
+          </React.Fragment>
+        )}
       </Card>
     </Stack>
   );
