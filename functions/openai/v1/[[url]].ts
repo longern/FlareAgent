@@ -30,5 +30,10 @@ export const onRequest: PagesFunction<Env> = async function (context) {
       "Content-Type": request.headers.get("Content-Type"),
     },
   });
-  return fetch(targetRequest);
+
+  const response = await fetch(targetRequest);
+  const newResponse = new Response(response.body, response);
+  newResponse.headers.set("Access-Control-Allow-Origin", "*");
+  newResponse.headers.set("Access-Control-Allow-Headers", "*");
+  return newResponse;
 };
