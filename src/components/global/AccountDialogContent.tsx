@@ -25,55 +25,12 @@ import jwt from "@tsndr/cloudflare-worker-jwt";
 
 import { useAvatarUrl } from "../ActionsProvider";
 
-function authenticate(
-  challenge: string,
-  providerOrigin: string,
-  options?: { timeout?: number }
-) {
-  return new Promise<{
-    name: string;
-    id: string;
-    response: {
-      clientDataJSON: string;
-      signature: string;
-      publicKey: string;
-    };
-  }>((resolve, reject) => {
-    const timeout = options?.timeout;
-    const childWindow = window.open(providerOrigin);
-    if (!childWindow) return;
-    const interval = setInterval(() => {
-      if (childWindow.closed) {
-        clearInterval(interval);
-        window.removeEventListener("message", messageHandler);
-        reject(new Error("Window closed"));
-      }
-      childWindow.postMessage(
-        { publicKey: { challenge, origin: window.location.origin } },
-        "*"
-      );
-    }, 500);
-
-    const messageHandler = async (event: MessageEvent) => {
-      if (event.origin !== providerOrigin) return;
-      if (event.data.type === "public-key") {
-        clearInterval(interval);
-        window.removeEventListener("message", messageHandler);
-        resolve(event.data);
-      }
-    };
-
-    window.addEventListener("message", messageHandler);
-
-    if (!timeout) return;
-    setTimeout(() => {
-      if (childWindow.closed) return;
-      childWindow.close();
-      clearInterval(interval);
-      window.removeEventListener("message", messageHandler);
-      reject(new Error("Timeout"));
-    }, timeout * 1000);
-  });
+function authenticate(challenge: string, providerOrigin: string) {
+  const searchParams = new URLSearchParams();
+  searchParams.set("challenge", challenge);
+  searchParams.set("callback_url", window.location.origin);
+  const providerUrl = `${providerOrigin}?${searchParams.toString()}`;
+  window.open(providerUrl);
 }
 
 async function challengeAuthenticate() {
@@ -82,7 +39,7 @@ async function challengeAuthenticate() {
   });
   const challengeJson = await challengeResponse.json();
   const { challenge } = challengeJson as { challenge: string };
-  const cred = await authenticate(challenge, "https://auth.longern.com");
+  const cred = authenticate(challenge, "https://auth.longern.com");
   const tokenResponse = await fetch("/auth/verify", {
     method: "POST",
     body: JSON.stringify(cred),
