@@ -1,4 +1,4 @@
-import { verifyJwt } from "../../../auth/utils";
+import { verifyJwt } from "../../../api/auth/utils";
 import { openaiResponseStream } from "../../../meta/v1/chat/completions";
 
 interface Env {

@@ -34,25 +34,12 @@ function authenticate(challenge: string, providerOrigin: string) {
 }
 
 async function challengeAuthenticate() {
-  const challengeResponse = await fetch("/auth/challenge", {
+  const challengeResponse = await fetch("/api/auth/challenge", {
     method: "POST",
   });
   const challengeJson = await challengeResponse.json();
   const { challenge } = challengeJson as { challenge: string };
-  const cred = authenticate(challenge, "https://auth.longern.com");
-  const tokenResponse = await fetch("/auth/verify", {
-    method: "POST",
-    body: JSON.stringify(cred),
-  });
-  const tokenJson: { token: string } | { error: string } =
-    await tokenResponse.json();
-  if ("error" in tokenJson) return alert(tokenJson.error);
-  const { token } = tokenJson;
-  localStorage.setItem("OPENAI_API_KEY", token);
-  localStorage.setItem(
-    "OPENAI_BASE_URL",
-    `${window.location.origin}/openai/v1`
-  );
+  authenticate(challenge, "https://auth.longern.com");
 }
 
 function useApiKey() {

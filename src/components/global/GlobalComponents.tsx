@@ -35,7 +35,7 @@ async function handleSignParams() {
     "",
     `${window.location.pathname}?${searchParams.toString()}`
   );
-  const tokenResponse = await fetch("/auth/verify", {
+  const tokenResponse = await fetch("/api/auth/verify", {
     method: "POST",
     body: cred,
   });

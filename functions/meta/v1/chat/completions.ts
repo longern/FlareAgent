@@ -1,4 +1,4 @@
-import { verifyJwt } from "../../../auth/utils";
+import { verifyJwt } from "../../../api/auth/utils";
 
 interface Env {
   AI: any;
