@@ -69,12 +69,6 @@ const globalStyles = (
 );
 
 const GlobalComponentsContext = createContext<{
-  FilesDialog: {
-    open: () => void;
-  };
-  SettingsDialog: {
-    open: () => void;
-  };
   ToolsDialog: {
     open: () => void;
   };
@@ -88,8 +82,6 @@ export function GlobalComponentsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [filesDialogOpen, setFilesDialogOpen] = useState(false);
-  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [toolsDialogOpen, setToolsDialogOpen] = useState(false);
   const [workflowDialogEdit, setWorkflowDialogEdit] = useState<Workflow | null>(
     null
@@ -125,12 +117,6 @@ export function GlobalComponentsProvider({
   return (
     <GlobalComponentsContext.Provider
       value={{
-        FilesDialog: {
-          open: () => setFilesDialogOpen(true),
-        },
-        SettingsDialog: {
-          open: () => setSettingsDialogOpen(true),
-        },
         ToolsDialog: {
           open: () => setToolsDialogOpen(true),
         },
@@ -145,24 +131,14 @@ export function GlobalComponentsProvider({
         <CssBaseline />
         {globalStyles}
         {children}
-        <Suspense>
-          <FilesDialog
-            open={filesDialogOpen}
-            onClose={() => setFilesDialogOpen(false)}
-          />
-        </Suspense>
+        <FilesDialog />
         <Suspense>
           <ToolsDialog
             open={toolsDialogOpen}
             onClose={() => setToolsDialogOpen(false)}
           />
         </Suspense>
-        <Suspense>
-          <SettingsDialog
-            open={settingsDialogOpen}
-            onClose={() => setSettingsDialogOpen(false)}
-          />
-        </Suspense>
+        <SettingsDialog />
         <Suspense>
           <WorkflowDialog
             workflow={workflowDialogEdit}

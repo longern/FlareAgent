@@ -128,6 +128,13 @@ function UserInput({
     userInputRef.current!.blur();
   }, [userInput, images, onSend]);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (matchesLg && e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <>
       <Stack
@@ -143,12 +150,7 @@ function UserInput({
           fullWidth
           size="small"
           onChange={(e) => setUserInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (matchesLg && e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
+          onKeyDown={handleKeyDown}
           onPaste={async () => {
             const pastedImages = await pasteImages();
             setImages((images) => [...images, ...pastedImages]);

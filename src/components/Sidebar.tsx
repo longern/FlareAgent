@@ -25,6 +25,8 @@ import {
   useSetAvatar,
   useWorkflowsState,
 } from "./ActionsProvider";
+import { useAppDispatch } from "../app/hooks";
+import { showFiles, showSettings } from "../app/dialogs";
 
 function WorkflowList({
   currentWorkflow,
@@ -108,11 +110,11 @@ function Sidebar({
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const { FilesDialog, SettingsDialog } = useGlobalComponents();
   const avatarUrl = useAvatarUrl();
   const setAvatar = useSetAvatar();
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
 
   const handleNewChat = useCallback(() => {
     onNewChat();
@@ -182,12 +184,12 @@ function Sidebar({
         </List>
         <List>
           <ListItem disablePadding>
-            <ListItemButton onClick={FilesDialog.open}>
+            <ListItemButton onClick={() => dispatch(showFiles())}>
               <ListItemText primary={t("My Files")} />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton onClick={SettingsDialog.open}>
+            <ListItemButton onClick={() => dispatch(showSettings())}>
               <ListItemText primary={t("Settings")} />
             </ListItemButton>
           </ListItem>

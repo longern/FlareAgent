@@ -24,8 +24,9 @@ import {
   executeWorkflowStep,
 } from "../workflow/execution";
 import { useModels } from "./hooks";
-import { useSetError } from "./ErrorDisplay";
 import { useActionsState, useSettings } from "./ActionsProvider";
+import { useAppDispatch } from "../app/hooks";
+import { showError } from "../app/error";
 
 function ModelSelector({
   model,
@@ -83,7 +84,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [model, setModel] = useModel();
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
-  const setError = useSetError();
+  const dispatch = useAppDispatch();
   const settings = useSettings() ?? {};
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -169,9 +170,9 @@ function App() {
         setMessages(state.messages);
       })
       .catch((e) => {
-        setError(e.message);
+        dispatch(showError({ message: e.message }));
       });
-  }, [currentWorkflow, currentNode, setError, setMessages]);
+  }, [currentWorkflow, currentNode, dispatch, setMessages]);
 
   return (
     <Stack direction="row" height="100%">

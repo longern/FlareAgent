@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
 
-import { ErrorProvider } from "./ErrorDisplay";
 import { ActionsProvider } from "./ActionsProvider";
 import { GlobalComponentsProvider } from "./global/GlobalComponents";
 import App from "./App";
 
-function Root() {
+function useVirtualKeyboardOverlay() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (window.history.state !== null)
@@ -15,15 +14,17 @@ function Root() {
         (window.navigator as any).virtualKeyboard.overlaysContent = true;
     }
   }, []);
+}
+
+function Root() {
+  useVirtualKeyboardOverlay();
 
   return (
-    <ErrorProvider>
-      <ActionsProvider>
-        <GlobalComponentsProvider>
-          <App />
-        </GlobalComponentsProvider>
-      </ActionsProvider>
-    </ErrorProvider>
+    <ActionsProvider>
+      <GlobalComponentsProvider>
+        <App />
+      </GlobalComponentsProvider>
+    </ActionsProvider>
   );
 }
 

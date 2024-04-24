@@ -34,6 +34,8 @@ import {
 import AccountDialogContent from "./AccountDialogContent";
 import { HistoryDialog } from "./HistoryDialog";
 import { useSetSettings, useSettings } from "../ActionsProvider";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { hideSettings } from "../../app/dialogs";
 
 const SparseList = styled(List)(() => ({
   padding: 0,
@@ -524,14 +526,12 @@ function SettingsForm() {
   );
 }
 
-function SettingsDialog({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+function SettingsDialog() {
   const { t } = useTranslation();
+  const open = useAppSelector((state) => state.dialogs.settings);
+  const dispatch = useAppDispatch();
+
+  const onClose = () => dispatch(hideSettings());
 
   return (
     <HistoryDialog
