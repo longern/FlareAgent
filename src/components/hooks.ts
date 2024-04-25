@@ -5,7 +5,7 @@ export function useModels() {
   const [models, setModels] = useState<string[] | null>(null);
 
   const fetchModels = useCallback(async () => {
-    const openaiApiKey = localStorage.getItem("OPENAI_API_KEY");
+    const openaiApiKey = localStorage.getItem("OPENAI_API_KEY") ?? "";
     const baseURL = localStorage.getItem("OPENAI_BASE_URL");
     if (!openaiApiKey) return;
     const openai = new OpenAI({

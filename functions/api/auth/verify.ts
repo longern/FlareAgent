@@ -64,7 +64,14 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
         },
         context.env.SECRET_KEY
       );
-      return Response.json({ token });
+      return Response.json(
+        { success: true },
+        {
+          headers: {
+            "Set-Cookie": `token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict`,
+          },
+        }
+      );
     }
   }
   return Response.json({ error: "Unauthorized" }, { status: 401 });

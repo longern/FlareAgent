@@ -2,11 +2,13 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import dialogsReducer from "./dialogs";
 import errorReducer from "./error";
+import identityReducer from "./identity";
 
 const store = configureStore({
   reducer: {
     error: errorReducer,
     dialogs: dialogsReducer,
+    identity: identityReducer,
   },
 });
 

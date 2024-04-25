@@ -24,30 +24,6 @@ const SettingsDialog = React.lazy(() => import("./SettingsDialog"));
 const ToolsDialog = React.lazy(() => import("./ToolsDialog"));
 const WorkflowDialog = React.lazy(() => import("./WorkflowDialog"));
 
-async function handleSignParams() {
-  if (typeof window === "undefined") return;
-  const searchParams = new URLSearchParams(window.location.search);
-  if (!searchParams.has("sign")) return;
-  const cred = searchParams.get("sign");
-  searchParams.delete("sign");
-  window.history.replaceState(
-    null,
-    "",
-    `${window.location.pathname}?${searchParams.toString()}`
-  );
-  const tokenResponse = await fetch("/api/auth/verify", {
-    method: "POST",
-    body: cred,
-  });
-  const tokenJson: { token: string } | { error: string } =
-    await tokenResponse.json();
-  if ("error" in tokenJson) return alert(tokenJson.error);
-  const { token } = tokenJson;
-  localStorage.setItem("OPENAI_API_KEY", token);
-}
-
-handleSignParams();
-
 const globalStyles = (
   <GlobalStyles
     styles={{

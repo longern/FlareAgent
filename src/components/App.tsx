@@ -25,7 +25,7 @@ import {
 } from "../workflow/execution";
 import { useModels } from "./hooks";
 import { useActionsState, useSettings } from "./ActionsProvider";
-import { useAppDispatch } from "../app/hooks";
+import { useAppDispatch, useInitializeApp } from "../app/hooks";
 import { showError } from "../app/error";
 
 function ModelSelector({
@@ -173,6 +173,8 @@ function App() {
         dispatch(showError({ message: e.message }));
       });
   }, [currentWorkflow, currentNode, dispatch, setMessages]);
+
+  useInitializeApp();
 
   return (
     <Stack direction="row" height="100%">

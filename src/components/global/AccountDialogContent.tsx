@@ -21,9 +21,9 @@ import {
   AirlineStops as AirlineStopsIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
-import jwt from "@tsndr/cloudflare-worker-jwt";
 
 import { useAvatarUrl } from "../ActionsProvider";
+import { useAppSelector } from "../../app/hooks";
 
 function authenticate(challenge: string, providerOrigin: string) {
   const searchParams = new URLSearchParams();
@@ -63,15 +63,8 @@ function useApiKey() {
   return [apiKey, setApiKey] as const;
 }
 
-function decodeToken(token: string) {
-  try {
-    return jwt.decode(token).payload as any;
-  } catch (e) {
-    return null;
-  }
-}
-
 function AccountContent() {
+  const userId = useAppSelector((state) => state.identity.id);
   const [apiKey, setApiKey] = useApiKey();
   const [baseUrl, setBaseUrl] = useState<string | null>(
     localStorage.getItem("OPENAI_BASE_URL") ?? null
@@ -92,12 +85,6 @@ function AccountContent() {
 
   const avatarUrl = useAvatarUrl();
 
-  const decodedToken = decodeToken(apiKey ?? "");
-  const userId =
-    decodedToken?.exp === undefined || decodedToken.exp >= Date.now() / 1000
-      ? decodedToken?.id
-      : undefined;
-
   return (
     <Stack spacing={2}>
       <Card elevation={0} component={List} disablePadding>
@@ -108,7 +95,7 @@ function AccountContent() {
                 <PersonIcon />
               </Avatar>
             </ListItemAvatar>
-            <ListItemText primary={userId} />
+            <ListItemText primary={userId ?? t("Sign in")} />
           </ListItemButton>
         </ListItem>
       </Card>
@@ -141,7 +128,7 @@ function AccountContent() {
             </FormControl>
           </ListItem>
         )}
-        {!modelProvider && (
+        {(!userId || !modelProvider) && (
           <React.Fragment>
             <ListItem>
               <TextField
