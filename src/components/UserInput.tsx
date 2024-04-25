@@ -19,7 +19,8 @@ import {
   Send as SendIcon,
   Timeline as TimelineIcon,
 } from "@mui/icons-material";
-import { useGlobalComponents } from "./global/GlobalComponents";
+import { useAppDispatch } from "../app/hooks";
+import { showTools } from "../app/dialogs";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -64,7 +65,7 @@ function UserInput({
   const [images, setImages] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<boolean>(false);
   const userInputRef = useRef<HTMLDivElement | null>(null);
-  const { ToolsDialog } = useGlobalComponents();
+  const dispatch = useAppDispatch();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
 
@@ -201,7 +202,7 @@ function UserInput({
           <IconButton aria-label="workflows">
             <TimelineIcon />
           </IconButton>
-          <IconButton aria-label="tools" onClick={ToolsDialog.open}>
+          <IconButton aria-label="tools" onClick={() => dispatch(showTools())}>
             <ExtensionIcon />
           </IconButton>
         </Stack>

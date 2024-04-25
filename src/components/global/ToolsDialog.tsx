@@ -18,6 +18,9 @@ import {
 import { Close as CloseIcon } from "@mui/icons-material";
 
 import { useActionsState } from "../ActionsProvider";
+import { connect } from "react-redux";
+import { AppState } from "../../app/store";
+import { hideTools } from "../../app/dialogs";
 
 const JsonEditor = React.lazy(async () => {
   const [{ default: CodeMirror }, { json }] = await Promise.all([
@@ -155,4 +158,11 @@ function ToolsDialog({
   );
 }
 
-export default ToolsDialog;
+export default connect(
+  (state: AppState) => ({
+    open: state.dialogs.tools,
+  }),
+  (dispatch) => ({
+    onClose: () => dispatch(hideTools()),
+  })
+)(ToolsDialog);

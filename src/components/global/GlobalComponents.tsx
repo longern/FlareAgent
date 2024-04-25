@@ -1,11 +1,4 @@
-import React, {
-  Suspense,
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { Suspense, useEffect, useMemo } from "react";
 import {
   CssBaseline,
   GlobalStyles,
@@ -15,7 +8,6 @@ import {
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-import { Workflow } from "../../workflow";
 import { ErrorDisplay } from "../ErrorDisplay";
 import { useSettings } from "../ActionsProvider";
 
@@ -44,24 +36,11 @@ const globalStyles = (
   />
 );
 
-const GlobalComponentsContext = createContext<{
-  ToolsDialog: {
-    open: () => void;
-  };
-  WorkflowDialog: {
-    edit: (workflow: Workflow) => void;
-  };
-} | null>(null);
-
 export function GlobalComponentsProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [toolsDialogOpen, setToolsDialogOpen] = useState(false);
-  const [workflowDialogEdit, setWorkflowDialogEdit] = useState<Workflow | null>(
-    null
-  );
   const settings = useSettings() ?? {};
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
   const { i18n } = useTranslation();
@@ -91,45 +70,23 @@ export function GlobalComponentsProvider({
   }, [i18n, settings.language]);
 
   return (
-    <GlobalComponentsContext.Provider
-      value={{
-        ToolsDialog: {
-          open: () => setToolsDialogOpen(true),
-        },
-        WorkflowDialog: {
-          edit: (workflow: Workflow) => {
-            setWorkflowDialogEdit(workflow);
-          },
-        },
-      }}
-    >
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {globalStyles}
-        {children}
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {globalStyles}
+      {children}
+      <Suspense>
         <FilesDialog />
-        <Suspense>
-          <ToolsDialog
-            open={toolsDialogOpen}
-            onClose={() => setToolsDialogOpen(false)}
-          />
-        </Suspense>
+      </Suspense>
+      <Suspense>
+        <ToolsDialog />
+      </Suspense>
+      <Suspense>
         <SettingsDialog />
-        <Suspense>
-          <WorkflowDialog
-            workflow={workflowDialogEdit}
-            onClose={() => setWorkflowDialogEdit(null)}
-          />
-        </Suspense>
-        <ErrorDisplay />
-      </ThemeProvider>
-    </GlobalComponentsContext.Provider>
+      </Suspense>
+      <Suspense>
+        <WorkflowDialog />
+      </Suspense>
+      <ErrorDisplay />
+    </ThemeProvider>
   );
-}
-
-export function useGlobalComponents() {
-  const globalComponents = useContext(GlobalComponentsContext);
-  if (globalComponents === null)
-    throw new Error("No global components provider");
-  return globalComponents;
 }

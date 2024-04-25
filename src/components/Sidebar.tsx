@@ -19,14 +19,13 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { Workflow, defaultWorkflow } from "../workflow";
 import { useTranslation } from "react-i18next";
-import { useGlobalComponents } from "./global/GlobalComponents";
 import {
   useAvatarUrl,
   useSetAvatar,
   useWorkflowsState,
 } from "./ActionsProvider";
 import { useAppDispatch } from "../app/hooks";
-import { showFiles, showSettings } from "../app/dialogs";
+import { showFiles, showSettings, showWorkflow } from "../app/dialogs";
 
 function WorkflowList({
   currentWorkflow,
@@ -36,8 +35,8 @@ function WorkflowList({
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
   const { workflows, newWorkflow } = useWorkflowsState();
-  const { WorkflowDialog } = useGlobalComponents();
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const workflowsWithDefault =
     workflows === null ? null : [defaultWorkflow, ...workflows];
 
@@ -76,7 +75,7 @@ function WorkflowList({
             <ListItemButton
               onClick={() => {
                 if (workflow === defaultWorkflow) return;
-                WorkflowDialog.edit(workflow);
+                dispatch(showWorkflow(workflow));
               }}
             >
               <ListItemText>{workflow.name}</ListItemText>

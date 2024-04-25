@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { connect } from "react-redux";
 import {
   AppBar,
   Box,
@@ -36,6 +37,8 @@ import { useTranslation } from "react-i18next";
 
 import type { DecisionNode, Edge, Node, Workflow } from "../../workflow";
 import { useWorkflowsState } from "../ActionsProvider";
+import { hideWorkflow } from "../../app/dialogs";
+import { AppState } from "../../app/store";
 
 const PythonEditor = React.lazy(async () => {
   const [{ default: CodeMirror }, { python }] = await Promise.all([
@@ -747,4 +750,11 @@ function WorkflowDialog({
   );
 }
 
-export default WorkflowDialog;
+export default connect(
+  (state: AppState) => ({
+    workflow: state.dialogs.workflow,
+  }),
+  (dispatch) => ({
+    onClose: () => dispatch(hideWorkflow()),
+  })
+)(WorkflowDialog);
