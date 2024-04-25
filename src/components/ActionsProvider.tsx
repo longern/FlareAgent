@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { Workflow } from "../workflow";
 import { useTranslation } from "react-i18next";
-import { readFile, useSyncFS, writeFile } from "../fs/hooks";
+import { useSyncFS } from "../fs/hooks";
 import { PaletteMode } from "@mui/material";
 
 export type Settings = {
@@ -21,14 +21,12 @@ export type Settings = {
 const ActionsContext = createContext<{
   actions: OpenAPIV3.Document[];
   workflows: Workflow[] | null;
-  avatar: File | null;
   settings: Settings | null;
 } | null>(null);
 const SetActionsContext = createContext<{
   setActions: React.Dispatch<React.SetStateAction<OpenAPIV3.Document[] | null>>;
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[] | null>>;
   newWorkflow: () => void;
-  setAvatar: React.Dispatch<React.SetStateAction<File | null>>;
   setSettings: React.Dispatch<React.SetStateAction<Settings | null>>;
 } | null>(null);
 
@@ -124,28 +122,6 @@ function useWorkflows() {
   return [workflows, setWorkflows, newWorkflow] as const;
 }
 
-function useAvatarState() {
-  const [avatar, setAvatar] = useState<File | null>(null);
-
-  useEffect(() => {
-    readFile("/root/.flareagent/avatar.png", { home: "/root" })
-      .then(async (file) => {
-        const arrayBuffer = await file.arrayBuffer();
-        setAvatar(new File([arrayBuffer], file.name, { type: file.type }));
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (avatar === null) return;
-    writeFile("/root/.flareagent/avatar.png", avatar, { home: "/root" }).catch(
-      () => {}
-    );
-  }, [avatar]);
-
-  return [avatar, setAvatar] as const;
-}
-
 function useSettingsState() {
   const [settings, setSettings] = useState<Settings | null>(null);
 
@@ -164,7 +140,6 @@ function useSettingsState() {
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
   const [actions, setActions] = useActions();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
-  const [avatar, setAvatar] = useAvatarState();
   const [settings, setSettings] = useSettingsState();
 
   const dispatchers = useMemo(
@@ -172,14 +147,13 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
       setActions,
       setWorkflows,
       newWorkflow,
-      setAvatar,
       setSettings,
     }),
-    [setActions, setWorkflows, newWorkflow, setAvatar, setSettings]
+    [setActions, setWorkflows, newWorkflow, setSettings]
   );
 
   return (
-    <ActionsContext.Provider value={{ actions, workflows, avatar, settings }}>
+    <ActionsContext.Provider value={{ actions, workflows, settings }}>
       <SetActionsContext.Provider value={dispatchers}>
         {children}
       </SetActionsContext.Provider>
@@ -197,25 +171,6 @@ export function useWorkflowsState() {
   const { workflows } = useContext(ActionsContext);
   const { setWorkflows, newWorkflow } = useContext(SetActionsContext);
   return { workflows, setWorkflows, newWorkflow } as const;
-}
-
-export function useAvatarUrl() {
-  const { avatar } = useContext(ActionsContext);
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (avatar === null) return;
-    const url = URL.createObjectURL(avatar);
-    setUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [avatar]);
-
-  return url;
-}
-
-export function useSetAvatar() {
-  const { setAvatar } = useContext(SetActionsContext);
-  return setAvatar;
 }
 
 export function useSettings() {

@@ -19,13 +19,10 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { Workflow, defaultWorkflow } from "../workflow";
 import { useTranslation } from "react-i18next";
-import {
-  useAvatarUrl,
-  useSetAvatar,
-  useWorkflowsState,
-} from "./ActionsProvider";
-import { useAppDispatch } from "../app/hooks";
+import { useWorkflowsState } from "./ActionsProvider";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { showFiles, showSettings, showWorkflow } from "../app/dialogs";
+import { setAvatar } from "../app/identity";
 
 function WorkflowList({
   currentWorkflow,
@@ -109,8 +106,7 @@ function Sidebar({
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const avatarUrl = useAvatarUrl();
-  const setAvatar = useSetAvatar();
+  const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -148,7 +144,7 @@ function Sidebar({
               hidden
               onChange={(event) => {
                 if (!event.target.files) return;
-                setAvatar(event.target.files[0]);
+                dispatch(setAvatar(event.target.files[0]));
                 event.target.value = "";
               }}
             />

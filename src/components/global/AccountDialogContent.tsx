@@ -22,7 +22,6 @@ import {
   Person as PersonIcon,
 } from "@mui/icons-material";
 
-import { useAvatarUrl } from "../ActionsProvider";
 import { useAppSelector } from "../../app/hooks";
 
 function authenticate(challenge: string, providerOrigin: string) {
@@ -83,7 +82,7 @@ function AccountContent() {
       : localStorage.removeItem("OPENAI_BASE_URL");
   }, [baseUrl]);
 
-  const avatarUrl = useAvatarUrl();
+  const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
 
   return (
     <Stack spacing={2}>

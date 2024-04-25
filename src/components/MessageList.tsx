@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 
 import { Highlighter, MarkdownHighlighter } from "./Highlighter";
-import { useAvatarUrl } from "./ActionsProvider";
+import { useAppSelector } from "../app/hooks";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {
@@ -156,7 +156,7 @@ function MessageListItem({
   onSelect: () => void;
   onUnselect: () => void;
 }) {
-  const avatarUrl = useAvatarUrl();
+  const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
 
   const content = useMemo(() => {
     return <MessageListItemContent message={message} />;
