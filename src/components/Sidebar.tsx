@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Box,
   Collapse,
   Drawer,
   IconButton,
@@ -23,6 +24,22 @@ import { useWorkflowsState } from "./ActionsProvider";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { showFiles, showSettings, showWorkflow } from "../app/dialogs";
 import { setAvatar } from "../app/identity";
+
+function ConversationList() {
+  const conversations = useAppSelector(
+    (state) => state.conversations.conversations
+  );
+
+  return (
+    <List disablePadding>
+      {conversations.map((conversation) => (
+        <ListItem key={conversation.id}>
+          <ListItemText primary={conversation.title} />
+        </ListItem>
+      ))}
+    </List>
+  );
+}
 
 function WorkflowList({
   currentWorkflow,
@@ -107,6 +124,7 @@ function Sidebar({
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
+  const userId = useAppSelector((state) => state.identity.id);
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -124,10 +142,7 @@ function Sidebar({
       sx={{
         width: "320px",
         flexShrink: 0,
-        [`& .MuiDrawer-paper`]: {
-          width: "320px",
-          boxSizing: "border-box",
-        },
+        [`& .MuiDrawer-paper`]: { width: "320px", boxSizing: "border-box" },
       }}
       onClose={onClose}
     >
@@ -135,7 +150,11 @@ function Sidebar({
         {modelSelector ? (
           <Stack sx={{ px: 2, py: 1 }}>{modelSelector}</Stack>
         ) : null}
-        <Stack direction="row" p={2}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{ padding: 2, alignItems: "center" }}
+        >
           <IconButton component="label" sx={{ p: 0 }}>
             <Avatar src={avatarUrl} sx={{ width: 64, height: 64 }} />
             <input
@@ -149,12 +168,20 @@ function Sidebar({
               }}
             />
           </IconButton>
+          <Box
+            sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}
+          >
+            {userId}
+          </Box>
         </Stack>
         <List sx={{ flexGrow: 1, minHeight: 0 }}>
           <ListItem disablePadding>
             <ListItemButton onClick={handleNewChat}>
               <ListItemText primary={t("New Chat")} />
             </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ConversationList />
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton

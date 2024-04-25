@@ -1,13 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
 
+import conversationsReducer from "./conversations";
 import dialogsReducer from "./dialogs";
 import errorReducer from "./error";
 import identityReducer from "./identity";
 
 const store = configureStore({
   reducer: {
-    error: errorReducer,
+    conversations: conversationsReducer,
     dialogs: dialogsReducer,
+    error: errorReducer,
     identity: identityReducer,
   },
 });

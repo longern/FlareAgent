@@ -10,28 +10,28 @@ export const dialogsSlice = createSlice({
     workflow: null as Workflow | null,
   },
   reducers: {
-    showFiles: (state) => {
+    showFiles(state) {
       state.files = true;
     },
-    showSettings: (state) => {
+    showSettings(state) {
       state.settings = true;
     },
-    showTools: (state) => {
+    showTools(state) {
       state.tools = true;
     },
-    showWorkflow: (state, action: PayloadAction<Workflow>) => {
+    showWorkflow(state, action: PayloadAction<Workflow>) {
       state.workflow = action.payload;
     },
-    hideFiles: (state) => {
+    hideFiles(state) {
       state.files = false;
     },
-    hideSettings: (state) => {
+    hideSettings(state) {
       state.settings = false;
     },
-    hideTools: (state) => {
+    hideTools(state) {
       state.tools = false;
     },
-    hideWorkflow: (state) => {
+    hideWorkflow(state) {
       state.workflow = null;
     },
   },

@@ -2,14 +2,17 @@ import React, { Suspense, useEffect, useMemo } from "react";
 import {
   CssBaseline,
   GlobalStyles,
+  Snackbar,
   ThemeProvider,
   createTheme,
   useMediaQuery,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { connect } from "react-redux";
 
-import { ErrorDisplay } from "../ErrorDisplay";
 import { useSettings } from "../ActionsProvider";
+import { AppState } from "../../app/store";
+import { hideError } from "../../app/error";
 
 const FilesDialog = React.lazy(() => import("./FilesDialog"));
 const SettingsDialog = React.lazy(() => import("./SettingsDialog"));
@@ -35,6 +38,17 @@ const globalStyles = (
     }}
   />
 );
+
+const ErrorDisplay = connect(
+  (state: AppState) => ({
+    color: "error",
+    open: state.error.message !== null,
+    message: state.error.message,
+  }),
+  (dispatch) => ({
+    onClose: () => dispatch(hideError()),
+  })
+)(Snackbar);
 
 export function GlobalComponentsProvider({
   children,

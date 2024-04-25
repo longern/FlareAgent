@@ -34,7 +34,7 @@ export const fetchIdentity = createAsyncThunk(
   }
 );
 
-export const loadAvatar = createAsyncThunk<File | null, void>(
+export const loadAvatar = createAsyncThunk<string | null, void>(
   "identity/loadAvatar",
   async () => {
     const file = await readFile("/root/.flareagent/avatar.png", {
@@ -42,19 +42,21 @@ export const loadAvatar = createAsyncThunk<File | null, void>(
     });
     const arrayBuffer = await file.arrayBuffer();
     const avatarFile = new File([arrayBuffer], file.name, { type: file.type });
-    return avatarFile;
+    return URL.createObjectURL(avatarFile);
   }
 );
 
-export const setAvatar = createAsyncThunk<File | null, File | null>(
+export const setAvatar = createAsyncThunk<string | null, File | null>(
   "identity/setAvatar",
   async (avatar) => {
     try {
       await writeFile("/root/.flareagent/avatar.png", avatar, {
         home: "/root",
       });
-      return avatar;
-    } catch {}
+      return URL.createObjectURL(avatar);
+    } catch {
+      return null;
+    }
   }
 );
 
@@ -65,22 +67,18 @@ const identitySlice = createSlice({
     avatarUrl: null,
   },
   reducers: {},
-  extraReducers: (builder) => {
+  extraReducers(builder) {
     builder.addCase(fetchIdentity.fulfilled, (state, action) => {
       state.id = action.payload.id;
     });
     builder.addCase(loadAvatar.fulfilled, (state, action) => {
-      state.avatarUrl = action.payload
-        ? URL.createObjectURL(action.payload)
-        : null;
+      state.avatarUrl = action.payload;
     });
     builder.addCase(setAvatar.fulfilled, (state, action) => {
       if (state.avatarUrl) {
         URL.revokeObjectURL(state.avatarUrl);
       }
-      state.avatarUrl = action.payload
-        ? URL.createObjectURL(action.payload)
-        : null;
+      state.avatarUrl = action.payload;
     });
   },
 });
