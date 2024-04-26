@@ -10,24 +10,15 @@ import React, {
 import { Workflow } from "../workflow";
 import { useTranslation } from "react-i18next";
 import { useSyncFS } from "../fs/hooks";
-import { PaletteMode } from "@mui/material";
-
-export type Settings = {
-  darkMode?: PaletteMode;
-  language?: string;
-  disableMemory?: boolean;
-};
 
 const ActionsContext = createContext<{
   actions: OpenAPIV3.Document[];
   workflows: Workflow[] | null;
-  settings: Settings | null;
 } | null>(null);
 const SetActionsContext = createContext<{
   setActions: React.Dispatch<React.SetStateAction<OpenAPIV3.Document[] | null>>;
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[] | null>>;
   newWorkflow: () => void;
-  setSettings: React.Dispatch<React.SetStateAction<Settings | null>>;
 } | null>(null);
 
 function useActions() {
@@ -122,38 +113,21 @@ function useWorkflows() {
   return [workflows, setWorkflows, newWorkflow] as const;
 }
 
-function useSettingsState() {
-  const [settings, setSettings] = useState<Settings | null>(null);
-
-  const fallbackValue = useMemo(() => ({}), []);
-
-  useSyncFS({
-    path: "/root/.flareagent/settings.json",
-    value: settings,
-    setValue: setSettings,
-    fallbackValue,
-  });
-
-  return [settings, setSettings] as const;
-}
-
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
   const [actions, setActions] = useActions();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
-  const [settings, setSettings] = useSettingsState();
 
   const dispatchers = useMemo(
     () => ({
       setActions,
       setWorkflows,
       newWorkflow,
-      setSettings,
     }),
-    [setActions, setWorkflows, newWorkflow, setSettings]
+    [setActions, setWorkflows, newWorkflow]
   );
 
   return (
-    <ActionsContext.Provider value={{ actions, workflows, settings }}>
+    <ActionsContext.Provider value={{ actions, workflows }}>
       <SetActionsContext.Provider value={dispatchers}>
         {children}
       </SetActionsContext.Provider>
@@ -171,14 +145,4 @@ export function useWorkflowsState() {
   const { workflows } = useContext(ActionsContext);
   const { setWorkflows, newWorkflow } = useContext(SetActionsContext);
   return { workflows, setWorkflows, newWorkflow } as const;
-}
-
-export function useSettings() {
-  const { settings } = useContext(ActionsContext);
-  return settings;
-}
-
-export function useSetSettings() {
-  const { setSettings } = useContext(SetActionsContext);
-  return setSettings;
 }

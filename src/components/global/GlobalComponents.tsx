@@ -8,9 +8,8 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { connect } from "react-redux";
+import { connect, useSelector } from "react-redux";
 
-import { useSettings } from "../ActionsProvider";
 import { AppState } from "../../app/store";
 import { hideError } from "../../app/error";
 
@@ -55,7 +54,8 @@ export function GlobalComponentsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const settings = useSettings() ?? {};
+  const darkMode = useSelector((state: AppState) => state.settings.darkMode);
+  const language = useSelector((state: AppState) => state.settings.language);
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
   const { i18n } = useTranslation();
 
@@ -64,8 +64,8 @@ export function GlobalComponentsProvider({
       createTheme({
         palette: {
           mode:
-            settings.darkMode !== undefined
-              ? settings.darkMode
+            darkMode !== undefined
+              ? darkMode
               : prefersDarkMode
               ? "dark"
               : "light",
@@ -76,12 +76,12 @@ export function GlobalComponentsProvider({
           },
         },
       }),
-    [settings.darkMode, prefersDarkMode]
+    [darkMode, prefersDarkMode]
   );
 
   useEffect(() => {
-    i18n.changeLanguage(settings.language);
-  }, [i18n, settings.language]);
+    i18n.changeLanguage(language);
+  }, [i18n, language]);
 
   return (
     <ThemeProvider theme={theme}>

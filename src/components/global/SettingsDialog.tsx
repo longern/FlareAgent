@@ -33,9 +33,9 @@ import {
 } from "@mui/icons-material";
 import AccountDialogContent from "./AccountDialogContent";
 import { HistoryDialog } from "./HistoryDialog";
-import { useSetSettings, useSettings } from "../ActionsProvider";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { hideSettings } from "../../app/dialogs";
+import { setSettings } from "../../app/settings";
 
 const SparseList = styled(List)(() => ({
   padding: 0,
@@ -50,14 +50,15 @@ function LanguageDialog({
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
-  const [settings, setSettings] = [useSettings(), useSetSettings()];
-  const [selectedLanguage, setSelectedLanguage] = useState(settings.language);
+  const language = useAppSelector((state) => state.settings.language);
+  const dispatch = useAppDispatch();
+  const [selectedLanguage, setSelectedLanguage] = useState(language);
 
   const handleChangeLanguage = useCallback(() => {
-    setSettings((settings) => ({ ...settings, language: selectedLanguage }));
+    dispatch(setSettings({ key: "language", value: selectedLanguage }));
     i18n.changeLanguage(selectedLanguage);
     onClose();
-  }, [selectedLanguage, i18n, onClose, setSettings]);
+  }, [dispatch, selectedLanguage, i18n, onClose]);
 
   function getDisplayName(code: string, locale: string) {
     try {
@@ -122,8 +123,9 @@ function DarkModeDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const [settings, setSettings] = [useSettings(), useSetSettings()];
-  const [darkMode, setDarkMode] = useState(settings.darkMode);
+  const settingsDarkMode = useAppSelector((state) => state.settings.darkMode);
+  const [darkMode, setDarkMode] = useState(settingsDarkMode);
+  const dispatch = useAppDispatch();
 
   const { t } = useTranslation();
 
@@ -139,7 +141,7 @@ function DarkModeDialog({
           color="inherit"
           aria-label={t("Save")}
           onClick={() => {
-            setSettings((settings) => ({ ...settings, darkMode }));
+            dispatch(setSettings({ key: "darkMode", value: darkMode }));
             onClose();
           }}
         >
@@ -179,7 +181,7 @@ function GeneralContent() {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [darkModeOpen, setDarkModeOpen] = useState(false);
 
-  const settings = useSettings();
+  const settings = useAppSelector((state) => state.settings);
   const { t, i18n } = useTranslation();
 
   function getDisplayName(code: string, locale: string) {
@@ -242,7 +244,8 @@ function GeneralContent() {
 function PersonalizationContent() {
   const [memories, setMemories] = useState<string[]>([]);
 
-  const [settings, setSettings] = [useSettings() ?? {}, useSetSettings()];
+  const disableMemory = useAppSelector((state) => state.settings.disableMemory);
+  const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
   const fetchMemories = useCallback(async () => {
@@ -273,12 +276,14 @@ function PersonalizationContent() {
             <ListItemText primary={t("Memory")} />
             <Switch
               color="primary"
-              checked={!settings.disableMemory}
+              checked={!disableMemory}
               onChange={(event) => {
-                setSettings((settings) => ({
-                  ...settings,
-                  disableMemory: !event.target.checked || undefined,
-                }));
+                dispatch(
+                  setSettings({
+                    key: "disableMemory",
+                    value: !event.target.checked || undefined,
+                  })
+                );
               }}
             />
           </ListItemButton>
