@@ -3,14 +3,15 @@ import {
   Avatar,
   Box,
   CircularProgress,
-  Collapse,
   IconButton,
+  Menu,
   Stack,
   Typography,
 } from "@mui/material";
 import {
   Build as BuildIcon,
   ContentCopy as ContentCopyIcon,
+  Menu as MenuIcon,
   Person as PersonIcon,
   Replay as ReplayIcon,
   SmartToy as SmartToyIcon,
@@ -145,18 +146,12 @@ function MessageListItemContent({
   );
 }
 
-function MessageListItem({
-  message,
-  selected,
-  onSelect,
-  onUnselect,
-}: {
-  message: ChatCompletionMessageParam;
-  selected: boolean;
-  onSelect: () => void;
-  onUnselect: () => void;
-}) {
+function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [disableContextMenu, setDisableContextMenu] = useState(false);
+
   const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
+  const { t } = useTranslation();
 
   const content = useMemo(() => {
     return <MessageListItemContent message={message} />;
@@ -208,17 +203,31 @@ function MessageListItem({
             "& pre": { margin: 0 },
             "& pre>code": { whiteSpace: "pre-wrap" },
           }}
-          onClick={() => (selected ? onUnselect() : onSelect())}
+          onContextMenu={(e) => {
+            if (disableContextMenu) return;
+            e.preventDefault();
+            setAnchorEl(e.currentTarget);
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(e.currentTarget);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          }}
         >
           {content}
         </Box>
 
-        <Collapse in={selected}>
+        <Menu
+          open={Boolean(anchorEl)}
+          anchorEl={anchorEl}
+          onClose={() => setAnchorEl(null)}
+        >
           <Stack
             direction="row"
             sx={{ fontSize: "0.8rem", color: "text.secondary" }}
           >
             <IconButton
+              aria-label={t("Copy")}
               size="small"
               onClick={() => {
                 navigator.clipboard.writeText(message.content as string);
@@ -226,11 +235,22 @@ function MessageListItem({
             >
               <ContentCopyIcon />
             </IconButton>
-            <IconButton size="small" onClick={onUnselect}>
+            <IconButton size="small">
               <ReplayIcon />
             </IconButton>
+            <IconButton
+              aria-label={t("Native context menu")}
+              size="small"
+              onClick={() => {
+                setDisableContextMenu(true);
+                setAnchorEl(null);
+                setTimeout(() => setDisableContextMenu(false), 60000);
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
           </Stack>
-        </Collapse>
+        </Menu>
       </Box>
       <Box flexShrink={0} width={48} />
     </Stack>
@@ -242,8 +262,6 @@ function MessageList({
 }: {
   messages: ChatCompletionMessageParam[] | null;
 }) {
-  const [selected, setSelected] = useState<number | null>(null);
-
   return (
     <Stack spacing={2}>
       {messages === null ? (
@@ -258,13 +276,7 @@ function MessageList({
         </Box>
       ) : (
         messages.map((message, index) => (
-          <MessageListItem
-            key={index}
-            message={message}
-            selected={selected === index}
-            onSelect={() => setSelected(index)}
-            onUnselect={() => setSelected(null)}
-          />
+          <MessageListItem key={index} message={message} />
         ))
       )}
     </Stack>
