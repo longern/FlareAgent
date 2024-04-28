@@ -12,11 +12,12 @@ import {
   MenuItem,
 } from "@mui/material";
 
-import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
+  archiveConversation,
   removeConversation,
   setCurrentConversation,
-} from "../app/conversations";
+} from "../../app/conversations";
 
 function ConversationList() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -79,7 +80,15 @@ function ConversationList() {
         >
           {t("Active")}
         </MenuItem>
-        <MenuItem>{t("Archive")}</MenuItem>
+        <MenuItem
+          onClick={() => {
+            archiveConversation(conversations[menuId]);
+            setAnchorEl(null);
+            setMenuId(null);
+          }}
+        >
+          {t("Archive")}
+        </MenuItem>
         <Divider component="li" />
         <MenuItem
           onClick={() => {

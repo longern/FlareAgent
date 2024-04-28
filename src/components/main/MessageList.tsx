@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import "katex/dist/katex.min.css";
 
 import { Highlighter, MarkdownHighlighter } from "./Highlighter";
-import { useAppSelector } from "../app/hooks";
+import { useAppSelector } from "../../app/hooks";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {

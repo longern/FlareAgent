@@ -8,7 +8,9 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  MenuItem,
   Radio,
+  Select,
   Stack,
   Theme,
   useMediaQuery,
@@ -18,13 +20,14 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 import React, { useCallback, useEffect, useState } from "react";
-import { Workflow, defaultWorkflow } from "../workflow";
+import { Workflow, defaultWorkflow } from "../../workflow";
 import { useTranslation } from "react-i18next";
-import { useWorkflowsState } from "./ActionsProvider";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { showFiles, showSettings, showWorkflow } from "../app/dialogs";
-import { setAvatar } from "../app/identity";
+import { useWorkflowsState } from "../ActionsProvider";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { showFiles, showSettings, showWorkflow } from "../../app/dialogs";
+import { setAvatar } from "../../app/identity";
 import ConversationList from "./ConversationList";
+import { useModels } from "../hooks";
 
 function WorkflowList({
   currentWorkflow,
@@ -91,6 +94,49 @@ function WorkflowList({
   );
 }
 
+export function useModel() {
+  const [model, setModel] = useState(
+    localStorage.getItem("OPENAI_MODEL") ?? "gpt-3.5-turbo"
+  );
+
+  useEffect(() => {
+    localStorage.setItem("OPENAI_MODEL", model);
+  }, [model]);
+
+  return [model, setModel] as const;
+}
+
+export function ModelSelector({
+  model,
+  onModelChange,
+}: {
+  model: string;
+  onModelChange: (model: string) => void;
+}) {
+  const models = useModels();
+
+  return (
+    <Select
+      variant="standard"
+      value={model}
+      onChange={(e) => {
+        onModelChange(e.target.value);
+      }}
+      inputProps={{ "aria-label": "model" }}
+    >
+      {models ? (
+        models.map((model) => (
+          <MenuItem key={model} value={model}>
+            {model}
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem value={model}>{model}</MenuItem>
+      )}
+    </Select>
+  );
+}
+
 function Sidebar({
   open,
   onClose,
@@ -132,7 +178,7 @@ function Sidebar({
       onClose={onClose}
     >
       <Stack height="100%">
-        {modelSelector ? (
+        {matchesLg ? (
           <Stack sx={{ px: 2, py: 1 }}>{modelSelector}</Stack>
         ) : null}
         <Stack

@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
-  MenuItem,
-  Select,
   Stack,
   Theme,
   useMediaQuery,
@@ -11,11 +9,11 @@ import {
 } from "@mui/material";
 
 import { ScrollToBottomButton, StopButton } from "./ActionButtons";
-import MessageList from "./MessageList";
-import MobileToolbar from "./MobileToolbar";
-import Sidebar from "./Sidebar";
-import ScrollToBottom from "./ScrollToBottom";
-import UserInput from "./UserInput";
+import MessageList from "./main/MessageList";
+import MobileToolbar from "./sidebar/MobileToolbar";
+import Sidebar, { ModelSelector, useModel } from "./sidebar/Sidebar";
+import ScrollToBottom from "./main/ScrollToBottom";
+import UserInput from "./main/UserInput";
 import { useMessages } from "../messages";
 import { apisToTool } from "../tools";
 import { Node, Workflow, defaultWorkflow } from "../workflow";
@@ -23,7 +21,6 @@ import {
   executeUserInputNode,
   executeWorkflowStep,
 } from "../workflow/execution";
-import { useModels } from "./hooks";
 import { useActionsState } from "./ActionsProvider";
 import { useAppDispatch, useAppSelector, useInitializeApp } from "../app/hooks";
 import { showError } from "../app/error";
@@ -31,49 +28,6 @@ import {
   resetCurrentConversation,
   updateCurrentConversation,
 } from "../app/conversations";
-
-function ModelSelector({
-  model,
-  onModelChange,
-}: {
-  model: string;
-  onModelChange: (model: string) => void;
-}) {
-  const models = useModels();
-
-  return (
-    <Select
-      variant="standard"
-      value={model}
-      onChange={(e) => {
-        onModelChange(e.target.value);
-      }}
-      inputProps={{ "aria-label": "model" }}
-    >
-      {models ? (
-        models.map((model) => (
-          <MenuItem key={model} value={model}>
-            {model}
-          </MenuItem>
-        ))
-      ) : (
-        <MenuItem value={model}>{model}</MenuItem>
-      )}
-    </Select>
-  );
-}
-
-function useModel() {
-  const [model, setModel] = useState(
-    localStorage.getItem("OPENAI_MODEL") ?? "gpt-3.5-turbo"
-  );
-
-  useEffect(() => {
-    localStorage.setItem("OPENAI_MODEL", model);
-  }, [model]);
-
-  return [model, setModel] as const;
-}
 
 function App() {
   const [tools] = useActionsState();
@@ -182,12 +136,29 @@ function App() {
     if (!messages || messages.length === 0) return;
     dispatch(
       updateCurrentConversation(
-        messages.map((message) => message.content as string)
+        Object.fromEntries(
+          messages.map((message) => {
+            const messageId = crypto.randomUUID();
+            return [
+              messageId,
+              {
+                id: messageId,
+                author: { role: message.role },
+                content: message.content as string,
+                create_time: new Date().toISOString(),
+              },
+            ];
+          })
+        )
       )
     );
   }, [dispatch, messages]);
 
   useInitializeApp();
+
+  const modelSelector = (
+    <ModelSelector model={model} onModelChange={setModel} />
+  );
 
   return (
     <Stack direction="row" height="100%">
@@ -195,20 +166,14 @@ function App() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNewChat={handleNewChat}
-        modelSelector={
-          matchesLg ? (
-            <ModelSelector model={model} onModelChange={setModel} />
-          ) : undefined
-        }
+        modelSelector={modelSelector}
         currentWorkflow={currentWorkflow}
         onWorkflowChange={handleWorkflowChange}
       />
       <Stack minWidth={0} flexGrow={1}>
         {!matchesLg && (
           <MobileToolbar
-            modelSelector={
-              <ModelSelector model={model} onModelChange={setModel} />
-            }
+            modelSelector={modelSelector}
             onMenuClick={() => setSidebarOpen(true)}
             onCreateThread={handleNewChat}
           />

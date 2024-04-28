@@ -19,8 +19,8 @@ import {
   Send as SendIcon,
   Timeline as TimelineIcon,
 } from "@mui/icons-material";
-import { useAppDispatch } from "../app/hooks";
-import { showTools } from "../app/dialogs";
+import { useAppDispatch } from "../../app/hooks";
+import { showTools } from "../../app/dialogs";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
