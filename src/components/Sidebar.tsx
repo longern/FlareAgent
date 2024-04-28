@@ -24,22 +24,7 @@ import { useWorkflowsState } from "./ActionsProvider";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { showFiles, showSettings, showWorkflow } from "../app/dialogs";
 import { setAvatar } from "../app/identity";
-
-function ConversationList() {
-  const conversations = useAppSelector(
-    (state) => state.conversations.conversations
-  );
-
-  return (
-    <List disablePadding>
-      {conversations.map((conversation) => (
-        <ListItem key={conversation.id}>
-          <ListItemText primary={conversation.title} />
-        </ListItem>
-      ))}
-    </List>
-  );
-}
+import ConversationList from "./ConversationList";
 
 function WorkflowList({
   currentWorkflow,

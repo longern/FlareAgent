@@ -1,30 +1,54 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
-export type Conversations = {
+export type Conversation = {
   id: string;
   title: string | null;
   create_time: string;
+  messages: string[];
 };
 
 export const conversationsSlice = createSlice({
   name: "conversations",
   initialState: {
-    conversations: [] as Conversations[],
-    currentConversation: null as string | null,
+    conversations: {} as Record<string, Conversation>,
+    currentConversationId: null as string | null,
   },
   reducers: {
-    addConversation(state, action) {
-      state.conversations.push(action.payload);
+    removeConversation(state, action: PayloadAction<string>) {
+      delete state.conversations[action.payload];
+      if (state.currentConversationId === action.payload) {
+        state.currentConversationId = null;
+      }
     },
-    removeConversation(state, action) {
-      state.conversations = state.conversations.filter(
-        (conversation) => conversation.id !== action.payload
-      );
+    resetCurrentConversation(state) {
+      state.currentConversationId = null;
+    },
+    setCurrentConversation(state, action: PayloadAction<string>) {
+      state.currentConversationId = action.payload;
+    },
+    updateCurrentConversation(state, action: PayloadAction<string[]>) {
+      if (state.currentConversationId === null) {
+        const id = crypto.randomUUID();
+        state.conversations[id] = {
+          id,
+          title: action.payload[0].slice(0, 10) || "Untitled",
+          create_time: new Date().toISOString(),
+          messages: action.payload,
+        };
+        state.currentConversationId = id;
+        return;
+      }
+      const current = state.conversations[state.currentConversationId!];
+      current.messages = action.payload;
     },
   },
 });
 
-export const { addConversation, removeConversation } =
-  conversationsSlice.actions;
+export const {
+  removeConversation,
+  resetCurrentConversation,
+  setCurrentConversation,
+  updateCurrentConversation,
+} = conversationsSlice.actions;
 
 export default conversationsSlice.reducer;

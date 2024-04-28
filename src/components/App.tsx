@@ -27,6 +27,10 @@ import { useModels } from "./hooks";
 import { useActionsState } from "./ActionsProvider";
 import { useAppDispatch, useAppSelector, useInitializeApp } from "../app/hooks";
 import { showError } from "../app/error";
+import {
+  resetCurrentConversation,
+  updateCurrentConversation,
+} from "../app/conversations";
 
 function ModelSelector({
   model,
@@ -139,7 +143,8 @@ function App() {
       controller.abort();
       setController(undefined);
     }
-  }, [setMessages, controller]);
+    dispatch(resetCurrentConversation());
+  }, [dispatch, setMessages, controller]);
 
   const handleWorkflowChange = useCallback(
     (workflow: Workflow) => {
@@ -172,6 +177,15 @@ function App() {
         dispatch(showError({ message: e.message }));
       });
   }, [currentWorkflow, currentNode, dispatch, setMessages]);
+
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    dispatch(
+      updateCurrentConversation(
+        messages.map((message) => message.content as string)
+      )
+    );
+  }, [dispatch, messages]);
 
   useInitializeApp();
 
