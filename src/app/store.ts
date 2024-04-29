@@ -4,6 +4,7 @@ import conversationsReducer from "./conversations";
 import dialogsReducer from "./dialogs";
 import errorReducer from "./error";
 import identityReducer from "./identity";
+import modelsReducer from "./models";
 import settingsReducer from "./settings";
 
 const store = configureStore({
@@ -12,6 +13,7 @@ const store = configureStore({
     dialogs: dialogsReducer,
     error: errorReducer,
     identity: identityReducer,
+    models: modelsReducer,
     settings: settingsReducer,
   },
 });

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export const conversationSlice = createSlice({
+export const errorSlice = createSlice({
   name: "error",
   initialState: {
     message: null as string | null,
@@ -15,6 +15,6 @@ export const conversationSlice = createSlice({
   },
 });
 
-export const { showError, hideError } = conversationSlice.actions;
+export const { showError, hideError } = errorSlice.actions;
 
-export default conversationSlice.reducer;
+export default errorSlice.reducer;

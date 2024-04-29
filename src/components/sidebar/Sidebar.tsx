@@ -20,14 +20,14 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 import React, { useCallback, useEffect, useState } from "react";
-import { Workflow, defaultWorkflow } from "../../workflow";
 import { useTranslation } from "react-i18next";
+
+import { Workflow, defaultWorkflow } from "../../workflow";
 import { useWorkflowsState } from "../ActionsProvider";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { showFiles, showSettings, showWorkflow } from "../../app/dialogs";
 import { setAvatar } from "../../app/identity";
 import ConversationList from "./ConversationList";
-import { useModels } from "../hooks";
 
 function WorkflowList({
   currentWorkflow,
@@ -113,7 +113,7 @@ export function ModelSelector({
   model: string;
   onModelChange: (model: string) => void;
 }) {
-  const models = useModels();
+  const models = useAppSelector((state) => state.models.models);
 
   return (
     <Select

@@ -44,15 +44,17 @@ export const conversationsSlice = createSlice({
         const id = crypto.randomUUID();
         state.conversations[id] = {
           id,
-          title: messages[0].content.slice(0, 10) || "Untitled",
+          title:
+            Array.from(Object.values(messages))[0].content.slice(0, 10) ||
+            "Untitled",
           create_time: new Date().toISOString(),
-          messages: action.payload,
+          messages,
         };
         state.currentConversationId = id;
         return;
       }
       const current = state.conversations[state.currentConversationId!];
-      current.messages = action.payload;
+      current.messages = messages;
     },
   },
 });
