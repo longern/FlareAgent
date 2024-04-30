@@ -1,6 +1,5 @@
 import {
   Badge,
-  Collapse,
   IconButton,
   Stack,
   TextField,
@@ -10,7 +9,6 @@ import {
 import React, { useCallback, useRef, useState } from "react";
 import { ChatCompletionContentPart } from "openai/resources/index.mjs";
 import {
-  Add as AddIcon,
   AttachFile as AttachFileIcon,
   Extension as ExtensionIcon,
   Image as ImageIcon,
@@ -64,7 +62,6 @@ function UserInput({
 }) {
   const [userInput, setUserInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
-  const [expanded, setExpanded] = useState<boolean>(false);
   const userInputRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useAppDispatch();
 
@@ -160,10 +157,7 @@ function UserInput({
           }}
           inputProps={{ "aria-label": t("User input") }}
           InputProps={{
-            sx: {
-              borderRadius: "26px",
-              backgroundColor: (theme) => theme.palette.background.paper,
-            },
+            sx: { backgroundColor: (theme) => theme.palette.background.paper },
             endAdornment: (
               <IconButton
                 aria-label="send"
@@ -177,41 +171,30 @@ function UserInput({
             ),
           }}
         />
-        <Stack sx={{ justifyContent: "center" }}>
-          <IconButton aria-label="more" onClick={() => setExpanded(!expanded)}>
-            <AddIcon />
-          </IconButton>
-        </Stack>
       </Stack>
-      <Collapse in={expanded}>
-        <Stack
-          direction="row"
-          justifyContent="space-around"
-          sx={{ marginTop: -0.5, marginBottom: 0.5 }}
-        >
-          <Badge
-            badgeContent={images.length}
-            color="primary"
-            overlap="circular"
-          >
-            <IconButton aria-label="image" onClick={handleImportImage}>
-              <ImageIcon />
-            </IconButton>
-          </Badge>
-          <IconButton aria-label="file" onClick={handleImportFile}>
-            <AttachFileIcon />
+      <Stack
+        direction="row"
+        justifyContent="space-around"
+        sx={{ marginTop: -0.5, marginBottom: 0.5 }}
+      >
+        <Badge badgeContent={images.length} color="primary" overlap="circular">
+          <IconButton aria-label="image" onClick={handleImportImage}>
+            <ImageIcon />
           </IconButton>
-          <IconButton aria-label="screenshot" onClick={onScreenshot}>
-            <ScreenshotIcon />
-          </IconButton>
-          <IconButton aria-label="workflows">
-            <TimelineIcon />
-          </IconButton>
-          <IconButton aria-label="tools" onClick={() => dispatch(showTools())}>
-            <ExtensionIcon />
-          </IconButton>
-        </Stack>
-      </Collapse>
+        </Badge>
+        <IconButton aria-label="file" onClick={handleImportFile}>
+          <AttachFileIcon />
+        </IconButton>
+        <IconButton aria-label="screenshot" onClick={onScreenshot}>
+          <ScreenshotIcon />
+        </IconButton>
+        <IconButton aria-label="workflows">
+          <TimelineIcon />
+        </IconButton>
+        <IconButton aria-label="tools" onClick={() => dispatch(showTools())}>
+          <ExtensionIcon />
+        </IconButton>
+      </Stack>
     </>
   );
 }
