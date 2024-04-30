@@ -165,7 +165,10 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
       {message.role === "system" ? (
         <Avatar>S</Avatar>
       ) : message.role === "user" ? (
-        <Avatar src={avatarUrl}>
+        <Avatar
+          src={avatarUrl}
+          sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
+        >
           <PersonIcon />
         </Avatar>
       ) : message.role === "assistant" ? (
@@ -192,12 +195,12 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
             borderRadius: "14px",
             backgroundColor: (theme) =>
               message.role === "user"
-                ? theme.palette.mode === "dark"
-                  ? "#333333"
-                  : "#e0e0e0"
-                : theme.palette.mode === "dark"
-                ? "#1f1f1f"
-                : "#f5f5f5",
+                ? theme.palette.primary.main
+                : theme.palette.background.paper,
+            color: (theme) =>
+              message.role === "user"
+                ? theme.palette.primary.contrastText
+                : theme.palette.text.primary,
             "& img": { display: "block", maxWidth: "100%" },
             "& p": { margin: 0 },
             "& pre": { margin: 0 },

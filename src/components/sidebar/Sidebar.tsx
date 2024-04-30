@@ -174,6 +174,7 @@ function Sidebar({
         width: "320px",
         flexShrink: 0,
         [`& .MuiDrawer-paper`]: { width: "320px", boxSizing: "border-box" },
+        backgroundColor: (theme) => theme.palette.background.paper,
       }}
       onClose={onClose}
     >

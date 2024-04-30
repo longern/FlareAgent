@@ -38,6 +38,23 @@ const globalStyles = (
   />
 );
 
+const lightTheme = createTheme(
+  createTheme({
+    palette: { background: { default: "#fafafa" } },
+    typography: { button: { textTransform: "none" } },
+  })
+);
+
+const darkTheme = createTheme(
+  createTheme({
+    palette: {
+      mode: "dark",
+      background: { default: "black", paper: "#181818" },
+    },
+    typography: { button: { textTransform: "none" } },
+  })
+);
+
 const ErrorDisplay = connect(
   (state: AppState) => ({
     color: "error",
@@ -59,25 +76,11 @@ export function GlobalComponentsProvider({
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
   const { i18n } = useTranslation();
 
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode:
-            darkMode !== undefined
-              ? darkMode
-              : prefersDarkMode
-              ? "dark"
-              : "light",
-        },
-        typography: {
-          button: {
-            textTransform: "none",
-          },
-        },
-      }),
-    [darkMode, prefersDarkMode]
-  );
+  const theme = useMemo(() => {
+    const enableDarkTheme =
+      darkMode !== undefined ? darkMode : prefersDarkMode ? "dark" : "light";
+    return enableDarkTheme === "dark" ? darkTheme : lightTheme;
+  }, [darkMode, prefersDarkMode]);
 
   useEffect(() => {
     i18n.changeLanguage(language);

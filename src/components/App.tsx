@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
+  Divider,
   Stack,
   Theme,
   useMediaQuery,
@@ -194,6 +195,7 @@ function App() {
             </Container>
           </ScrollToBottom>
         </Box>
+        <Divider />
         <Container maxWidth="md" sx={{ paddingX: 1 }}>
           <UserInput
             onSend={(userInput) => {
