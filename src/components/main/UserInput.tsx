@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
 import { ChatCompletionContentPart } from "openai/resources/index.mjs";
-
 import {
   Add as AddIcon,
   AttachFile as AttachFileIcon,
@@ -19,6 +18,8 @@ import {
   Send as SendIcon,
   Timeline as TimelineIcon,
 } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
+
 import { useAppDispatch } from "../../app/hooks";
 import { showTools } from "../../app/dialogs";
 
@@ -68,6 +69,7 @@ function UserInput({
   const dispatch = useAppDispatch();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const { t } = useTranslation();
 
   const handleImportImage = useCallback(() => {
     const input = document.createElement("input");
@@ -156,7 +158,7 @@ function UserInput({
             const pastedImages = await pasteImages();
             setImages((images) => [...images, ...pastedImages]);
           }}
-          inputProps={{ "aria-label": "user input" }}
+          inputProps={{ "aria-label": t("User input") }}
           InputProps={{
             sx: {
               borderRadius: "26px",

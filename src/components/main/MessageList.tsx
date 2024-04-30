@@ -1,10 +1,12 @@
-import React, { Suspense, useMemo, useState } from "react";
+import React, { Suspense, useCallback, useMemo, useState } from "react";
 import {
   Avatar,
   Box,
   CircularProgress,
-  IconButton,
+  ListItemIcon,
+  ListItemText,
   Menu,
+  MenuItem,
   Stack,
   Typography,
 } from "@mui/material";
@@ -146,49 +148,69 @@ function MessageListItemContent({
   );
 }
 
+function MessageAvatar({ role }: { role: string }) {
+  const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
+
+  return role === "system" ? (
+    <Avatar>S</Avatar>
+  ) : role === "user" ? (
+    <Avatar
+      src={avatarUrl}
+      sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
+    >
+      <PersonIcon />
+    </Avatar>
+  ) : role === "assistant" ? (
+    <Avatar sx={{ backgroundColor: "#19c37d" }}>
+      <SmartToyIcon />
+    </Avatar>
+  ) : role === "tool" ? (
+    <Avatar>
+      <BuildIcon />
+    </Avatar>
+  ) : (
+    <Avatar>?</Avatar>
+  );
+}
+
 function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [contextMenu, setContextMenu] = React.useState<{
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
   const [disableContextMenu, setDisableContextMenu] = useState(false);
 
-  const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
   const { t } = useTranslation();
 
   const content = useMemo(() => {
     return <MessageListItemContent message={message} />;
   }, [message]);
 
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (disableContextMenu) return;
+      event.preventDefault();
+      setContextMenu((contextMenu) =>
+        contextMenu === null
+          ? { mouseX: event.clientX, mouseY: event.clientY }
+          : null
+      );
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(event.currentTarget);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    },
+    [disableContextMenu]
+  );
+
   return (
     <Stack
       direction={message.role === "user" ? "row-reverse" : "row"}
       spacing={1}
     >
-      {message.role === "system" ? (
-        <Avatar>S</Avatar>
-      ) : message.role === "user" ? (
-        <Avatar
-          src={avatarUrl}
-          sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
-        >
-          <PersonIcon />
-        </Avatar>
-      ) : message.role === "assistant" ? (
-        <Avatar sx={{ backgroundColor: "#19c37d" }}>
-          <SmartToyIcon />
-        </Avatar>
-      ) : message.role === "tool" ? (
-        <Avatar>
-          <BuildIcon />
-        </Avatar>
-      ) : (
-        <Avatar>?</Avatar>
-      )}
-      <Box
-        sx={{
-          minWidth: 0,
-          overflow: "hidden",
-          overflowWrap: "break-word",
-        }}
-      >
+      <MessageAvatar role={message.role} />
+      <Box sx={{ minWidth: 0, overflow: "hidden", overflowWrap: "break-word" }}>
         <Box
           sx={{
             padding: "0.5em 0.8em",
@@ -206,53 +228,52 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
             "& pre": { margin: 0 },
             "& pre>code": { whiteSpace: "pre-wrap" },
           }}
-          onContextMenu={(e) => {
-            if (disableContextMenu) return;
-            e.preventDefault();
-            setAnchorEl(e.currentTarget);
-            const selection = window.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(e.currentTarget);
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-          }}
+          onContextMenu={handleContextMenu}
         >
           {content}
         </Box>
 
         <Menu
-          open={Boolean(anchorEl)}
-          anchorEl={anchorEl}
-          onClose={() => setAnchorEl(null)}
+          open={contextMenu !== null}
+          onClose={() => setContextMenu(null)}
+          anchorReference="anchorPosition"
+          anchorPosition={
+            contextMenu !== null
+              ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+              : undefined
+          }
         >
-          <Stack
-            direction="row"
-            sx={{ fontSize: "0.8rem", color: "text.secondary" }}
+          <MenuItem
+            onClick={() => {
+              navigator.clipboard.writeText(message.content as string);
+              const selection = window.getSelection();
+              selection?.removeAllRanges();
+              setContextMenu(null);
+            }}
           >
-            <IconButton
-              aria-label={t("Copy")}
-              size="small"
-              onClick={() => {
-                navigator.clipboard.writeText(message.content as string);
-              }}
-            >
+            <ListItemIcon>
               <ContentCopyIcon />
-            </IconButton>
-            <IconButton size="small">
+            </ListItemIcon>
+            <ListItemText>{t("Copy")}</ListItemText>
+          </MenuItem>
+          <MenuItem>
+            <ListItemIcon>
               <ReplayIcon />
-            </IconButton>
-            <IconButton
-              aria-label={t("Native context menu")}
-              size="small"
-              onClick={() => {
-                setDisableContextMenu(true);
-                setAnchorEl(null);
-                setTimeout(() => setDisableContextMenu(false), 60000);
-              }}
-            >
+            </ListItemIcon>
+            <ListItemText>{t("Retry")}</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setDisableContextMenu(true);
+              setContextMenu(null);
+              setTimeout(() => setDisableContextMenu(false), 60000);
+            }}
+          >
+            <ListItemIcon>
               <MenuIcon />
-            </IconButton>
-          </Stack>
+            </ListItemIcon>
+            <ListItemText>{t("Native menu")}</ListItemText>
+          </MenuItem>
         </Menu>
       </Box>
       <Box flexShrink={0} width={48} />
