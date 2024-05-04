@@ -45,8 +45,9 @@ export const conversationsSlice = createSlice({
         state.conversations[id] = {
           id,
           title:
-            Array.from(Object.values(messages))[0].content.slice(0, 10) ||
-            "Untitled",
+            Array.from(Object.values(messages))[0]
+              .content.trim()
+              .slice(0, 10) || "Untitled",
           create_time: new Date().toISOString(),
           messages,
         };
