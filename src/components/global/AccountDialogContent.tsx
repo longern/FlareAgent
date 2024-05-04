@@ -66,10 +66,10 @@ function AccountContent() {
   const userId = useAppSelector((state) => state.identity.id);
   const [apiKey, setApiKey] = useApiKey();
   const [baseUrl, setBaseUrl] = useState<string | null>(
-    localStorage.getItem("OPENAI_BASE_URL") ?? null
+    localStorage.getItem("OPENAI_BASE_URL")
   );
   const [modelProvider, setModelProvider] = useState<string | null>(
-    baseUrl.startsWith(window.location.origin)
+    baseUrl?.startsWith(window.location.origin)
       ? baseUrl.slice(window.location.origin.length + 1).replace(/\/v1\/?$/, "")
       : ""
   );
