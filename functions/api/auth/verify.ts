@@ -68,7 +68,9 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
         { success: true },
         {
           headers: {
-            "Set-Cookie": `token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict`,
+            "Set-Cookie": `token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${
+              7 * 24 * 60 * 60
+            }`,
           },
         }
       );
