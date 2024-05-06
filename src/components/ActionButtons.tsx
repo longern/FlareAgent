@@ -37,7 +37,7 @@ export function ScrollToBottomButton({
       size="small"
       sx={{
         position: "absolute",
-        bottom: 80,
+        bottom: 120,
         right: 16,
         zIndex: 1,
       }}

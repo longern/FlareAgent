@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { connect } from "react-redux";
 import {
   Box,
   Breadcrumbs,
@@ -28,8 +29,8 @@ import {
 
 import { DIRECTORY } from "../../fs/hooks";
 import { HistoryDialog } from "./HistoryDialog";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { hideFiles } from "../../app/dialogs";
+import { AppState } from "../../app/store";
 
 function humanFileSize(size: number) {
   var i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -159,7 +160,13 @@ async function listDirectory(dirHandle: FileSystemDirectoryHandle) {
   return files;
 }
 
-function FilesDialog() {
+function FilesDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [files, setFiles] = useState<({ name: string } | File)[]>([]);
   const [storageNotSupported, setStorageNotSupported] = useState(false);
   const [dirHandle, setDirHandle] = useState<FileSystemDirectoryHandle | null>(
@@ -169,10 +176,6 @@ function FilesDialog() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const { t } = useTranslation();
-  const open = useAppSelector((state) => state.dialogs.files);
-  const dispatch = useAppDispatch();
-
-  const onClose = () => dispatch(hideFiles());
 
   const readDirectory = useCallback(
     (dirHandle: FileSystemDirectoryHandle) =>
@@ -364,4 +367,11 @@ function FilesDialog() {
   );
 }
 
-export default FilesDialog;
+export default connect(
+  (state: AppState) => ({
+    open: state.dialogs.files,
+  }),
+  (dispatch) => ({
+    onClose: () => dispatch(hideFiles()),
+  })
+)(FilesDialog);

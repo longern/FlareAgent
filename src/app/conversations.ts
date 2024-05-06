@@ -1,11 +1,12 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { ChatCompletionContentPart } from "openai/resources/index.mjs";
 
 export type Message = {
   author: {
     role: "user" | "assistant" | "system" | "tool" | "function";
   };
   id: string;
-  content: string;
+  content: string | ChatCompletionContentPart[];
   create_time: string;
 };
 
@@ -40,14 +41,14 @@ export const conversationsSlice = createSlice({
       action: PayloadAction<Record<string, Message>>
     ) {
       const messages = action.payload;
+      const content = Array.from(Object.values(messages))[0].content;
       if (state.currentConversationId === null) {
         const id = crypto.randomUUID();
         state.conversations[id] = {
           id,
           title:
-            Array.from(Object.values(messages))[0]
-              .content.trim()
-              .slice(0, 10) || "Untitled",
+            (typeof content === "string" ? content : "").trim().slice(0, 10) ||
+            "Untitled",
           create_time: new Date().toISOString(),
           messages,
         };

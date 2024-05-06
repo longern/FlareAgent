@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { connect } from "react-redux";
 import {
   Box,
   Button,
@@ -31,11 +32,13 @@ import {
   Tune as TuneIcon,
   Psychology as PsychologyIcon,
 } from "@mui/icons-material";
+
 import AccountDialogContent from "./AccountDialogContent";
 import { HistoryDialog } from "./HistoryDialog";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { hideSettings } from "../../app/dialogs";
 import { setSettings } from "../../app/settings";
+import { AppState } from "../../app/store";
 
 const SparseList = styled(List)(() => ({
   padding: 0,
@@ -531,12 +534,14 @@ function SettingsForm() {
   );
 }
 
-function SettingsDialog() {
+function SettingsDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
-  const open = useAppSelector((state) => state.dialogs.settings);
-  const dispatch = useAppDispatch();
-
-  const onClose = () => dispatch(hideSettings());
 
   return (
     <HistoryDialog
@@ -552,4 +557,11 @@ function SettingsDialog() {
   );
 }
 
-export default SettingsDialog;
+export default connect(
+  (state: AppState) => ({
+    open: state.dialogs.settings,
+  }),
+  (dispatch) => ({
+    onClose: () => dispatch(hideSettings()),
+  })
+)(SettingsDialog);

@@ -145,7 +145,7 @@ function App() {
               {
                 id: messageId,
                 author: { role: message.role },
-                content: message.content as string,
+                content: message.content,
                 create_time: new Date().toISOString(),
               },
             ];
