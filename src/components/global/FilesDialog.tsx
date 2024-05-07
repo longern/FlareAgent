@@ -137,7 +137,7 @@ function FilesListItem({
 }
 
 async function listDirectory(dirHandle: FileSystemDirectoryHandle) {
-  const files = [];
+  const files: ({ name: string } | File)[] = [];
   for await (const [, value] of dirHandle as unknown as AsyncGenerator<
     [string, FileSystemFileHandle | FileSystemDirectoryHandle]
   >) {
@@ -160,6 +160,55 @@ async function listDirectory(dirHandle: FileSystemDirectoryHandle) {
   return files;
 }
 
+function PathBreadcrumbs({
+  path,
+  setDirHandle,
+}: {
+  path: string[];
+  setDirHandle: (handle: FileSystemDirectoryHandle) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Breadcrumbs sx={{ px: 2, py: 1.5 }} maxItems={3} itemsAfterCollapse={2}>
+      <Link
+        component="button"
+        underline="none"
+        color={path.length === 0 ? "inherit" : undefined}
+        disabled={path.length === 0}
+        onClick={() => DIRECTORY.then(setDirHandle)}
+      >
+        {t("My Files")}
+      </Link>
+      {path.map((name, index) =>
+        index === path.length - 1 ? (
+          <Box key={index} component="span">
+            {name}
+          </Box>
+        ) : (
+          <Link
+            key={index}
+            component="button"
+            underline="none"
+            onClick={() => {
+              const handle = path
+                .slice(0, index + 1)
+                .reduce(
+                  (handle, name) =>
+                    handle.then((handle) => handle.getDirectoryHandle(name)),
+                  DIRECTORY
+                );
+              handle.then(setDirHandle);
+            }}
+          >
+            {name}
+          </Link>
+        )
+      )}
+    </Breadcrumbs>
+  );
+}
+
 function FilesDialog({
   open,
   onClose,
@@ -179,7 +228,14 @@ function FilesDialog({
 
   const readDirectory = useCallback(
     (dirHandle: FileSystemDirectoryHandle) =>
-      listDirectory(dirHandle).then(setFiles),
+      listDirectory(dirHandle).then(async (files) => {
+        const root = await DIRECTORY;
+        if (root === dirHandle) {
+          const index = files.findIndex((file) => file.name === ".flareagent");
+          if (index !== -1) files.splice(index, 1);
+        }
+        setFiles(files);
+      }),
     []
   );
 
@@ -198,10 +254,9 @@ function FilesDialog({
           await writable.close();
         })
       );
-      const files = await listDirectory(dirHandle);
-      setFiles(files);
+      readDirectory(dirHandle);
     },
-    [dirHandle]
+    [dirHandle, readDirectory]
   );
 
   useEffect(() => {
@@ -213,7 +268,7 @@ function FilesDialog({
   }, [dirHandle, readDirectory]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return setDirHandle(null);
     if (!navigator.storage) return setStorageNotSupported(true);
     DIRECTORY.then(setDirHandle);
   }, [open]);
@@ -265,42 +320,7 @@ function FilesDialog({
       open={open}
       onClose={onClose}
     >
-      <Breadcrumbs sx={{ px: 2, py: 1.5 }} maxItems={3} itemsAfterCollapse={2}>
-        <Link
-          component="button"
-          underline="none"
-          color={path.length === 0 ? "inherit" : undefined}
-          disabled={path.length === 0}
-          onClick={() => DIRECTORY.then(setDirHandle)}
-        >
-          {t("My Files")}
-        </Link>
-        {path.map((name, index) =>
-          index === path.length - 1 ? (
-            <Box key={index} component="span">
-              {name}
-            </Box>
-          ) : (
-            <Link
-              key={index}
-              component="button"
-              underline="none"
-              onClick={() => {
-                const handle = path
-                  .slice(0, index + 1)
-                  .reduce(
-                    (handle, name) =>
-                      handle.then((handle) => handle.getDirectoryHandle(name)),
-                    DIRECTORY
-                  );
-                handle.then(setDirHandle);
-              }}
-            >
-              {name}
-            </Link>
-          )
-        )}
-      </Breadcrumbs>
+      <PathBreadcrumbs path={path} setDirHandle={setDirHandle} />
 
       {storageNotSupported ? (
         <Box sx={{ display: "flex", justifyContent: "center" }}>
