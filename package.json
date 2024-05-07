@@ -12,6 +12,7 @@
     "@mui/material": "^5.15.2",
     "@noble/curves": "^1.4.0",
     "@reduxjs/toolkit": "^2.2.3",
+    "@sqlite.org/sqlite-wasm": "^3.45.3-build1",
     "@tsndr/cloudflare-worker-jwt": "^2.5.3",
     "@uiw/react-codemirror": "^4.21.21",
     "bs58": "^5.0.0",
