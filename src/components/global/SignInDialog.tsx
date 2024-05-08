@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { connect } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { Button, Container, Dialog } from "@mui/material";
+import { Button, Container, Dialog, Stack } from "@mui/material";
 
 import { AppState } from "../../app/store";
 import { hideSignIn } from "../../app/dialogs";
@@ -24,6 +24,8 @@ async function challengeAuthenticate() {
   const { challenge } = challengeJson as { challenge: string };
   authenticate(challenge, "https://auth.longern.com");
 }
+
+declare const process: { env: { REACT_APP_QUOTA_RESELLER_URL?: string } };
 
 function SignInDialog({ open }: { open: boolean }) {
   const dispatch = useAppDispatch();
@@ -63,13 +65,25 @@ function SignInDialog({ open }: { open: boolean }) {
         >
           {t("Sign in")}
         </Button>
-        <Button
-          variant="text"
-          size="large"
-          onClick={() => dispatch(hideSignIn())}
-        >
-          {t("Skip")}
-        </Button>
+        <Stack spacing={2} direction="row">
+          {process.env.REACT_APP_QUOTA_RESELLER_URL && (
+            <Button
+              variant="text"
+              size="large"
+              href={process.env.REACT_APP_QUOTA_RESELLER_URL}
+              target="_blank"
+            >
+              {t("Buy your own quota")}
+            </Button>
+          )}
+          <Button
+            variant="text"
+            size="large"
+            onClick={() => dispatch(hideSignIn())}
+          >
+            {t("Skip")}
+          </Button>
+        </Stack>
       </Container>
     </Dialog>
   );

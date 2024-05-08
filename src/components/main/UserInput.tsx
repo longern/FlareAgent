@@ -162,7 +162,7 @@ function UserInput({
               <IconButton
                 aria-label="send"
                 size="small"
-                disabled={userInput === ""}
+                disabled={userInput === "" && !images.length}
                 onClick={handleSend}
                 sx={{ alignSelf: "flex-end" }}
               >
