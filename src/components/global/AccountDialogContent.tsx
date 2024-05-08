@@ -24,21 +24,9 @@ import {
 
 import { useAppSelector } from "../../app/hooks";
 
-function authenticate(challenge: string, providerOrigin: string) {
-  const searchParams = new URLSearchParams();
-  searchParams.set("challenge", challenge);
-  searchParams.set("callback_url", window.location.origin);
-  const providerUrl = `${providerOrigin}?${searchParams.toString()}`;
-  window.open(providerUrl);
-}
-
-async function challengeAuthenticate() {
-  const challengeResponse = await fetch("/api/auth/challenge", {
-    method: "POST",
-  });
-  const challengeJson = await challengeResponse.json();
-  const { challenge } = challengeJson as { challenge: string };
-  authenticate(challenge, "https://auth.longern.com");
+async function signOut() {
+  await fetch("/api/auth/signout", { method: "POST" });
+  window.location.reload();
 }
 
 function useApiKey() {
@@ -88,7 +76,7 @@ function AccountContent() {
     <Stack spacing={2}>
       <Card elevation={0} component={List} disablePadding>
         <ListItem disablePadding>
-          <ListItemButton onClick={challengeAuthenticate}>
+          <ListItemButton>
             <ListItemAvatar>
               <Avatar src={avatarUrl}>
                 <PersonIcon />
@@ -171,6 +159,15 @@ function AccountContent() {
           </React.Fragment>
         )}
       </Card>
+      {userId && (
+        <Card elevation={0} component={List} disablePadding>
+          <ListItem disablePadding>
+            <ListItemButton onClick={signOut}>
+              <ListItemText primary={t("Sign out")} />
+            </ListItemButton>
+          </ListItem>
+        </Card>
+      )}
     </Stack>
   );
 }

@@ -7,6 +7,7 @@ import { useSyncFS } from "../fs/hooks";
 import { Settings, initializeSettings } from "./settings";
 import OpenAI from "openai";
 import { setModels } from "./models";
+import { showSignIn } from "./dialogs";
 
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<AppState>();
@@ -66,7 +67,13 @@ export function useSyncSettings() {
 export function useInitializeApp() {
   const dispatch = useAppDispatch();
   useEffect(() => {
-    dispatch(fetchIdentity());
+    dispatch(fetchIdentity()).then((action) => {
+      if (
+        action.meta.requestStatus === "rejected" &&
+        !window.localStorage.getItem("OPENAI_API_KEY")
+      )
+        dispatch(showSignIn());
+    });
     dispatch(loadAvatar());
   }, [dispatch]);
   useModels();

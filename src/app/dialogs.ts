@@ -6,6 +6,7 @@ export const dialogsSlice = createSlice({
   initialState: {
     files: false,
     settings: false,
+    signIn: false,
     tools: false,
     workflow: null as Workflow | null,
   },
@@ -15,6 +16,12 @@ export const dialogsSlice = createSlice({
     },
     showSettings(state) {
       state.settings = true;
+    },
+    showSignIn(state) {
+      state.signIn = true;
+    },
+    hideSignIn(state) {
+      state.signIn = false;
     },
     showTools(state) {
       state.tools = true;
@@ -40,6 +47,8 @@ export const dialogsSlice = createSlice({
 export const {
   showFiles,
   hideFiles,
+  showSignIn,
+  hideSignIn,
   showSettings,
   hideSettings,
   showTools,

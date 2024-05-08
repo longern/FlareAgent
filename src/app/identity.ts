@@ -7,16 +7,17 @@ async function handleSignParams() {
   const searchParams = new URLSearchParams(window.location.search);
   if (!searchParams.has("sign")) return;
   const cred = searchParams.get("sign");
+  const tokenResponse = await fetch("/api/auth/verify", {
+    method: "POST",
+    body: cred,
+  });
+  window.close();
   searchParams.delete("sign");
   window.history.replaceState(
     null,
     "",
     `${window.location.pathname}?${searchParams.toString()}`
   );
-  const tokenResponse = await fetch("/api/auth/verify", {
-    method: "POST",
-    body: cred,
-  });
   const tokenJson: { success: boolean } | { error: string } =
     await tokenResponse.json();
   if ("error" in tokenJson) return alert(tokenJson.error);

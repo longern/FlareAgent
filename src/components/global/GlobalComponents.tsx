@@ -14,6 +14,7 @@ import { AppState } from "../../app/store";
 import { hideError } from "../../app/error";
 
 const FilesDialog = React.lazy(() => import("./FilesDialog"));
+const SignInDialog = React.lazy(() => import("./SignInDialog"));
 const SettingsDialog = React.lazy(() => import("./SettingsDialog"));
 const ToolsDialog = React.lazy(() => import("./ToolsDialog"));
 const WorkflowDialog = React.lazy(() => import("./WorkflowDialog"));
@@ -93,6 +94,9 @@ export function GlobalComponentsProvider({
       {children}
       <Suspense>
         <FilesDialog />
+      </Suspense>
+      <Suspense>
+        <SignInDialog />
       </Suspense>
       <Suspense>
         <ToolsDialog />
