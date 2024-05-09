@@ -1,23 +1,31 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 import conversationsReducer from "./conversations";
 import dialogsReducer from "./dialogs";
 import errorReducer from "./error";
 import identityReducer from "./identity";
 import modelsReducer from "./models";
-import settingsReducer from "./settings";
+import settingsReducer, { settingsMiddleware } from "./settings";
+import conversationsMiddleware from "./conversationsMiddleware";
+import { initializeApp } from "./init";
 
-const store = configureStore({
-  reducer: {
-    conversations: conversationsReducer,
-    dialogs: dialogsReducer,
-    error: errorReducer,
-    identity: identityReducer,
-    models: modelsReducer,
-    settings: settingsReducer,
-  },
+const reducers = combineReducers({
+  conversations: conversationsReducer,
+  dialogs: dialogsReducer,
+  error: errorReducer,
+  identity: identityReducer,
+  models: modelsReducer,
+  settings: settingsReducer,
 });
 
-export type AppState = ReturnType<typeof store.getState>;
+const store = configureStore({
+  reducer: reducers,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(conversationsMiddleware, settingsMiddleware),
+});
+
+store.dispatch(initializeApp());
+
+export type AppState = ReturnType<typeof reducers>;
 export type AppDispatch = typeof store.dispatch;
 export default store;

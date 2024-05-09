@@ -4,7 +4,6 @@ import { Provider } from "react-redux";
 
 import store from "./app/store";
 import Root from "./components/Root";
-import "./db";
 import "./i18n";
 import "./scheme";
 

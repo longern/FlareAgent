@@ -14,6 +14,7 @@ import {
   Menu,
   MenuItem,
   Stack,
+  Typography,
 } from "@mui/material";
 import {
   AudioFile as AudioFileIcon,
@@ -323,13 +324,19 @@ function FilesDialog({
       <PathBreadcrumbs path={path} setDirHandle={setDirHandle} />
 
       {storageNotSupported ? (
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Typography
+          color="textSecondary"
+          sx={{ display: "flex", justifyContent: "center" }}
+        >
           {t("Storage not supported")}
-        </Box>
+        </Typography>
       ) : files.length === 0 ? (
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Typography
+          color="textSecondary"
+          sx={{ display: "flex", justifyContent: "center" }}
+        >
           {t("No files")}
-        </Box>
+        </Typography>
       ) : (
         <List disablePadding sx={{ overflow: "auto" }}>
           {files.map((file) => {

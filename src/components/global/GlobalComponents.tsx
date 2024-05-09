@@ -19,6 +19,14 @@ const SettingsDialog = React.lazy(() => import("./SettingsDialog"));
 const ToolsDialog = React.lazy(() => import("./ToolsDialog"));
 const WorkflowDialog = React.lazy(() => import("./WorkflowDialog"));
 
+if (typeof window !== "undefined") {
+  if (window.history.state !== null)
+    window.history.replaceState(null, "", window.location.pathname);
+
+  if ("virtualKeyboard" in window.navigator)
+    (window.navigator as any).virtualKeyboard.overlaysContent = true;
+}
+
 const globalStyles = (
   <GlobalStyles
     styles={{

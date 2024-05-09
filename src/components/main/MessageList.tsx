@@ -27,6 +27,8 @@ import "katex/dist/katex.min.css";
 
 import { Highlighter, MarkdownHighlighter } from "./Highlighter";
 import { useAppSelector } from "../../app/hooks";
+import { connect } from "react-redux";
+import { AppState } from "../../app/store";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {
@@ -307,4 +309,19 @@ function MessageList({
   );
 }
 
-export default MessageList;
+export default connect((state: AppState) => ({
+  messages:
+    state.conversations.currentConversationId === null
+      ? []
+      : Object.values(
+          state.conversations.conversations[
+            state.conversations.currentConversationId
+          ].messages
+        ).map(
+          (message) =>
+            ({
+              role: message.author_role,
+              content: JSON.parse(message.content),
+            } as ChatCompletionMessageParam)
+        ),
+}))(MessageList);

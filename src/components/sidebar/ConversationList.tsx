@@ -89,6 +89,7 @@ function ConversationList() {
         >
           {t("Archive")}
         </MenuItem>
+        <MenuItem>{t("Rename")}</MenuItem>
         <Divider component="li" />
         <MenuItem
           onClick={() => {
