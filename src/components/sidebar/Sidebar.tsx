@@ -28,6 +28,7 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { showFiles, showSettings, showWorkflow } from "../../app/dialogs";
 import { setAvatar } from "../../app/identity";
 import ConversationList from "./ConversationList";
+import { fetchModels } from "../../app/models";
 
 function WorkflowList({
   currentWorkflow,
@@ -106,6 +107,16 @@ export function useModel() {
   return [model, setModel] as const;
 }
 
+function useUpdateModels() {
+  const userId = useAppSelector((state) => state.identity.id);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (!userId) return;
+    dispatch(fetchModels());
+  }, [dispatch, userId]);
+}
+
 export function ModelSelector({
   model,
   onModelChange,
@@ -114,6 +125,8 @@ export function ModelSelector({
   onModelChange: (model: string) => void;
 }) {
   const models = useAppSelector((state) => state.models.models);
+
+  useUpdateModels();
 
   return (
     <Select
