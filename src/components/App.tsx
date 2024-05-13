@@ -31,6 +31,7 @@ import {
   fetchDrawings,
   setCurrentConversation,
 } from "../app/conversations";
+import { abort, setAbortable } from "../app/abort";
 
 async function screenshot(element: HTMLElement, options: HtmlToImageOptions) {
   const { toBlob } = await import("html-to-image");
@@ -76,8 +77,12 @@ function useHandleSend() {
               messages: { [messageId]: message },
             })
       );
-      if (model === "dall-e-3") dispatch(fetchDrawings(userInput as string));
-      else dispatch(fetchAssistantMessage(model));
+      const promise = dispatch(
+        model === "dall-e-3"
+          ? fetchDrawings(userInput as string)
+          : fetchAssistantMessage(model)
+      );
+      dispatch(setAbortable(promise));
     },
     [dispatch, currentConversationId, model]
   );
@@ -89,13 +94,11 @@ function App() {
   const [messages, setMessages] = useMessages();
   const [currentNode, setCurrentNode] = useState<Node | undefined | null>(null);
   const [variables, setVariables] = useState<Map<string, string>>(new Map());
-  const [controller, setController] = useState<AbortController | undefined>(
-    undefined
-  );
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
   const model = useAppSelector((state) => state.models.model);
+  const hasAbortable = useAppSelector((state) => state.abort.hasAbortable);
   const disableMemory = useAppSelector((state) => state.settings.disableMemory);
   const dispatch = useAppDispatch();
 
@@ -134,7 +137,6 @@ function App() {
         tools.filter((tool) => !disableMemory || tool.info.title !== "Memory")
       ),
       onPartialMessage: (message) => setMessages([...messages!, message]),
-      onAbortController: (controller) => setController(controller),
     });
     setVariables(state.variables);
     return state;
@@ -147,12 +149,8 @@ function App() {
     setMessages([]);
     setVariables(new Map());
     setSidebarOpen(false);
-    if (controller) {
-      controller.abort();
-      setController(undefined);
-    }
     dispatch(setCurrentConversation(null));
-  }, [dispatch, setMessages, controller]);
+  }, [dispatch, setMessages]);
 
   const handleWorkflowChange = useCallback(
     (workflow: Workflow) => {
@@ -240,7 +238,7 @@ function App() {
       {!scrollToBottom && (
         <ScrollToBottomButton onClick={() => setScrollToBottom(true)} />
       )}
-      {controller && <StopButton onClick={() => controller.abort()} />}
+      {hasAbortable && <StopButton onClick={() => dispatch(abort())} />}
     </Stack>
   );
 }

@@ -15,7 +15,7 @@ export function StopButton({
       size="small"
       sx={{
         position: "absolute",
-        bottom: 64,
+        bottom: 120,
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: 1,

@@ -1,5 +1,6 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
+import abortReducer from "./abort";
 import conversationsReducer from "./conversations";
 import dialogsReducer from "./dialogs";
 import errorReducer from "./error";
@@ -10,6 +11,7 @@ import conversationsMiddleware from "./conversationsMiddleware";
 import { initializeApp } from "./init";
 
 const reducers = combineReducers({
+  abort: abortReducer,
   conversations: conversationsReducer,
   dialogs: dialogsReducer,
   error: errorReducer,

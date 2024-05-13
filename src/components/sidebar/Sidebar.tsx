@@ -95,18 +95,6 @@ function WorkflowList({
   );
 }
 
-export function useModel() {
-  const [model, setModel] = useState(
-    localStorage.getItem("OPENAI_MODEL") ?? "gpt-3.5-turbo"
-  );
-
-  useEffect(() => {
-    localStorage.setItem("OPENAI_MODEL", model);
-  }, [model]);
-
-  return [model, setModel] as const;
-}
-
 function useUpdateModels() {
   const userId = useAppSelector((state) => state.identity.id);
   const dispatch = useAppDispatch();
@@ -179,7 +167,12 @@ function Sidebar({
       variant={matchesLg ? "permanent" : "temporary"}
       open={open}
       anchor="left"
-      sx={{ [`& .MuiDrawer-paper`]: { width: "320px" } }}
+      sx={{
+        [`& .MuiDrawer-paper`]: {
+          width: "320px",
+          position: matchesLg ? "relative" : "fixed",
+        },
+      }}
       onClose={onClose}
     >
       <Stack height="100%">
