@@ -25,6 +25,21 @@ export const Highlighter = React.lazy(async () => {
   };
 });
 
+const preprocessLaTeX = (content: string) => {
+  // Replace block-level LaTeX delimiters \[ \] with $$ $$
+
+  const blockProcessedContent = content.replace(
+    /\\\[\n(.*?)\n\\\]/gs,
+    (_, equation) => `$$${equation}$$`
+  );
+  // Replace inline LaTeX delimiters \( \) with $ $
+  const inlineProcessedContent = blockProcessedContent.replace(
+    /\\\((.*?)\\\)/gs,
+    (_, equation) => `$${equation}$`
+  );
+  return inlineProcessedContent;
+};
+
 export const MarkdownHighlighter = React.lazy(async () => {
   const [
     { default: Markdown },
@@ -67,7 +82,7 @@ export const MarkdownHighlighter = React.lazy(async () => {
           remarkPlugins={[remarkMath]}
           rehypePlugins={[rehypeKatex]}
         >
-          {children}
+          {preprocessLaTeX(children)}
         </Markdown>
       );
     },
