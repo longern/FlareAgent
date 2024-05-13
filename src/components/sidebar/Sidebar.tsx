@@ -28,7 +28,7 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { showFiles, showSettings, showWorkflow } from "../../app/dialogs";
 import { setAvatar } from "../../app/identity";
 import ConversationList from "./ConversationList";
-import { fetchModels } from "../../app/models";
+import { fetchModels, setModel } from "../../app/models";
 
 function WorkflowList({
   currentWorkflow,
@@ -117,14 +117,10 @@ function useUpdateModels() {
   }, [dispatch, userId]);
 }
 
-export function ModelSelector({
-  model,
-  onModelChange,
-}: {
-  model: string;
-  onModelChange: (model: string) => void;
-}) {
+export function ModelSelector() {
   const models = useAppSelector((state) => state.models.models);
+  const model = useAppSelector((state) => state.models.model);
+  const dispatch = useAppDispatch();
 
   useUpdateModels();
 
@@ -133,7 +129,7 @@ export function ModelSelector({
       variant="standard"
       value={model}
       onChange={(e) => {
-        onModelChange(e.target.value);
+        dispatch(setModel(e.target.value));
       }}
       inputProps={{ "aria-label": "model" }}
     >
@@ -216,9 +212,6 @@ function Sidebar({
         </Stack>
         <ListItemButton onClick={handleNewChat} sx={{ flexGrow: 0 }}>
           <ListItemText primary={t("New chat")} />
-        </ListItemButton>
-        <ListItemButton sx={{ flexGrow: 0 }}>
-          <ListItemText primary={t("New image")} />
         </ListItemButton>
         <List
           sx={{ flexGrow: 1, minHeight: 0, overflowY: "auto" }}

@@ -19,6 +19,7 @@ import {
   SmartToy as SmartToyIcon,
 } from "@mui/icons-material";
 import {
+  ChatCompletionContentPart,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
 } from "openai/resources/index";
@@ -102,11 +103,19 @@ function MessageListItemContent({
 
   return message.role === "assistant" ? (
     <>
-      {message.content && (
+      {typeof message.content === "string" ? (
         <Suspense fallback={message.content}>
           <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
         </Suspense>
-      )}
+      ) : message.content ? (
+        (message.content as ChatCompletionContentPart[]).map((part, index) =>
+          part.type === "text" ? (
+            <span key={index}>{part.text}</span>
+          ) : part.type === "image_url" ? (
+            <img key={index} src={part.image_url.url} alt="" />
+          ) : null
+        )
+      ) : null}
       {Array.isArray(message.tool_calls) && message.tool_calls.length > 0 && (
         <>
           <div>{t("Calling functions:")}</div>

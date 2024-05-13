@@ -14,7 +14,7 @@ import type { Options as HtmlToImageOptions } from "html-to-image/lib/types";
 import { ScrollToBottomButton, StopButton } from "./ActionButtons";
 import MessageList from "./main/MessageList";
 import MobileToolbar from "./sidebar/MobileToolbar";
-import Sidebar, { ModelSelector, useModel } from "./sidebar/Sidebar";
+import Sidebar, { ModelSelector } from "./sidebar/Sidebar";
 import ScrollToBottom from "./main/ScrollToBottom";
 import UserInput from "./main/UserInput";
 import { useMessages } from "../messages";
@@ -28,6 +28,7 @@ import {
   createConversation,
   createMessage,
   fetchAssistantMessage,
+  fetchDrawings,
   setCurrentConversation,
 } from "../app/conversations";
 
@@ -49,11 +50,11 @@ function extractTitle(userInput: string | ChatCompletionContentPart[]) {
 }
 
 function useHandleSend() {
-  const dispatch = useAppDispatch();
-  const [model] = useModel();
+  const model = useAppSelector((state) => state.models.model);
   const currentConversationId = useAppSelector(
     (state) => state.conversations.currentConversationId
   );
+  const dispatch = useAppDispatch();
 
   return useCallback(
     (userInput: string | ChatCompletionContentPart[]) => {
@@ -75,7 +76,8 @@ function useHandleSend() {
               messages: { [messageId]: message },
             })
       );
-      dispatch(fetchAssistantMessage(model));
+      if (model === "dall-e-3") dispatch(fetchDrawings(userInput as string));
+      else dispatch(fetchAssistantMessage(model));
     },
     [dispatch, currentConversationId, model]
   );
@@ -92,8 +94,8 @@ function App() {
   );
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [model, setModel] = useModel();
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
+  const model = useAppSelector((state) => state.models.model);
   const disableMemory = useAppSelector((state) => state.settings.disableMemory);
   const dispatch = useAppDispatch();
 
@@ -186,9 +188,7 @@ function App() {
       });
   }, [currentWorkflow, currentNode, dispatch, setMessages]);
 
-  const modelSelector = (
-    <ModelSelector model={model} onModelChange={setModel} />
-  );
+  const modelSelector = <ModelSelector />;
 
   return (
     <Stack direction="row" height="100%">

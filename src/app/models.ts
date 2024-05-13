@@ -5,10 +5,15 @@ export const modelsSlice = createSlice({
   name: "error",
   initialState: {
     models: null as string[] | null,
+    model: localStorage.getItem("OPENAI_MODEL") ?? "gpt-3.5-turbo",
   },
   reducers: {
     setModels(state, action: PayloadAction<string[]>) {
       state.models = action.payload;
+    },
+
+    setModel(state, action: PayloadAction<string>) {
+      state.model = action.payload;
     },
   },
 });
@@ -33,6 +38,7 @@ export const fetchModels = createAsyncThunk(
         (model) =>
           model.owned_by === "system" &&
           ((model.id.startsWith("gpt-") && !model.id.includes("instruct")) ||
+            model.id === "dall-e-3" ||
             model.id.startsWith("llama-") ||
             model.id.startsWith("qwen"))
       )
@@ -42,5 +48,14 @@ export const fetchModels = createAsyncThunk(
 );
 
 export const { setModels } = modelsSlice.actions;
+
+export const setModel = createAsyncThunk(
+  "models/setModel",
+  async (model: string, { dispatch }) => {
+    localStorage.setItem("OPENAI_MODEL", model);
+    dispatch(modelsSlice.actions.setModel(model));
+    return model;
+  }
+);
 
 export default modelsSlice.reducer;

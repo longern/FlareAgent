@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { connect } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { Button, Container, Dialog, Stack } from "@mui/material";
+import { Button, Container, Dialog, Stack, Typography } from "@mui/material";
 
 import { AppState } from "../../app/store";
 import { hideSignIn } from "../../app/dialogs";
@@ -56,6 +56,9 @@ function SignInDialog({ open }: { open: boolean }) {
           gap: 2,
         }}
       >
+        <Typography variant="h4" sx={{ marginY: 4 }}>
+          {t("Please sign in")}
+        </Typography>
         <Button
           variant="contained"
           size="large"

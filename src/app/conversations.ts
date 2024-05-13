@@ -2,6 +2,7 @@ import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { AppState } from "./store";
 import {
   ChatCompletion,
+  ChatCompletionContentPart,
   ChatCompletionMessageParam,
 } from "openai/resources/index.mjs";
 
@@ -125,6 +126,43 @@ function patchDelta(obj: any, delta: any) {
   return delta;
 }
 
+export const fetchDrawings = createAsyncThunk(
+  "conversations/fetchDrawings",
+  async (prompt: string, { dispatch, signal }) => {
+    const { OpenAI } = await import("openai");
+    const openaiApiKey = localStorage.getItem("OPENAI_API_KEY") ?? "";
+    const baseURL = localStorage.getItem("OPENAI_BASE_URL");
+    const openai = new OpenAI({
+      apiKey: openaiApiKey,
+      baseURL,
+      dangerouslyAllowBrowser: true,
+    });
+    const completion = await openai.images.generate(
+      {
+        model: "dall-e-3",
+        prompt,
+        response_format: "b64_json",
+      },
+      { signal }
+    );
+    const messageId = crypto.randomUUID();
+    const imageUrl = "data:image/png;base64," + completion.data[0].b64_json;
+    dispatch(
+      createMessage({
+        id: messageId,
+        author_role: "assistant",
+        content: JSON.stringify([
+          {
+            type: "image_url",
+            image_url: { url: imageUrl },
+          } as ChatCompletionContentPart,
+        ]),
+        create_time: Date.now(),
+      })
+    );
+  }
+);
+
 export const fetchAssistantMessage = createAsyncThunk(
   "conversations/fetchAssistantMessage",
   async (model: string, { getState, dispatch, signal }) => {
@@ -149,12 +187,14 @@ export const fetchAssistantMessage = createAsyncThunk(
         } as ChatCompletionMessageParam)
     );
 
-    const completion = await openai.chat.completions.create({
-      model,
-      messages: messages,
-      stream: true,
-    });
-    signal.addEventListener("abort", () => completion.controller.abort());
+    const completion = await openai.chat.completions.create(
+      {
+        model,
+        messages: messages,
+        stream: true,
+      },
+      { signal }
+    );
 
     const messageId = crypto.randomUUID();
     const timestamp = Date.now();
