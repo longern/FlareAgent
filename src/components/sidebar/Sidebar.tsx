@@ -219,12 +219,16 @@ function Sidebar({
             {userId}
           </Box>
         </Stack>
-        <List sx={{ flexGrow: 1, minHeight: 0 }}>
-          <ListItem disablePadding>
-            <ListItemButton onClick={handleNewChat}>
-              <ListItemText primary={t("New Chat")} />
-            </ListItemButton>
-          </ListItem>
+        <ListItemButton onClick={handleNewChat} sx={{ flexGrow: 0 }}>
+          <ListItemText primary={t("New chat")} />
+        </ListItemButton>
+        <ListItemButton sx={{ flexGrow: 0 }}>
+          <ListItemText primary={t("New image")} />
+        </ListItemButton>
+        <List
+          sx={{ flexGrow: 1, minHeight: 0, overflowY: "auto" }}
+          disablePadding
+        >
           <ListItem disablePadding>
             <ConversationList />
           </ListItem>
@@ -249,7 +253,7 @@ function Sidebar({
             />
           </Collapse>
         </List>
-        <List>
+        <List disablePadding>
           <ListItem disablePadding>
             <ListItemButton onClick={() => dispatch(showFiles())}>
               <ListItemText primary={t("My Files")} />
