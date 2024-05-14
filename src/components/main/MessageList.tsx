@@ -1,4 +1,11 @@
-import React, { Suspense, useCallback, useMemo, useState } from "react";
+import {
+  Build as BuildIcon,
+  ContentCopy as ContentCopyIcon,
+  Menu as MenuIcon,
+  Person as PersonIcon,
+  Replay as ReplayIcon,
+  SmartToy as SmartToyIcon,
+} from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -10,26 +17,19 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import {
-  Build as BuildIcon,
-  ContentCopy as ContentCopyIcon,
-  Menu as MenuIcon,
-  Person as PersonIcon,
-  Replay as ReplayIcon,
-  SmartToy as SmartToyIcon,
-} from "@mui/icons-material";
+import "katex/dist/katex.min.css";
 import {
   ChatCompletionContentPart,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
 } from "openai/resources/index";
+import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import "katex/dist/katex.min.css";
-
-import { Highlighter, MarkdownHighlighter } from "./Highlighter";
-import { useAppSelector } from "../../app/hooks";
 import { connect } from "react-redux";
+
+import { useAppSelector } from "../../app/hooks";
 import { AppState } from "../../app/store";
+import { Highlighter, MarkdownHighlighter } from "./Highlighter";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {

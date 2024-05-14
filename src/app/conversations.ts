@@ -48,6 +48,13 @@ export const conversationsSlice = createSlice({
         action.payload.map((conversation) => [conversation.id, conversation])
       );
     },
+    updateConversationTitle(
+      state,
+      action: PayloadAction<{ id: string; title: string }>
+    ) {
+      const id = action.payload.id;
+      state.conversations[id].title = action.payload.title;
+    },
     removeConversation(state, action: PayloadAction<string>) {
       delete state.conversations[action.payload];
       if (state.currentConversationId === action.payload) {
@@ -56,28 +63,6 @@ export const conversationsSlice = createSlice({
     },
     setCurrentConversation(state, action: PayloadAction<string | null>) {
       state.currentConversationId = action.payload;
-    },
-    updateCurrentConversation(
-      state,
-      action: PayloadAction<Record<string, Message>>
-    ) {
-      const messages = action.payload;
-      if (state.currentConversationId === null) {
-        const id = crypto.randomUUID();
-        const content = Array.from(Object.values(messages))[0].content;
-        state.conversations[id] = {
-          id,
-          title:
-            (typeof content === "string" ? content : "").trim().slice(0, 10) ||
-            "Untitled",
-          create_time: Date.now(),
-          messages,
-        };
-        state.currentConversationId = id;
-        return;
-      }
-      const current = state.conversations[state.currentConversationId!];
-      current.messages = messages;
     },
 
     setMessages(state, action: PayloadAction<Record<string, Message>>) {
@@ -236,9 +221,9 @@ export const fetchAssistantMessage = createAsyncThunk(
 export const {
   createConversation,
   setConversations,
+  updateConversationTitle,
   removeConversation,
   setCurrentConversation,
-  updateCurrentConversation,
   createMessage,
   updatePartialMessage,
 } = conversationsSlice.actions;

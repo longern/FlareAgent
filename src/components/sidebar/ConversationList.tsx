@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MoreHoriz as MoreHorizIcon } from "@mui/icons-material";
 import {
@@ -17,6 +17,7 @@ import {
   archiveConversation,
   removeConversation,
   setCurrentConversation,
+  updateConversationTitle,
 } from "../../app/conversations";
 
 function ConversationList({ onClose }: { onClose: () => void }) {
@@ -30,6 +31,11 @@ function ConversationList({ onClose }: { onClose: () => void }) {
   );
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
+
+  const closeMenu = useCallback(() => {
+    setAnchorEl(null);
+    setMenuId(null);
+  }, []);
 
   return (
     <React.Fragment>
@@ -66,17 +72,13 @@ function ConversationList({ onClose }: { onClose: () => void }) {
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
-        onClose={() => {
-          setAnchorEl(null);
-          setMenuId(null);
-        }}
+        onClose={closeMenu}
         MenuListProps={{ sx: { minWidth: "160px" } }}
       >
         <MenuItem
           onClick={() => {
             dispatch(setCurrentConversation(menuId));
-            setAnchorEl(null);
-            setMenuId(null);
+            closeMenu();
           }}
         >
           {t("Active")}
@@ -84,19 +86,33 @@ function ConversationList({ onClose }: { onClose: () => void }) {
         <MenuItem
           onClick={() => {
             archiveConversation(conversations[menuId]);
-            setAnchorEl(null);
-            setMenuId(null);
+            closeMenu();
           }}
         >
           {t("Archive")}
         </MenuItem>
-        <MenuItem>{t("Rename")}</MenuItem>
+        <MenuItem
+          onClick={() => {
+            closeMenu();
+            setTimeout(() => {
+              const newTitle = window.prompt(
+                t("Enter new title"),
+                conversations[menuId].title
+              );
+              if (!newTitle) return;
+              dispatch(
+                updateConversationTitle({ id: menuId, title: newTitle })
+              );
+            }, 0);
+          }}
+        >
+          {t("Rename")}
+        </MenuItem>
         <Divider component="li" />
         <MenuItem
           onClick={() => {
             dispatch(removeConversation(menuId));
-            setAnchorEl(null);
-            setMenuId(null);
+            closeMenu();
           }}
         >
           {t("Delete")}

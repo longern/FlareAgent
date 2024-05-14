@@ -52,6 +52,15 @@ const conversationsMiddleware: Middleware<{}, AppState> = (store) => {
         break;
       }
 
+      case conversationsSlice.actions.updateConversationTitle.type: {
+        const { id, title } = action.payload;
+        db.exec(
+          "UPDATE flare_agent_conversations SET title = ? WHERE conversation_id = ?",
+          [title, id]
+        );
+        break;
+      }
+
       case conversationsSlice.actions.removeConversation.type: {
         db.exec(
           "DELETE FROM flare_agent_conversations WHERE conversation_id = ?",
