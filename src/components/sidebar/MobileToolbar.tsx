@@ -6,12 +6,12 @@ import {
 } from "@mui/icons-material";
 import { Box } from "@mui/system";
 
+import { modelSelector } from "./Sidebar";
+
 function MobileToolbar({
-  modelSelector,
   onMenuClick,
   onCreateThread,
 }: {
-  modelSelector: React.ReactNode;
   onMenuClick: () => void;
   onCreateThread: () => void;
 }) {

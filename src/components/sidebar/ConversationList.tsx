@@ -19,7 +19,7 @@ import {
   setCurrentConversation,
 } from "../../app/conversations";
 
-function ConversationList() {
+function ConversationList({ onClose }: { onClose: () => void }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
   const conversations = useAppSelector(
@@ -55,6 +55,7 @@ function ConversationList() {
               selected={conversation.id === currentConversationId}
               onClick={() => {
                 dispatch(setCurrentConversation(conversation.id));
+                onClose();
               }}
             >
               <ListItemText primary={conversation.title} />

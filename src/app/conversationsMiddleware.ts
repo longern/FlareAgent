@@ -1,12 +1,7 @@
 import type { Middleware } from "@reduxjs/toolkit";
 
 import type { AppState } from "./store";
-import {
-  Message,
-  conversationsSlice,
-  setConversations,
-  setCurrentConversation,
-} from "./conversations";
+import { Message, conversationsSlice, setConversations } from "./conversations";
 import { DB } from "../db";
 
 type ValueOf<T> = T[keyof T];
@@ -28,9 +23,6 @@ const conversationsMiddleware: Middleware<{}, AppState> = (store) => {
       messages: null,
     }));
     dispatch(setConversations(conversations));
-    if (conversations.length > 0) {
-      dispatch(setCurrentConversation(conversations[0].id));
-    }
   });
 
   return (next) => async (action: ConversationActions) => {

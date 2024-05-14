@@ -90,7 +90,7 @@ function AccountContent() {
         {userId && (
           <ListItem>
             <FormControl variant="standard" fullWidth>
-              <InputLabel id="model-provider-label">
+              <InputLabel id="model-provider-label" shrink>
                 {t("Model provider")}
               </InputLabel>
               <Select
@@ -106,6 +106,7 @@ function AccountContent() {
                   }
                 }}
                 label={t("Model provider")}
+                displayEmpty
               >
                 <MenuItem value={""}>{t("Custom model")}</MenuItem>
                 <MenuItem value="openai">openai</MenuItem>

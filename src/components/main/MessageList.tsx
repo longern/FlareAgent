@@ -234,6 +234,7 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
               message.role === "user"
                 ? theme.palette.primary.contrastText
                 : theme.palette.text.primary,
+            overflowX: "auto",
             "& img": { display: "block", maxWidth: "100%" },
             "& p": { margin: 0 },
             "& pre": { margin: 0 },

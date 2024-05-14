@@ -29,8 +29,8 @@ const preprocessLaTeX = (content: string) => {
   // Replace block-level LaTeX delimiters \[ \] with $$ $$
 
   const blockProcessedContent = content.replace(
-    /\\\[\n(.*?)\n\\\]/gs,
-    (_, equation) => `$$${equation}$$`
+    /\\\[\s(.*?)\s\\\]/gs,
+    (_, equation) => `$$\n${equation}\n$$`
   );
   // Replace inline LaTeX delimiters \( \) with $ $
   const inlineProcessedContent = blockProcessedContent.replace(

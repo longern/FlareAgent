@@ -40,7 +40,7 @@ import { hideSettings } from "../../app/dialogs";
 import { setSettings } from "../../app/settings";
 import { AppState } from "../../app/store";
 
-const SparseList = styled(List)(() => ({
+export const SparseList = styled(List)(() => ({
   padding: 0,
   "& .MuiListItemButton-root": { minHeight: 60 },
 }));

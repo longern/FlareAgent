@@ -14,7 +14,7 @@ import type { Options as HtmlToImageOptions } from "html-to-image/lib/types";
 import { ScrollToBottomButton, StopButton } from "./ActionButtons";
 import MessageList from "./main/MessageList";
 import MobileToolbar from "./sidebar/MobileToolbar";
-import Sidebar, { ModelSelector } from "./sidebar/Sidebar";
+import Sidebar from "./sidebar/Sidebar";
 import ScrollToBottom from "./main/ScrollToBottom";
 import UserInput from "./main/UserInput";
 import { useMessages } from "../messages";
@@ -151,6 +151,7 @@ function App() {
     setVariables(new Map());
     setSidebarOpen(false);
     dispatch(setCurrentConversation(null));
+    dispatch(abort());
   }, [dispatch, setMessages]);
 
   const handleWorkflowChange = useCallback(
@@ -187,22 +188,18 @@ function App() {
       });
   }, [currentWorkflow, currentNode, dispatch, setMessages]);
 
-  const modelSelector = <ModelSelector />;
-
   return (
     <Stack direction="row" height="100%">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNewChat={handleNewChat}
-        modelSelector={modelSelector}
         currentWorkflow={currentWorkflow}
         onWorkflowChange={handleWorkflowChange}
       />
       <Stack minWidth={0} flexGrow={1}>
         {!matchesLg && (
           <MobileToolbar
-            modelSelector={modelSelector}
             onMenuClick={() => setSidebarOpen(true)}
             onCreateThread={handleNewChat}
           />

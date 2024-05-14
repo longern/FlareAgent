@@ -24,15 +24,14 @@ export const setAbortable = createAsyncThunk(
   "abort/setAbortable",
   async (a: Abortable | null, { dispatch }) => {
     abortable = a;
-    dispatch(setAbort(true !== null));
+    dispatch(setAbort(a !== null));
   }
 );
 
 export const abort = createAsyncThunk(
   "abort/abort",
   async (_, { dispatch }) => {
-    if (!abortable) return;
-    abortable.abort();
+    if (abortable) abortable.abort();
     abortable = null;
     dispatch(setAbort(false));
   }

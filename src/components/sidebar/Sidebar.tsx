@@ -29,6 +29,7 @@ import { showFiles, showSettings, showWorkflow } from "../../app/dialogs";
 import { setAvatar } from "../../app/identity";
 import ConversationList from "./ConversationList";
 import { fetchModels, setModel } from "../../app/models";
+import { SparseList } from "../global/SettingsDialog";
 
 function WorkflowList({
   currentWorkflow,
@@ -134,18 +135,18 @@ export function ModelSelector() {
   );
 }
 
+export const modelSelector = <ModelSelector />;
+
 function Sidebar({
   open,
   onClose,
   onNewChat,
-  modelSelector,
   currentWorkflow,
   onWorkflowChange,
 }: {
   open: boolean;
   onClose: () => void;
   onNewChat: () => void;
-  modelSelector?: React.ReactNode;
   currentWorkflow: Workflow | null;
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
@@ -176,9 +177,11 @@ function Sidebar({
       onClose={onClose}
     >
       <Stack height="100%">
-        {matchesLg ? (
-          <Stack sx={{ px: 2, py: 1 }}>{modelSelector}</Stack>
-        ) : null}
+        {matchesLg && (
+          <Stack sx={{ px: 2, py: 1.5, justifyContent: "center" }}>
+            {modelSelector}
+          </Stack>
+        )}
         <Stack
           direction="row"
           spacing={2}
@@ -203,15 +206,18 @@ function Sidebar({
             {userId}
           </Box>
         </Stack>
-        <ListItemButton onClick={handleNewChat} sx={{ flexGrow: 0 }}>
+        <ListItemButton
+          onClick={handleNewChat}
+          sx={{ flexGrow: 0, minHeight: 60 }}
+        >
           <ListItemText primary={t("New chat")} />
         </ListItemButton>
-        <List
+        <SparseList
           sx={{ flexGrow: 1, minHeight: 0, overflowY: "auto" }}
           disablePadding
         >
           <ListItem disablePadding>
-            <ConversationList />
+            <ConversationList onClose={onClose} />
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton
@@ -233,8 +239,8 @@ function Sidebar({
               onWorkflowChange={onWorkflowChange}
             />
           </Collapse>
-        </List>
-        <List disablePadding>
+        </SparseList>
+        <SparseList disablePadding>
           <ListItem disablePadding>
             <ListItemButton onClick={() => dispatch(showFiles())}>
               <ListItemText primary={t("My Files")} />
@@ -245,7 +251,7 @@ function Sidebar({
               <ListItemText primary={t("Settings")} />
             </ListItemButton>
           </ListItem>
-        </List>
+        </SparseList>
       </Stack>
     </Drawer>
   );
