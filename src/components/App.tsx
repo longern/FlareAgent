@@ -83,6 +83,7 @@ function useHandleSend() {
           : fetchAssistantMessage(model)
       );
       dispatch(setAbortable(promise));
+      promise.finally(() => dispatch(setAbortable(null)));
     },
     [dispatch, currentConversationId, model]
   );

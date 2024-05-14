@@ -22,9 +22,9 @@ let abortable: Abortable | null = null;
 
 export const setAbortable = createAsyncThunk(
   "abort/setAbortable",
-  async (a: Abortable, { dispatch }) => {
+  async (a: Abortable | null, { dispatch }) => {
     abortable = a;
-    dispatch(setAbort(true));
+    dispatch(setAbort(true !== null));
   }
 );
 
