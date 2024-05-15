@@ -3,6 +3,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { showSignIn } from "./dialogs";
 import { fetchIdentity, loadAvatar } from "./identity";
 import { fetchModels } from "./models";
+import { fetchTools } from "./tools";
 
 export const initializeApp = createAsyncThunk(
   "app/initializeApp",
@@ -16,5 +17,6 @@ export const initializeApp = createAsyncThunk(
     });
     dispatch(loadAvatar());
     dispatch(fetchModels());
+    dispatch(fetchTools());
   }
 );

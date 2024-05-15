@@ -1,24 +1,32 @@
 import {
   Box,
-  Button,
   Card,
   CircularProgress,
-  DialogActions,
   DialogContent,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   Switch,
 } from "@mui/material";
-import React, { Suspense, useState } from "react";
+import { Add as AddIcon, Save as SaveIcon } from "@mui/icons-material";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 
 import { hideTools } from "../../app/dialogs";
 import { AppState } from "../../app/store";
-import { useActionsState } from "../ActionsProvider";
 import { HistoryDialog } from "./HistoryDialog";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { createTool, toggleTool } from "../../app/tools";
+import { OpenAPIV3 } from "openapi-types";
 
 const JsonEditor = React.lazy(async () => {
   const [{ default: CodeMirror }, { json }] = await Promise.all([
@@ -35,13 +43,82 @@ const JsonEditor = React.lazy(async () => {
     }) => (
       <CodeMirror
         value={value}
-        height="24em"
+        height="80vh"
         extensions={[json()]}
         onChange={onChange}
       />
     ),
   };
 });
+
+function EditToolDialog({
+  initialToolId,
+  open,
+  onClose,
+}: {
+  initialToolId: string | undefined;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const tools = useAppSelector((state) => state.tools.tools);
+  const [toolDefinition, setToolDefinition] = useState("");
+  const dispatch = useAppDispatch();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!open) return;
+    setToolDefinition(
+      initialToolId === undefined
+        ? ""
+        : JSON.stringify(JSON.parse(tools[initialToolId].definition), null, 2)
+    );
+  }, [open, initialToolId, tools]);
+
+  const handleCreate = useCallback(() => {
+    dispatch(
+      createTool({
+        id: crypto.randomUUID(),
+        definition: toolDefinition,
+      })
+    );
+    onClose();
+  }, [dispatch, toolDefinition, onClose]);
+
+  return (
+    <HistoryDialog
+      hash="edit-tool"
+      title={t("Edit Tool")}
+      open={open}
+      onClose={onClose}
+      endAdornment={
+        <IconButton
+          color="inherit"
+          aria-label={t("Save")}
+          onClick={handleCreate}
+        >
+          <SaveIcon />
+        </IconButton>
+      }
+    >
+      <Suspense
+        fallback={
+          <Box
+            sx={{
+              display: "flex",
+              height: "24em",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        }
+      >
+        <JsonEditor value={toolDefinition} onChange={setToolDefinition} />
+      </Suspense>
+    </HistoryDialog>
+  );
+}
 
 function ToolsDialog({
   open,
@@ -50,24 +127,22 @@ function ToolsDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const tools = useAppSelector((state) => state.tools.tools);
+  const [initialToolId, setInitialToolId] = useState<string | undefined>(
+    undefined
+  );
+  const [showEditTool, setShowEditTool] = useState(false);
+  const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const [toolDefinition, setToolDefinition] = useState("");
-  const [actions, setActions] = useActionsState();
-  const [editingAction, setEditingAction] = useState<
-    (typeof actions)[number] | null | undefined
-  >(null);
 
-  function handleSave() {
-    const newAction: (typeof actions)[number] = JSON.parse(toolDefinition);
-    setActions((actions) =>
-      editingAction === undefined
-        ? [...actions, newAction]
-        : actions.map((action) =>
-            action === editingAction ? newAction : action
-          )
-    );
-    setEditingAction(null);
-  }
+  const parsedTools = useMemo(() => {
+    if (tools === null) return null;
+    return Object.values(tools).map(({ id, enabled, definition }) => ({
+      id,
+      enabled,
+      definition: JSON.parse(definition) as OpenAPIV3.Document,
+    }));
+  }, [tools]);
 
   return (
     <HistoryDialog
@@ -75,82 +150,56 @@ function ToolsDialog({
       title={t("Tools")}
       open={open}
       onClose={onClose}
+      endAdornment={
+        <IconButton
+          color="inherit"
+          onClick={() => {
+            setInitialToolId(undefined);
+            setShowEditTool(true);
+          }}
+          aria-label={t("Add")}
+        >
+          <AddIcon />
+        </IconButton>
+      }
     >
       <DialogContent sx={{ padding: 2 }}>
-        {editingAction === null ? (
-          actions === null ? (
-            <CircularProgress />
-          ) : (
-            <Card>
-              <List disablePadding>
-                {actions.map((action) => (
-                  <ListItem
-                    key={action.info.title}
-                    disablePadding
-                    sx={{ paddingRight: 2 }}
-                  >
-                    <ListItemButton
-                      onClick={() => {
-                        setEditingAction(action);
-                        setToolDefinition(JSON.stringify(action, null, 2));
-                      }}
-                    >
-                      <ListItemText
-                        primary={action.info.title}
-                        secondary={action.info.description}
-                      />
-                    </ListItemButton>
-                    <Switch edge="end" checked={false} />
-                  </ListItem>
-                ))}
-                <ListItem disablePadding>
+        {tools === null ? (
+          <CircularProgress />
+        ) : (
+          <Card>
+            <List disablePadding>
+              {parsedTools.map(({ id, enabled, definition: action }) => (
+                <ListItem key={id} disablePadding sx={{ paddingRight: 2 }}>
                   <ListItemButton
                     onClick={() => {
-                      setEditingAction(undefined);
-                      setToolDefinition("");
+                      setInitialToolId(id);
+                      setShowEditTool(true);
                     }}
                   >
-                    <ListItemText primary={t("New...")} />
+                    <ListItemText
+                      primary={action.info.title}
+                      secondary={action.info.description}
+                    />
                   </ListItemButton>
+                  <Switch
+                    edge="end"
+                    checked={enabled ?? false}
+                    onChange={() => {
+                      dispatch(toggleTool({ id, enabled: !enabled }));
+                    }}
+                  />
                 </ListItem>
-              </List>
-            </Card>
-          )
-        ) : (
-          <>
-            <Suspense
-              fallback={
-                <Box
-                  sx={{
-                    display: "flex",
-                    height: "24em",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <CircularProgress />
-                </Box>
-              }
-            >
-              <JsonEditor value={toolDefinition} onChange={setToolDefinition} />
-            </Suspense>
-            <DialogActions>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setEditingAction(null);
-                  setToolDefinition("");
-                }}
-              >
-                {t("Cancel")}
-              </Button>
-              <Button variant="contained" color="primary" onClick={handleSave}>
-                {t("Save")}
-              </Button>
-            </DialogActions>
-          </>
+              ))}
+            </List>
+          </Card>
         )}
       </DialogContent>
+      <EditToolDialog
+        initialToolId={initialToolId}
+        open={showEditTool}
+        onClose={() => setShowEditTool(false)}
+      />
     </HistoryDialog>
   );
 }

@@ -11,13 +11,31 @@ import searchRoute from "./search";
 const app = new Hono();
 
 const TOOL_LIST = [
-  "tool://other-tools/openapi.json",
-  "tool://memories/openapi.json",
+  {
+    id: "31ac14bb-b816-44de-b516-0ff49a22b629",
+    definition_url: "tool://other-tools/openapi.json",
+  },
+  {
+    id: "ea802749-b7e7-4027-a01f-2761a54598c7",
+    definition_url: "tool://memories/openapi.json",
+  },
 
-  "tool://crawl/openapi.json",
-  "tool://dalle-3/openapi.json",
-  "tool://python/openapi.json",
-  "tool://search/openapi.json",
+  {
+    id: "7eeb5eb8-bbcb-48e5-8f9b-e7b174c37cb0",
+    definition_url: "tool://crawl/openapi.json",
+  },
+  {
+    id: "bc9de670-35d2-420b-8e44-009fd236cfc9",
+    definition_url: "tool://dalle-3/openapi.json",
+  },
+  {
+    id: "8d67c00d-b819-4117-b8e0-7c1c19b8f061",
+    definition_url: "tool://python/openapi.json",
+  },
+  {
+    id: "a9a0ba3c-3eab-4978-a909-a19eddb9335d",
+    definition_url: "tool://search/openapi.json",
+  },
 ];
 
 app.get("/", () => {

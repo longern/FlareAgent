@@ -8,6 +8,7 @@ import identityReducer from "./identity";
 import memoriesReducer from "./memories";
 import modelsReducer from "./models";
 import settingsReducer, { settingsMiddleware } from "./settings";
+import toolsReducer from "./tools";
 import conversationsMiddleware from "./conversationsMiddleware";
 import memoriesMiddleware from "./memoriesMiddleware";
 import { initializeApp } from "./init";
@@ -21,6 +22,7 @@ const reducers = combineReducers({
   memories: memoriesReducer,
   models: modelsReducer,
   settings: settingsReducer,
+  tools: toolsReducer,
 });
 
 const store = configureStore({
