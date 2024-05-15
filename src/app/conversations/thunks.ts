@@ -1,11 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { AppState } from "../store";
 import {
   ChatCompletion,
   ChatCompletionContentPart,
   ChatCompletionMessageParam,
+  ChatCompletionMessageToolCall,
 } from "openai/resources/index.mjs";
+import { OpenAPIV3 } from "openapi-types";
+
 import { createMessage, updatePartialMessage } from ".";
+import { apisToTool } from "../../tools";
+import { AppState } from "../store";
 
 function patchDelta(obj: any, delta: any) {
   if (Array.isArray(delta)) {
@@ -66,6 +70,27 @@ const fetchDrawings = createAsyncThunk(
   }
 );
 
+async function invokeTools(
+  tools: ReturnType<typeof apisToTool>,
+  toolCalls: ChatCompletionMessageToolCall[]
+) {
+  if (tools.length === 0) return [];
+  const results = Promise.allSettled(
+    toolCalls.map(async (toolCall) => {
+      const tool = tools.find(
+        (tool) => tool.function.name === toolCall.function.name
+      );
+      if (!tool) throw new Error(`Tool not found: ${toolCall.function.name}`);
+      const url = tool.endpoint;
+      const method = tool.method;
+      const body = toolCall.function.arguments;
+      const response = await fetch(url, { method, body });
+      return response.text();
+    })
+  );
+  return results;
+}
+
 const fetchAssistantMessage = createAsyncThunk(
   "conversations/fetchAssistantMessage",
   async (model: string, { getState, dispatch, signal }) => {
@@ -90,17 +115,34 @@ const fetchAssistantMessage = createAsyncThunk(
         } as ChatCompletionMessageParam)
     );
 
+    const enabledTools = Object.values(state.tools.tools)
+      .filter((tool) => tool.enabled)
+      .map((tool) => JSON.parse(tool.definition) as OpenAPIV3.Document);
+    const tools = apisToTool(enabledTools);
+
     const completion = await openai.chat.completions.create(
       {
         model,
         messages: messages,
         stream: true,
+        tools: tools.length > 0 ? tools : undefined,
       },
       { signal }
     );
 
     const messageId = crypto.randomUUID();
     const timestamp = Date.now();
+    function onPartialMessage(content: string) {
+      dispatch(
+        updatePartialMessage({
+          id: messageId,
+          author_role: "assistant",
+          content: JSON.stringify(content),
+          create_time: timestamp,
+        })
+      );
+    }
+
     const choices: ChatCompletion.Choice[] = [];
     for await (const chunk of completion) {
       for (const chunkChoice of chunk.choices) {
@@ -110,14 +152,7 @@ const fetchAssistantMessage = createAsyncThunk(
         const choice = choices[index];
         choice.finish_reason = finish_reason!;
         choice.message = patchDelta(choice.message, delta);
-        dispatch(
-          updatePartialMessage({
-            id: messageId,
-            author_role: "assistant",
-            content: JSON.stringify(choice.message.content),
-            create_time: timestamp,
-          })
-        );
+        onPartialMessage(choice.message.content ?? "");
       }
     }
 
@@ -125,11 +160,29 @@ const fetchAssistantMessage = createAsyncThunk(
       throw new Error("No response from OpenAI API");
     }
     const choice = choices[0];
+
+    const toolsResults = await invokeTools(
+      tools,
+      choice.message.tool_calls ?? []
+    );
+
+    const toolsResultsContent = toolsResults
+      .map((result) => {
+        if (result.status === "fulfilled") {
+          return result.value;
+        } else {
+          return result.reason.message;
+        }
+      })
+      .join("\n");
+
     dispatch(
       createMessage({
         id: messageId,
         author_role: "assistant",
-        content: JSON.stringify(choice.message.content),
+        content: JSON.stringify(
+          (choice.message.content ?? "") + toolsResultsContent
+        ),
         create_time: timestamp,
       })
     );

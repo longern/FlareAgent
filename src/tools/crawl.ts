@@ -33,6 +33,7 @@ const DEFINITION: OpenAPIV3.Document = {
     description: "Crawl a web page",
     version: "v1",
   },
+  servers: [{ url: "tool://" }],
   paths: {
     "/crawl": {
       post: {

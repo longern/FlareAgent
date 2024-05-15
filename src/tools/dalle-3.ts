@@ -8,13 +8,7 @@ app.post("/", async (context) => {
   const body: {
     prompt: string;
   } = await context.req.json();
-  const token = window.localStorage.getItem("OPENAI_API_KEY");
-  if (!token) {
-    return Response.json(
-      { error: "OpenAI API token not found" },
-      { status: 500 }
-    );
-  }
+  const token = window.localStorage.getItem("OPENAI_API_KEY") ?? "";
   const baseURL = window.localStorage.getItem("OPENAI_BASE_URL");
   const openai = new OpenAI({
     apiKey: token,
@@ -35,7 +29,7 @@ const DEFINITION: OpenAPIV3.Document = {
     description: "Generate an image given a prompt",
     version: "v1",
   },
-  servers: [],
+  servers: [{ url: "tool://" }],
   paths: {
     "/dalle-3": {
       post: {

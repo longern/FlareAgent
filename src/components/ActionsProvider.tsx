@@ -1,9 +1,7 @@
-import { OpenAPIV3 } from "openapi-types";
 import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -12,43 +10,12 @@ import { useTranslation } from "react-i18next";
 import { useSyncFS } from "../fs/hooks";
 
 const ActionsContext = createContext<{
-  actions: OpenAPIV3.Document[];
   workflows: Workflow[] | null;
 } | null>(null);
 const SetActionsContext = createContext<{
-  setActions: React.Dispatch<React.SetStateAction<OpenAPIV3.Document[] | null>>;
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[] | null>>;
   newWorkflow: () => void;
 } | null>(null);
-
-function useActions() {
-  const [actions, setActions] = useState<OpenAPIV3.Document[]>([]);
-
-  const fetchActions = useCallback(async () => {
-    await import("../tools/scheme");
-    const response = await fetch("tool://");
-    const data: { tools: string[] } = await response.json();
-    const toolsResult = await Promise.allSettled(
-      data.tools.map(async (url) => {
-        const response = await fetch(url);
-        const tool: OpenAPIV3.Document = await response.json();
-        return tool;
-      })
-    );
-    const tools = toolsResult
-      .map((result) => {
-        return result.status === "fulfilled" ? result.value : null;
-      })
-      .filter((tool) => tool !== null);
-    setActions(tools);
-  }, []);
-
-  useEffect(() => {
-    fetchActions();
-  }, [fetchActions]);
-
-  return [actions, setActions] as const;
-}
 
 const fallbackWorkflows: Workflow[] = [];
 
@@ -114,31 +81,23 @@ function useWorkflows() {
 }
 
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
-  const [actions, setActions] = useActions();
   const [workflows, setWorkflows, newWorkflow] = useWorkflows();
 
   const dispatchers = useMemo(
     () => ({
-      setActions,
       setWorkflows,
       newWorkflow,
     }),
-    [setActions, setWorkflows, newWorkflow]
+    [setWorkflows, newWorkflow]
   );
 
   return (
-    <ActionsContext.Provider value={{ actions, workflows }}>
+    <ActionsContext.Provider value={{ workflows }}>
       <SetActionsContext.Provider value={dispatchers}>
         {children}
       </SetActionsContext.Provider>
     </ActionsContext.Provider>
   );
-}
-
-export function useActionsState() {
-  const { actions } = useContext(ActionsContext);
-  const { setActions } = useContext(SetActionsContext);
-  return [actions, setActions] as const;
 }
 
 export function useWorkflowsState() {

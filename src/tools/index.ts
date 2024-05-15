@@ -35,7 +35,7 @@ export function apisToTool(apis: OpenAPIV3.Document[]): Tool[] {
 
           return {
             type: "function",
-            endpoint: `${TOOL_SCHEME}:/${path}`,
+            endpoint: api.servers[0].url + path.replace(/^\//, ""),
             method,
             function: {
               name: operation.operationId,

@@ -21,6 +21,7 @@ const DEFINITION: OpenAPIV3.Document = {
     description: "Search the web",
     version: "v1",
   },
+  servers: [{ url: "tool://" }],
   paths: {
     "/search": {
       post: {

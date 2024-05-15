@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -17,13 +17,8 @@ import MobileToolbar from "./sidebar/MobileToolbar";
 import Sidebar from "./sidebar/Sidebar";
 import ScrollToBottom from "./main/ScrollToBottom";
 import UserInput from "./main/UserInput";
-import { useMessages } from "../messages";
-import { apisToTool } from "../tools";
-import { Node, Workflow, defaultWorkflow } from "../workflow";
-import { executeWorkflowStep } from "../workflow/execution";
-import { useActionsState } from "./ActionsProvider";
+import { Workflow, defaultWorkflow } from "../workflow";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { showError } from "../app/error";
 import {
   createConversation,
   createMessage,
@@ -32,6 +27,7 @@ import {
   setCurrentConversation,
 } from "../app/conversations";
 import { abort, setAbortable } from "../app/abort";
+import { showError } from "../app/error";
 
 async function screenshot(element: HTMLElement, options: HtmlToImageOptions) {
   const { toBlob } = await import("html-to-image");
@@ -83,22 +79,21 @@ function useHandleSend() {
           : fetchAssistantMessage(model)
       );
       dispatch(setAbortable(promise));
-      promise.finally(() => dispatch(setAbortable(null)));
+      promise
+        .unwrap()
+        .catch((error) => dispatch(showError({ message: error.message })))
+        .finally(() => dispatch(setAbortable(null)));
     },
     [dispatch, currentConversationId, model]
   );
 }
 
 function App() {
-  const [tools] = useActionsState();
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
-  const [messages, setMessages] = useMessages();
-  const [currentNode, setCurrentNode] = useState<Node | undefined | null>(null);
   const [variables, setVariables] = useState<Map<string, string>>(new Map());
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
-  const model = useAppSelector((state) => state.models.model);
   const hasAbortable = useAppSelector((state) => state.abort.hasAbortable);
   const disableMemory = useAppSelector((state) => state.settings.disableMemory);
   const dispatch = useAppDispatch();
@@ -107,10 +102,7 @@ function App() {
   const theme = useTheme();
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  const executeWorkflowStepCallback = async (
-    workflow: Workflow,
-    node: Node
-  ) => {
+  const executeWorkflowStepCallback = async () => {
     variables.set("MEMORIES", "");
     if (!disableMemory) {
       await import("../tools/scheme");
@@ -125,34 +117,16 @@ function App() {
         })
         .catch(() => {});
     }
-
-    const state = await executeWorkflowStep({
-      workflow: workflow,
-      state: {
-        node: node,
-        messages: messages!,
-        variables: variables,
-      },
-      model: model,
-      tools: apisToTool(
-        tools.filter((tool) => !disableMemory || tool.info.title !== "Memory")
-      ),
-      onPartialMessage: (message) => setMessages([...messages!, message]),
-    });
-    setVariables(state.variables);
-    return state;
   };
   const executeWorkflowStepRef = useRef(executeWorkflowStepCallback);
   executeWorkflowStepRef.current = executeWorkflowStepCallback;
 
   const handleNewChat = useCallback(() => {
-    setCurrentNode(null);
-    setMessages([]);
     setVariables(new Map());
     setSidebarOpen(false);
     dispatch(setCurrentConversation(null));
     dispatch(abort());
-  }, [dispatch, setMessages]);
+  }, [dispatch]);
 
   const handleWorkflowChange = useCallback(
     (workflow: Workflow) => {
@@ -163,30 +137,6 @@ function App() {
   );
 
   const handleSend = useHandleSend();
-
-  useEffect(() => {
-    if (currentWorkflow === null || messages === null) return;
-    if (currentNode !== null) return;
-    const startNode = currentWorkflow.nodes.find(
-      (node) => node.type === "start"
-    );
-    setCurrentNode(startNode);
-  }, [currentWorkflow, currentNode, messages]);
-
-  useEffect(() => {
-    if (currentWorkflow === null) return;
-    if (!currentNode) return;
-    if (currentNode.type === "user-input") return;
-    executeWorkflowStepRef
-      .current(currentWorkflow, currentNode)
-      .then((state) => {
-        setCurrentNode(state.node);
-        setMessages(state.messages);
-      })
-      .catch((e) => {
-        dispatch(showError({ message: e.message }));
-      });
-  }, [currentWorkflow, currentNode, dispatch, setMessages]);
 
   return (
     <Stack direction="row" height="100%">
