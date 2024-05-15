@@ -61,6 +61,7 @@ export function HistoryDialog({
   onClose,
   children,
   endAdornment,
+  TransitionComponent = SlideLeft,
 }: {
   hash: string;
   title?: React.ReactNode;
@@ -70,6 +71,7 @@ export function HistoryDialog({
   endAdornment?:
     | React.ReactNode
     | ((props: { onClose: () => void }) => React.ReactNode);
+  TransitionComponent?: React.ComponentType<TransitionProps>;
 }) {
   const { t } = useTranslation();
 
@@ -80,7 +82,7 @@ export function HistoryDialog({
           open={open}
           onClose={onClose}
           fullScreen
-          TransitionComponent={SlideLeft}
+          TransitionComponent={TransitionComponent}
           PaperProps={{
             sx: {
               backgroundColor: (theme) =>

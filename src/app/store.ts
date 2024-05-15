@@ -9,7 +9,7 @@ import memoriesReducer from "./memories";
 import modelsReducer from "./models";
 import settingsReducer, { settingsMiddleware } from "./settings";
 import toolsReducer from "./tools";
-import conversationsMiddleware from "./conversationsMiddleware";
+import conversationsMiddleware from "./conversations/middleware";
 import memoriesMiddleware from "./memoriesMiddleware";
 import { initializeApp } from "./init";
 

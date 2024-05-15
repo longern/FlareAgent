@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { OpenAPIV3 } from "openapi-types";
 
 const app = new Hono();
 
@@ -25,7 +26,7 @@ app.post("/", async (context) => {
   return new Response((document.body.textContent ?? "").slice(0, 4096));
 });
 
-const DEFINITION = {
+const DEFINITION: OpenAPIV3.Document = {
   openapi: "3.0.1",
   info: {
     title: "Crawler",
@@ -46,7 +47,6 @@ const DEFINITION = {
                   url: {
                     type: "string",
                     description: "The url to crawl (must be https)",
-                    required: true,
                   },
                 },
               },

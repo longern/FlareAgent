@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { DIRECTORY } from "../fs/hooks";
+import { OpenAPIV3 } from "openapi-types";
 
 const app = new Hono();
 
@@ -70,7 +71,7 @@ app.delete("/", async (context) => {
   }
 });
 
-const DEFINITION = {
+const DEFINITION: OpenAPIV3.Document = {
   openapi: "3.0.1",
   info: {
     title: "Memory",
@@ -91,7 +92,6 @@ const DEFINITION = {
                   value: {
                     type: "string",
                     description: "Memory expressed in whole sentences",
-                    required: true,
                   },
                 },
               },
@@ -116,7 +116,6 @@ const DEFINITION = {
                   index: {
                     type: "number",
                     description: "The index of the memory to delete",
-                    required: true,
                   },
                 },
               },

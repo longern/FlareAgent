@@ -1,8 +1,8 @@
 import type { Middleware } from "@reduxjs/toolkit";
 
-import type { AppState } from "./store";
-import { Message, conversationsSlice, setConversations } from "./conversations";
-import { DB } from "../db";
+import { Message, conversationsSlice, setConversations } from ".";
+import { DB } from "../../db";
+import type { AppState } from "../store";
 
 type ValueOf<T> = T[keyof T];
 type ConversationActions = ReturnType<

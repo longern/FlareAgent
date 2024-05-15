@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { OpenAPIV3 } from "openapi-types";
 
 const app = new Hono();
 
@@ -13,7 +14,7 @@ app.post("/", async (context) => {
   });
 });
 
-const DEFINITION = {
+const DEFINITION: OpenAPIV3.Document = {
   openapi: "3.0.1",
   info: {
     title: "Search API",
@@ -34,7 +35,6 @@ const DEFINITION = {
                   keyword: {
                     type: "string",
                     description: "The keyword to search",
-                    required: true,
                   },
                 },
               },

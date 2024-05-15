@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import OpenAI from "openai";
+import { OpenAPIV3 } from "openapi-types";
 
 const app = new Hono();
 
@@ -27,13 +28,14 @@ app.post("/", async (context) => {
   return Response.json({ images: imageUrls });
 });
 
-const DEFINITION = {
+const DEFINITION: OpenAPIV3.Document = {
   openapi: "3.0.1",
   info: {
     title: "Dalle-3",
     description: "Generate an image given a prompt",
     version: "v1",
   },
+  servers: [],
   paths: {
     "/dalle-3": {
       post: {
@@ -48,7 +50,6 @@ const DEFINITION = {
                   prompt: {
                     type: "string",
                     description: "The prompt to generate an image from",
-                    required: true,
                   },
                 },
               },
