@@ -39,6 +39,7 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { hideSettings } from "../../app/dialogs";
 import { setSettings } from "../../app/settings";
 import { AppState } from "../../app/store";
+import { clearMemories, deleteMemory } from "../../app/memories";
 
 export const SparseList = styled(List)(() => ({
   padding: 0,
@@ -245,31 +246,10 @@ function GeneralContent() {
 }
 
 function PersonalizationContent() {
-  const [memories, setMemories] = useState<string[]>([]);
-
+  const memories = useAppSelector((state) => state.memories.memories);
   const disableMemory = useAppSelector((state) => state.settings.disableMemory);
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-
-  const fetchMemories = useCallback(async () => {
-    const response = await fetch("tool://memories");
-    setMemories((await response.json()) ?? []);
-  }, []);
-
-  const deleteMemory = useCallback(
-    (index: number) => {
-      fetch("tool://memories", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ index }),
-      }).then(fetchMemories);
-    },
-    [fetchMemories]
-  );
-
-  useEffect(() => {
-    fetchMemories();
-  }, [fetchMemories]);
 
   return (
     <Stack height="100%" spacing={1}>
@@ -294,10 +274,10 @@ function PersonalizationContent() {
       </SparseList>
       <Card variant="outlined" sx={{ flexGrow: 1, overflow: "auto" }}>
         <SparseList>
-          {memories.map((memory, index) => (
-            <ListItem key={memory}>
-              <ListItemText primary={memory} />
-              <IconButton onClick={() => deleteMemory(index)}>
+          {Object.values(memories).map((memory) => (
+            <ListItem key={memory.id}>
+              <ListItemText primary={memory.content} />
+              <IconButton onClick={() => deleteMemory(memory.id)}>
                 <DeleteIcon />
               </IconButton>
             </ListItem>
@@ -308,9 +288,7 @@ function PersonalizationContent() {
         <Button
           variant="outlined"
           color="error"
-          onClick={() => {
-            fetch("tool://memories", { method: "DELETE" }).then(fetchMemories);
-          }}
+          onClick={() => dispatch(clearMemories())}
         >
           {t("Clear memory")}
         </Button>

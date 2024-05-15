@@ -1,26 +1,24 @@
-import React, { Suspense, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
-  AppBar,
   Box,
   Button,
+  Card,
   CircularProgress,
-  Dialog,
   DialogActions,
-  IconButton,
+  DialogContent,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
-  Toolbar,
-  Typography,
+  Switch,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
-
-import { useActionsState } from "../ActionsProvider";
+import React, { Suspense, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
-import { AppState } from "../../app/store";
+
 import { hideTools } from "../../app/dialogs";
+import { AppState } from "../../app/store";
+import { useActionsState } from "../ActionsProvider";
+import { HistoryDialog } from "./HistoryDialog";
 
 const JsonEditor = React.lazy(async () => {
   const [{ default: CodeMirror }, { json }] = await Promise.all([
@@ -72,89 +70,88 @@ function ToolsDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <AppBar position="relative">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={onClose}
-            aria-label="close"
-          >
-            <CloseIcon />
-          </IconButton>
-          <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
-            {editingAction ? editingAction.info.title : t("Tools")}
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      {editingAction === null ? (
-        actions === null ? (
-          <CircularProgress />
+    <HistoryDialog
+      hash="tools"
+      title={t("Tools")}
+      open={open}
+      onClose={onClose}
+    >
+      <DialogContent sx={{ padding: 2 }}>
+        {editingAction === null ? (
+          actions === null ? (
+            <CircularProgress />
+          ) : (
+            <Card>
+              <List disablePadding>
+                {actions.map((action) => (
+                  <ListItem
+                    key={action.info.title}
+                    disablePadding
+                    sx={{ paddingRight: 2 }}
+                  >
+                    <ListItemButton
+                      onClick={() => {
+                        setEditingAction(action);
+                        setToolDefinition(JSON.stringify(action, null, 2));
+                      }}
+                    >
+                      <ListItemText
+                        primary={action.info.title}
+                        secondary={action.info.description}
+                      />
+                    </ListItemButton>
+                    <Switch edge="end" checked={false} />
+                  </ListItem>
+                ))}
+                <ListItem disablePadding>
+                  <ListItemButton
+                    onClick={() => {
+                      setEditingAction(undefined);
+                      setToolDefinition("");
+                    }}
+                  >
+                    <ListItemText primary={t("New...")} />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Card>
+          )
         ) : (
-          <List>
-            {actions.map((action) => (
-              <ListItem key={action.info.title} disablePadding>
-                <ListItemButton
-                  onClick={() => {
-                    setEditingAction(action);
-                    setToolDefinition(JSON.stringify(action, null, 2));
+          <>
+            <Suspense
+              fallback={
+                <Box
+                  sx={{
+                    display: "flex",
+                    height: "24em",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  <ListItemText
-                    primary={action.info.title}
-                    secondary={action.info.description}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-            <ListItem disablePadding>
-              <ListItemButton
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              <JsonEditor value={toolDefinition} onChange={setToolDefinition} />
+            </Suspense>
+            <DialogActions>
+              <Button
+                variant="outlined"
                 onClick={() => {
-                  setEditingAction(undefined);
+                  setEditingAction(null);
                   setToolDefinition("");
                 }}
               >
-                <ListItemText primary={t("New...")} />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        )
-      ) : (
-        <>
-          <Suspense
-            fallback={
-              <Box
-                sx={{
-                  display: "flex",
-                  height: "24em",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            }
-          >
-            <JsonEditor value={toolDefinition} onChange={setToolDefinition} />
-          </Suspense>
-          <DialogActions>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setEditingAction(null);
-                setToolDefinition("");
-              }}
-            >
-              {t("Cancel")}
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleSave}>
-              {t("Save")}
-            </Button>
-          </DialogActions>
-        </>
-      )}
-    </Dialog>
+                {t("Cancel")}
+              </Button>
+              <Button variant="contained" color="primary" onClick={handleSave}>
+                {t("Save")}
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </DialogContent>
+    </HistoryDialog>
   );
 }
 

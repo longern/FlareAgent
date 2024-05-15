@@ -5,9 +5,11 @@ import conversationsReducer from "./conversations";
 import dialogsReducer from "./dialogs";
 import errorReducer from "./error";
 import identityReducer from "./identity";
+import memoriesReducer from "./memories";
 import modelsReducer from "./models";
 import settingsReducer, { settingsMiddleware } from "./settings";
 import conversationsMiddleware from "./conversationsMiddleware";
+import memoriesMiddleware from "./memoriesMiddleware";
 import { initializeApp } from "./init";
 
 const reducers = combineReducers({
@@ -16,6 +18,7 @@ const reducers = combineReducers({
   dialogs: dialogsReducer,
   error: errorReducer,
   identity: identityReducer,
+  memories: memoriesReducer,
   models: modelsReducer,
   settings: settingsReducer,
 });
@@ -23,7 +26,11 @@ const reducers = combineReducers({
 const store = configureStore({
   reducer: reducers,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(conversationsMiddleware, settingsMiddleware),
+    getDefaultMiddleware().concat(
+      conversationsMiddleware,
+      memoriesMiddleware,
+      settingsMiddleware
+    ),
 });
 
 store.dispatch(initializeApp());

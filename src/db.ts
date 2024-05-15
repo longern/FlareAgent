@@ -18,6 +18,12 @@ CREATE TABLE IF NOT EXISTS flare_agent_messages (
   FOREIGN KEY (conversation_id) REFERENCES flare_agent_conversations(conversation_id)
   ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS flare_agent_memories (
+  memory_id TEXT PRIMARY KEY NOT NULL,
+  content TEXT,
+  create_time INTEGER DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+);
 `;
 
 export const DB = new Promise<Database>(async (resolve) => {
