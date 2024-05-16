@@ -107,6 +107,7 @@ const fetchAssistantMessage = createAsyncThunk(
       baseURL,
       dangerouslyAllowBrowser: true,
     });
+
     const messages = Object.values(conversation.messages).map(
       (message) =>
         ({
@@ -114,6 +115,13 @@ const fetchAssistantMessage = createAsyncThunk(
           content: JSON.parse(message.content),
         } as ChatCompletionMessageParam)
     );
+
+    if (state.settings.systemPrompt) {
+      messages.unshift({
+        role: "system",
+        content: state.settings.systemPrompt,
+      });
+    }
 
     const enabledTools = Object.values(state.tools.tools)
       .filter((tool) => tool.enabled)

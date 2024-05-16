@@ -16,6 +16,7 @@ import {
   ListItemText,
   Stack,
   Switch,
+  TextField,
   Theme,
   styled,
   useMediaQuery,
@@ -29,6 +30,7 @@ import {
   Help as HelpIcon,
   Lock as LockIcon,
   NavigateNext as NavigateNextIcon,
+  Save as SaveIcon,
   Tune as TuneIcon,
   Psychology as PsychologyIcon,
 } from "@mui/icons-material";
@@ -245,14 +247,80 @@ function GeneralContent() {
   );
 }
 
+function SystemPromptEditor({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const systemPrompt = useAppSelector((state) => state.settings.systemPrompt);
+  const dispatch = useAppDispatch();
+  const [value, setValue] = useState(systemPrompt ?? "");
+
+  const { t } = useTranslation();
+
+  return (
+    <HistoryDialog
+      hash="system-prompt"
+      title={t("System prompt")}
+      open={open}
+      onClose={onClose}
+      endAdornment={({ onClose }) => (
+        <IconButton
+          size="large"
+          color="inherit"
+          aria-label={t("Save")}
+          onClick={() => {
+            dispatch(
+              setSettings({ key: "systemPrompt", value: value ?? undefined })
+            );
+            onClose();
+          }}
+        >
+          <SaveIcon />
+        </IconButton>
+      )}
+    >
+      <Card elevation={0} sx={{ height: "100%" }}>
+        <TextField
+          variant="standard"
+          fullWidth
+          multiline
+          minRows={20}
+          maxRows={20}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          inputProps={{ sx: { padding: 2 } }}
+        />
+      </Card>
+    </HistoryDialog>
+  );
+}
+
 function PersonalizationContent() {
   const memories = useAppSelector((state) => state.memories.memories);
+  const systemPrompt = useAppSelector((state) => state.settings.systemPrompt);
   const disableMemory = useAppSelector((state) => state.settings.disableMemory);
+  const [showSystemPromptEditor, setShowSystemPromptEditor] = useState(false);
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
   return (
     <Stack height="100%" spacing={1}>
+      <Card elevation={0}>
+        <SparseList>
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => setShowSystemPromptEditor(true)}>
+              <ListItemText
+                primary={t("System prompt")}
+                secondary={systemPrompt}
+              />
+              <NavigateNextIcon />
+            </ListItemButton>
+          </ListItem>
+        </SparseList>
+      </Card>
       <SparseList>
         <ListItem disablePadding>
           <ListItemButton component="label" disableRipple>
@@ -293,6 +361,10 @@ function PersonalizationContent() {
           {t("Clear memory")}
         </Button>
       </Box>
+      <SystemPromptEditor
+        open={showSystemPromptEditor}
+        onClose={() => setShowSystemPromptEditor(false)}
+      />
     </Stack>
   );
 }

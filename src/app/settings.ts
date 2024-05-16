@@ -9,6 +9,7 @@ export const SETTINGS_LOCAL_STORAGE_KEY = "flareAgentSettings";
 export type Settings = {
   darkMode?: "dark" | "light";
   language?: string;
+  systemPrompt?: string;
   disableMemory?: boolean;
 };
 
