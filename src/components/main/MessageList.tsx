@@ -5,6 +5,7 @@ import {
   Person as PersonIcon,
   Replay as ReplayIcon,
   SmartToy as SmartToyIcon,
+  VolumeUp as VolumeUpIcon,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -215,101 +216,122 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
     [disableContextMenu]
   );
 
-  return (
-    <Stack
-      direction={message.role === "user" ? "row-reverse" : "row"}
-      spacing={1}
-    >
-      <MessageAvatar role={message.role} />
-      <Box
-        sx={{
-          minWidth: 0,
-          overflow: "auto",
-          overflowWrap: "break-word",
-          padding: "0.5em 0.8em",
-          borderRadius: "14px",
-          backgroundColor: (theme) =>
-            message.role === "user"
-              ? theme.palette.primary.main
-              : theme.palette.background.paper,
-          color: (theme) =>
-            message.role === "user"
-              ? theme.palette.primary.contrastText
-              : theme.palette.text.primary,
-          overflowX: "auto",
-          "& img": { display: "block", maxWidth: "100%", maxHeight: "60vh" },
-          "& p": { marginY: 1 },
-          "& pre": { margin: 0 },
-          "& pre>code": { whiteSpace: "pre-wrap" },
-        }}
-        onContextMenu={handleContextMenu}
-      >
-        {content}
-      </Box>
-      <Box flexShrink={0} width={48} />
+  const handleCopyToClipboard = useCallback(async () => {
+    if (typeof message.content === "string") {
+      await navigator.clipboard.writeText(message.content);
+    } else {
+      const items = await Promise.all(
+        message.content.map(async (part) => {
+          if (part.type === "text") {
+            return new ClipboardItem({
+              "text/plain": new Blob([part.text], {
+                type: "text/plain",
+              }),
+            });
+          } else if (part.type === "image_url") {
+            const response = await fetch(part.image_url.url);
+            return new ClipboardItem({
+              "image/png": await response.blob(),
+            });
+          }
+        })
+      );
+      await navigator.clipboard.write(items);
+    }
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    setContextMenu(null);
+  }, [message.content]);
 
-      <Menu
-        open={contextMenu !== null}
-        onClose={() => setContextMenu(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          contextMenu !== null
-            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-            : undefined
-        }
+  const messageBox = (
+    <Box
+      sx={{
+        minWidth: 0,
+        overflow: "auto",
+        overflowWrap: "break-word",
+        padding: "0.5em 0.8em",
+        borderRadius: "14px",
+        backgroundColor: (theme) =>
+          message.role === "user"
+            ? theme.palette.primary.main
+            : theme.palette.background.paper,
+        color: (theme) =>
+          message.role === "user"
+            ? theme.palette.primary.contrastText
+            : theme.palette.text.primary,
+        overflowX: "auto",
+        "& img": { display: "block", maxWidth: "100%", maxHeight: "60vh" },
+        "& p": { marginY: 1 },
+        "& pre": { margin: 0 },
+        "& pre>code": { whiteSpace: "pre-wrap" },
+      }}
+      onContextMenu={handleContextMenu}
+    >
+      {content}
+    </Box>
+  );
+
+  const messageMenu = (
+    <Menu
+      open={contextMenu !== null}
+      onClose={() => setContextMenu(null)}
+      anchorReference="anchorPosition"
+      anchorPosition={
+        contextMenu !== null
+          ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+          : undefined
+      }
+    >
+      <MenuItem>
+        <ListItemIcon>
+          <VolumeUpIcon />
+        </ListItemIcon>
+        <ListItemText>{t("Read aloud")}</ListItemText>
+      </MenuItem>
+      <MenuItem onClick={handleCopyToClipboard}>
+        <ListItemIcon>
+          <ContentCopyIcon />
+        </ListItemIcon>
+        <ListItemText>{t("Copy")}</ListItemText>
+      </MenuItem>
+      <MenuItem>
+        <ListItemIcon>
+          <ReplayIcon />
+        </ListItemIcon>
+        <ListItemText>{t("Retry")}</ListItemText>
+      </MenuItem>
+      <MenuItem
+        onClick={() => {
+          setDisableContextMenu(true);
+          setContextMenu(null);
+          setTimeout(() => setDisableContextMenu(false), 60000);
+        }}
       >
-        <MenuItem
-          onClick={async () => {
-            if (typeof message.content === "string") {
-              await navigator.clipboard.writeText(message.content);
-            } else {
-              const items = await Promise.all(
-                message.content.map(async (part) => {
-                  if (part.type === "text") {
-                    return new ClipboardItem({
-                      "text/plain": new Blob([part.text], {
-                        type: "text/plain",
-                      }),
-                    });
-                  } else if (part.type === "image_url") {
-                    const response = await fetch(part.image_url.url);
-                    return new ClipboardItem({
-                      "image/png": await response.blob(),
-                    });
-                  }
-                })
-              );
-              await navigator.clipboard.write(items);
-            }
-            const selection = window.getSelection();
-            selection?.removeAllRanges();
-            setContextMenu(null);
-          }}
-        >
-          <ListItemIcon>
-            <ContentCopyIcon />
-          </ListItemIcon>
-          <ListItemText>{t("Copy")}</ListItemText>
-        </MenuItem>
-        <MenuItem>
-          <ListItemIcon>
-            <ReplayIcon />
-          </ListItemIcon>
-          <ListItemText>{t("Retry")}</ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setDisableContextMenu(true);
-            setContextMenu(null);
-            setTimeout(() => setDisableContextMenu(false), 60000);
-          }}
-        >
-          <ListItemIcon>
-            <MenuIcon />
-          </ListItemIcon>
-          <ListItemText>{t("Native menu")}</ListItemText>
-        </MenuItem>
-      </Menu>
+        <ListItemIcon>
+          <MenuIcon />
+        </ListItemIcon>
+        <ListItemText>{t("Native menu")}</ListItemText>
+      </MenuItem>
+    </Menu>
+  );
+
+  return (
+    <Stack direction="row" spacing={1}>
+      {message.role === "user" ? (
+        <React.Fragment>
+          <Box flexShrink={0} minWidth={48} flexGrow={1} />
+          {messageBox}
+          <MessageAvatar role={message.role} />
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          <MessageAvatar role={message.role} />
+          {messageBox}
+          <Box flexShrink={0} minWidth={48} flexGrow={1} />
+        </React.Fragment>
+      )}
+
+      {messageMenu}
     </Stack>
   );
 }
