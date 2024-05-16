@@ -1,17 +1,24 @@
 import {
   Badge,
+  Card,
+  CardActionArea,
+  CardContent,
+  Collapse,
   IconButton,
   Stack,
   TextField,
   Theme,
+  Typography,
   useMediaQuery,
 } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
 import { ChatCompletionContentPart } from "openai/resources/index.mjs";
 import {
-  AttachFile as AttachFileIcon,
+  AddCircleOutline as AddCircleOutlineIcon,
   Extension as ExtensionIcon,
+  Folder as FolderIcon,
   Image as ImageIcon,
+  Phone as PhoneIcon,
   Screenshot as ScreenshotIcon,
   Send as SendIcon,
   Timeline as TimelineIcon,
@@ -19,7 +26,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { useAppDispatch } from "../../app/hooks";
-import { showTools } from "../../app/dialogs";
+import { showFiles, showTools } from "../../app/dialogs";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -53,6 +60,27 @@ async function pasteImages(): Promise<string[]> {
   }
 }
 
+function CaptionButton({
+  children,
+  caption,
+  onClick,
+}: {
+  children: React.ReactNode;
+  caption: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <Stack sx={{ alignItems: "center", gap: "4px" }}>
+      <Card elevation={0}>
+        <CardActionArea onClick={onClick}>
+          <CardContent>{children}</CardContent>
+        </CardActionArea>
+      </Card>
+      <Typography variant="caption">{caption}</Typography>
+    </Stack>
+  );
+}
+
 function UserInput({
   onSend,
   onScreenshot,
@@ -62,6 +90,7 @@ function UserInput({
 }) {
   const [userInput, setUserInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState<boolean>(false);
   const userInputRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useAppDispatch();
 
@@ -85,23 +114,19 @@ function UserInput({
     input.click();
   }, []);
 
-  const handleImportFile = useCallback(() => {
+  const handleCapturePhoto = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "*/*";
-    input.multiple = true;
+    input.accept = "image/*";
+    input.capture = "environment";
     input.onchange = async () => {
       if (input.files) {
         const files = Array.from(input.files);
-        const dirHandle = await navigator.storage.getDirectory();
-        files.forEach(async (file) => {
-          const fileHandle = await dirHandle.getFileHandle(file.name, {
-            create: true,
-          });
-          const writable = await fileHandle.createWritable();
-          await writable.write(file);
-          await writable.close();
-        });
+        const images = await Promise.all(
+          files.map((file) => blobToDataUrl(file))
+        );
+        setImages(images);
       }
     };
     input.click();
@@ -135,6 +160,18 @@ function UserInput({
     }
   };
 
+  const sendButton = (
+    <IconButton
+      aria-label="send"
+      size="small"
+      disabled={userInput === "" && !images.length}
+      onClick={handleSend}
+      sx={{ alignSelf: "flex-end" }}
+    >
+      <SendIcon />
+    </IconButton>
+  );
+
   return (
     <>
       <Stack
@@ -158,17 +195,7 @@ function UserInput({
           inputProps={{ "aria-label": t("User input") }}
           InputProps={{
             sx: { backgroundColor: (theme) => theme.palette.background.paper },
-            endAdornment: (
-              <IconButton
-                aria-label="send"
-                size="small"
-                disabled={userInput === "" && !images.length}
-                onClick={handleSend}
-                sx={{ alignSelf: "flex-end" }}
-              >
-                <SendIcon />
-              </IconButton>
-            ),
+            endAdornment: sendButton,
           }}
         />
       </Stack>
@@ -177,24 +204,47 @@ function UserInput({
         justifyContent="space-around"
         sx={{ marginTop: -0.5, marginBottom: 0.5 }}
       >
+        <IconButton aria-label="phone">
+          <PhoneIcon />
+        </IconButton>
         <Badge badgeContent={images.length} color="primary" overlap="circular">
-          <IconButton aria-label="image" onClick={handleImportImage}>
+          <IconButton
+            aria-label="image"
+            onClick={handleImportImage}
+            onContextMenu={handleCapturePhoto}
+          >
             <ImageIcon />
           </IconButton>
         </Badge>
-        <IconButton aria-label="file" onClick={handleImportFile}>
-          <AttachFileIcon />
-        </IconButton>
         <IconButton aria-label="screenshot" onClick={onScreenshot}>
           <ScreenshotIcon />
-        </IconButton>
-        <IconButton aria-label="workflows">
-          <TimelineIcon />
         </IconButton>
         <IconButton aria-label="tools" onClick={() => dispatch(showTools())}>
           <ExtensionIcon />
         </IconButton>
+        <IconButton aria-label="expand" onClick={() => setExpanded(!expanded)}>
+          <AddCircleOutlineIcon />
+        </IconButton>
       </Stack>
+      <Collapse in={expanded}>
+        <Stack
+          sx={{
+            padding: 4,
+            flexDirection: "row",
+            justifyContent: "space-evenly",
+          }}
+        >
+          <CaptionButton caption={t("Workflow")}>
+            <TimelineIcon />
+          </CaptionButton>
+          <CaptionButton
+            caption={t("Files")}
+            onClick={() => dispatch(showFiles())}
+          >
+            <FolderIcon />
+          </CaptionButton>
+        </Stack>
+      </Collapse>
     </>
   );
 }

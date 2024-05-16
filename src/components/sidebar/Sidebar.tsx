@@ -1,4 +1,8 @@
 import {
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+} from "@mui/icons-material";
+import {
   Avatar,
   Box,
   Collapse,
@@ -15,21 +19,17 @@ import {
   Theme,
   useMediaQuery,
 } from "@mui/material";
-import {
-  ExpandLess as ExpandLessIcon,
-  ExpandMore as ExpandMoreIcon,
-} from "@mui/icons-material";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { showSettings, showWorkflow } from "../../app/dialogs";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setAvatar } from "../../app/identity";
+import { fetchModels, setModel } from "../../app/models";
 import { Workflow, defaultWorkflow } from "../../workflow";
 import { useWorkflowsState } from "../ActionsProvider";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { showFiles, showSettings, showWorkflow } from "../../app/dialogs";
-import { setAvatar } from "../../app/identity";
-import ConversationList from "./ConversationList";
-import { fetchModels, setModel } from "../../app/models";
 import { SparseList } from "../global/SettingsDialog";
+import ConversationList from "./ConversationList";
 
 function WorkflowList({
   currentWorkflow,
@@ -241,11 +241,6 @@ function Sidebar({
           </Collapse>
         </SparseList>
         <SparseList disablePadding>
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => dispatch(showFiles())}>
-              <ListItemText primary={t("My Files")} />
-            </ListItemButton>
-          </ListItem>
           <ListItem disablePadding>
             <ListItemButton onClick={() => dispatch(showSettings())}>
               <ListItemText primary={t("Settings")} />
