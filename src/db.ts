@@ -39,9 +39,11 @@ export const DB = new Promise<Database>(async (resolve) => {
     });
   });
 
-  const { dbId } = await promiser("open", {
-    filename: "file:.flareagent/db.sqlite3?vfs=opfs",
-  });
+  const { dbId } = window.isSecureContext
+    ? await promiser("open", {
+        filename: "file:.flareagent/db.sqlite3?vfs=opfs",
+      })
+    : await promiser("open", { filename: "db.sqlite3" });
 
   async function exec<T = any[]>(
     sql: string,
