@@ -16,7 +16,11 @@ import { useTranslation } from "react-i18next";
 
 import { ChatCompletionExecutionOutput } from "../../app/conversations/thunks";
 import { Highlighter } from "./Highlighter";
-import { Search } from "@mui/icons-material";
+import {
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Search as SearchIcon,
+} from "@mui/icons-material";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {
@@ -37,29 +41,34 @@ function MaybeJsonBlock({ children }: { children: string }) {
   }
 }
 
-function MaybePythonBlock({ children }: { children: string }) {
-  try {
-    const parsed: { code: string } = JSON.parse(children);
-    return (
-      <Suspense
-        fallback={
-          <pre>
-            <div style={{ overflow: "auto" }}>
-              <code>{parsed.code}</code>
-            </div>
-          </pre>
-        }
-      >
-        <Highlighter children={parsed.code} language={"python"} />
-      </Suspense>
-    );
-  } catch (e) {
-    return (
-      <pre>
-        <code>{children}</code>
-      </pre>
-    );
-  }
+function PythonToolCallMessage({ content }: { content: any }) {
+  const [expanded, setExpanded] = React.useState(false);
+
+  const { t } = useTranslation();
+
+  const code: string = content?.code ?? content;
+
+  return (
+    <React.Fragment>
+      <Button onClick={() => setExpanded(!expanded)}>
+        {t("Python code")}
+        {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+      </Button>
+      <Collapse in={expanded} mountOnEnter>
+        <Suspense
+          fallback={
+            <pre>
+              <div style={{ overflow: "auto" }}>
+                <code>{code}</code>
+              </div>
+            </pre>
+          }
+        >
+          <Highlighter children={code} language={"python"} />
+        </Suspense>
+      </Collapse>
+    </React.Fragment>
+  );
 }
 
 export function AssistantToolCallMessasge({
@@ -79,17 +88,15 @@ export function AssistantToolCallMessasge({
     <div style={{ overflow: "auto", fontSize: "0.8rem" }}>
       {tool_call.function.name === "search" ? (
         <Stack direction="row" sx={{ alignItems: "center" }}>
-          <Search />
+          <SearchIcon />
           {callArguments?.keyword}
         </Stack>
+      ) : tool_call.function.name === "python" ? (
+        <PythonToolCallMessage content={callArguments} />
       ) : (
         <code>
           <div>{tool_call.function.name}</div>
-          {tool_call.function.name === "python" ? (
-            <MaybePythonBlock>{tool_call.function.arguments}</MaybePythonBlock>
-          ) : (
-            tool_call.function.arguments
-          )}
+          {tool_call.function.arguments}
         </code>
       )}
     </div>
@@ -98,6 +105,8 @@ export function AssistantToolCallMessasge({
 
 function SearchOutputMessage({ content }: { content: string }) {
   const [expanded, setExpanded] = React.useState(false);
+
+  const { t } = useTranslation();
 
   const body = useMemo(() => {
     try {
@@ -112,9 +121,10 @@ function SearchOutputMessage({ content }: { content: string }) {
   return (
     <React.Fragment>
       <Button onClick={() => setExpanded(!expanded)}>
-        {body.results.length} results
+        {t("searchResultsWithCount", { count: body.results.length })}
+        {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </Button>
-      <Collapse in={expanded}>
+      <Collapse in={expanded} mountOnEnter>
         <List>
           {body.results.map((result, index) => (
             <ListItem key={index} disablePadding>

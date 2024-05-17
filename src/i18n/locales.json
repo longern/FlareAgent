@@ -42,6 +42,7 @@
       "Permissions": "Permissions",
       "Personalization": "Personalization",
       "Pipe to Variable": "Pipe to Variable",
+      "Python code": "Python code",
       "Regex": "Regex",
       "Rename": "Rename",
       "RHS": "RHS",
@@ -60,7 +61,9 @@
       "Variable": "Variable",
       "Variable Name": "Variable Name",
       "Workflow": "Workflow",
-      "Workflow Name": "Workflow Name"
+      "Workflow Name": "Workflow Name",
+      "searchResultsWithCount_one": "{{count}} search result",
+      "searchResultsWithCount_other": "{{count}} search results"
     }
   },
   "zh": {
@@ -106,6 +109,7 @@
       "Permissions": "权限",
       "Personalization": "个性化",
       "Pipe to Variable": "输送到变量",
+      "Python code": "Python 代码",
       "Regex": "正则表达式",
       "Rename": "重命名",
       "RHS": "右操作数",
@@ -124,7 +128,8 @@
       "Variable": "变量",
       "Variable Name": "变量名称",
       "Workflow": "工作流",
-      "Workflow Name": "工作流名称"
+      "Workflow Name": "工作流名称",
+      "searchResultsWithCount": "{{count}} 个搜索结果"
     }
   }
 }
