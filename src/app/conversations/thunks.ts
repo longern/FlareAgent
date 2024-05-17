@@ -74,7 +74,6 @@ async function invokeTools(
   tools: ReturnType<typeof apisToTool>,
   toolCalls: ChatCompletionMessageToolCall[]
 ) {
-  if (tools.length === 0) return [];
   const results = Promise.allSettled(
     toolCalls.map(async (toolCall) => {
       const tool = tools.find(
@@ -90,6 +89,20 @@ async function invokeTools(
   );
   return results;
 }
+
+export type ChatCompletionExecutionOutput = {
+  type: "execution_output";
+  tool_call_id: string;
+  output: string;
+};
+
+export type ChatCompletionContent =
+  | string
+  | Array<
+      | ChatCompletionContentPart
+      | ChatCompletionMessageToolCall
+      | ChatCompletionExecutionOutput
+    >;
 
 const fetchAssistantMessage = createAsyncThunk(
   "conversations/fetchAssistantMessage",
@@ -109,11 +122,36 @@ const fetchAssistantMessage = createAsyncThunk(
     });
 
     const messages = Object.values(conversation.messages).map(
-      (message) =>
-        ({
+      (message): ChatCompletionMessageParam => {
+        const content = JSON.parse(message.content) as ChatCompletionContent;
+        if (
+          typeof content === "object" &&
+          Array.isArray(content) &&
+          content.length > 0 &&
+          content[0].type === "function"
+        ) {
+          return {
+            role: "assistant",
+            content: null,
+            tool_calls: content as ChatCompletionMessageToolCall[],
+          };
+        } else if (
+          typeof content === "object" &&
+          Array.isArray(content) &&
+          content.length > 0 &&
+          content[0].type === "execution_output"
+        ) {
+          return {
+            role: "tool",
+            tool_call_id: content[0].tool_call_id,
+            content: content[0].output,
+          };
+        }
+        return {
           role: message.author_role,
-          content: JSON.parse(message.content),
-        } as ChatCompletionMessageParam)
+          content,
+        } as ChatCompletionMessageParam;
+      }
     );
 
     if (state.settings.systemPrompt) {
@@ -169,31 +207,39 @@ const fetchAssistantMessage = createAsyncThunk(
     }
     const choice = choices[0];
 
-    const toolsResults = await invokeTools(
-      tools,
-      choice.message.tool_calls ?? []
-    );
-
-    const toolsResultsContent = toolsResults
-      .map((result) => {
-        if (result.status === "fulfilled") {
-          return result.value;
-        } else {
-          return result.reason.message;
-        }
-      })
-      .join("\n");
-
     dispatch(
       createMessage({
         id: messageId,
         author_role: "assistant",
-        content: JSON.stringify(
-          (choice.message.content ?? "") + toolsResultsContent
-        ),
+        content: choice.message.tool_calls
+          ? JSON.stringify(choice.message.tool_calls)
+          : JSON.stringify(choice.message.content ?? ""),
         create_time: timestamp,
       })
     );
+
+    if (!choice.message.tool_calls) return;
+    const toolsResult = await invokeTools(tools, choice.message.tool_calls);
+    for (const [index, result] of toolsResult.entries()) {
+      const toolCallId = choice.message.tool_calls[index].id;
+      dispatch(
+        createMessage({
+          id: crypto.randomUUID(),
+          author_role: "tool",
+          content: JSON.stringify([
+            {
+              type: "execution_output",
+              tool_call_id: toolCallId,
+              output:
+                result.status === "fulfilled" ? result.value : result.reason,
+            },
+          ] as ChatCompletionContent),
+          create_time: Date.now(),
+        })
+      );
+    }
+
+    dispatch(fetchAssistantMessage(model));
   }
 );
 

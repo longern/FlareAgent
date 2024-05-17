@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 import {
-  ChatCompletionContentPart,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
 } from "openai/resources/index";
@@ -31,6 +30,10 @@ import { connect } from "react-redux";
 import { useAppSelector } from "../../app/hooks";
 import { AppState } from "../../app/store";
 import { Highlighter, MarkdownHighlighter } from "./Highlighter";
+import {
+  ChatCompletionContent,
+  ChatCompletionExecutionOutput,
+} from "../../app/conversations/thunks";
 
 function MaybeJsonBlock({ children }: { children: string }) {
   try {
@@ -102,32 +105,25 @@ function MessageListItemContent({
 }) {
   const { t } = useTranslation();
 
+  const content: ChatCompletionContent = message.content;
+
   return message.role === "assistant" ? (
     <>
-      {typeof message.content === "string" ? (
-        <Suspense fallback={message.content}>
-          <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
+      {typeof content === "string" ? (
+        <Suspense fallback={content}>
+          <MarkdownHighlighter>{content}</MarkdownHighlighter>
         </Suspense>
-      ) : message.content ? (
-        (message.content as ChatCompletionContentPart[]).map((part, index) =>
+      ) : content ? (
+        content.map((part, index) =>
           part.type === "text" ? (
             <span key={index}>{part.text}</span>
           ) : part.type === "image_url" ? (
             <img key={index} src={part.image_url.url} alt="" />
+          ) : part.type === "function" ? (
+            <AssistantToolCallMessasge key={part.id} tool_call={part} />
           ) : null
         )
       ) : null}
-      {Array.isArray(message.tool_calls) && message.tool_calls.length > 0 && (
-        <>
-          <div>{t("Calling functions:")}</div>
-          {message.tool_calls.map((tool_call) => (
-            <AssistantToolCallMessasge
-              key={tool_call.id}
-              tool_call={tool_call}
-            />
-          ))}
-        </>
-      )}
     </>
   ) : message.role === "tool" ? (
     <Box
@@ -137,8 +133,10 @@ function MessageListItemContent({
         fontSize: "0.8rem",
       }}
     >
-      {message.content ? (
-        <MaybeJsonBlock>{message.content}</MaybeJsonBlock>
+      {content ? (
+        <MaybeJsonBlock>
+          {(content as Array<ChatCompletionExecutionOutput>)[0].output}
+        </MaybeJsonBlock>
       ) : (
         <Typography variant="body2" color="text.secondary">
           {t("No output")}
