@@ -124,11 +124,12 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
   );
 
   const handleCopyToClipboard = useCallback(async () => {
-    if (typeof message.content === "string") {
-      await navigator.clipboard.writeText(message.content);
+    const content: ChatCompletionContent = message.content;
+    if (typeof content === "string") {
+      await navigator.clipboard.writeText(content);
     } else {
       const items = await Promise.all(
-        message.content.map(async (part) => {
+        content.map(async (part) => {
           if (part.type === "text") {
             return new ClipboardItem({
               "text/plain": new Blob([part.text], {
@@ -137,10 +138,16 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
             });
           } else if (part.type === "image_url") {
             const response = await fetch(part.image_url.url);
+            const blob = await response.blob();
+            return new ClipboardItem({ [blob.type]: blob });
+          } else if (part.type === "execution_output") {
             return new ClipboardItem({
-              "image/png": await response.blob(),
+              "text/plain": new Blob([part.output], {
+                type: "text/plain",
+              }),
             });
           }
+          return new ClipboardItem({});
         })
       );
       await navigator.clipboard.write(items);
