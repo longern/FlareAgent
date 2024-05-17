@@ -1,3 +1,4 @@
+import { Link } from "@mui/material";
 import React from "react";
 
 export const Highlighter = React.lazy(async () => {
@@ -55,14 +56,22 @@ export const MarkdownHighlighter = React.lazy(async () => {
       return (
         <Markdown
           components={{
-            a: ({ node, children, ...props }) => {
+            a: ({ node, children, ref, ...props }) => {
               let url = new URL(props.href ?? "", window.location.href);
               if (url.origin !== window.location.origin) {
                 props.target = "_blank";
                 props.rel = "noopener noreferrer";
               }
 
-              return <a {...props}>{children}</a>;
+              return (
+                <Link
+                  {...props}
+                  underline="hover"
+                  onContextMenu={(event) => event.stopPropagation()}
+                >
+                  {children}
+                </Link>
+              );
             },
             code(props) {
               const { children, className, node, ...rest } = props;
