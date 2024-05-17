@@ -16,145 +16,54 @@ import {
   Menu,
   MenuItem,
   Stack,
-  Typography,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
-import {
-  ChatCompletionMessageParam,
-  ChatCompletionMessageToolCall,
-} from "openai/resources/index";
+import { ChatCompletionMessageParam } from "openai/resources/index";
 import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 
 import { useAppSelector } from "../../app/hooks";
 import { AppState } from "../../app/store";
-import { Highlighter, MarkdownHighlighter } from "./Highlighter";
+import { MarkdownHighlighter } from "./Highlighter";
 import {
   ChatCompletionContent,
   ChatCompletionExecutionOutput,
 } from "../../app/conversations/thunks";
-
-function MaybeJsonBlock({ children }: { children: string }) {
-  try {
-    const pretty = JSON.stringify(JSON.parse(children), null, 2);
-    return (
-      <pre>
-        <div style={{ overflow: "auto" }}>
-          <code>{pretty}</code>
-        </div>
-      </pre>
-    );
-  } catch (e) {
-    return (
-      <pre>
-        <code>{children}</code>
-      </pre>
-    );
-  }
-}
-
-function MaybePythonBlock({ children }: { children: string }) {
-  try {
-    const parsed: { code: string } = JSON.parse(children);
-    return (
-      <Suspense
-        fallback={
-          <pre>
-            <div style={{ overflow: "auto" }}>
-              <code>{parsed.code}</code>
-            </div>
-          </pre>
-        }
-      >
-        <Highlighter children={parsed.code} language={"python"} />
-      </Suspense>
-    );
-  } catch (e) {
-    return (
-      <pre>
-        <code>{children}</code>
-      </pre>
-    );
-  }
-}
-
-function AssistantToolCallMessasge({
-  tool_call,
-}: {
-  tool_call: ChatCompletionMessageToolCall;
-}) {
-  return (
-    <div style={{ overflow: "auto", fontSize: "0.8rem" }}>
-      <code>
-        <div>{tool_call.function.name}</div>
-        {tool_call.function.name === "python" ? (
-          <MaybePythonBlock>{tool_call.function.arguments}</MaybePythonBlock>
-        ) : (
-          tool_call.function.arguments
-        )}
-      </code>
-    </div>
-  );
-}
+import {
+  AssistantToolCallMessasge,
+  ToolExecutionOutputMessage,
+} from "./ToolCallMessage";
 
 function MessageListItemContent({
   message,
 }: {
   message: ChatCompletionMessageParam;
 }) {
-  const { t } = useTranslation();
-
   const content: ChatCompletionContent = message.content;
 
-  return message.role === "assistant" ? (
-    <>
-      {typeof content === "string" ? (
-        <Suspense fallback={content}>
-          <MarkdownHighlighter>{content}</MarkdownHighlighter>
-        </Suspense>
-      ) : content ? (
-        content.map((part, index) =>
-          part.type === "text" ? (
-            <span key={index}>{part.text}</span>
-          ) : part.type === "image_url" ? (
-            <img key={index} src={part.image_url.url} alt="" />
-          ) : part.type === "function" ? (
-            <AssistantToolCallMessasge key={part.id} tool_call={part} />
-          ) : null
-        )
-      ) : null}
-    </>
-  ) : message.role === "tool" ? (
-    <Box
-      sx={{
-        maxHeight: "12rem",
-        overflow: "auto",
-        fontSize: "0.8rem",
-      }}
-    >
-      {content ? (
-        <MaybeJsonBlock>
-          {(content as Array<ChatCompletionExecutionOutput>)[0].output}
-        </MaybeJsonBlock>
-      ) : (
-        <Typography variant="body2" color="text.secondary">
-          {t("No output")}
-        </Typography>
-      )}
-    </Box>
+  return message.role === "tool" ? (
+    <ToolExecutionOutputMessage
+      content={content[0] as ChatCompletionExecutionOutput}
+    />
+  ) : typeof content === "string" ? (
+    message.role === "assistant" ? (
+      <Suspense fallback={content}>
+        <MarkdownHighlighter>{content}</MarkdownHighlighter>
+      </Suspense>
+    ) : (
+      <p>{content}</p>
+    )
   ) : (
-    <Box sx={{ whiteSpace: "pre-wrap" }}>
-      {typeof message.content === "string"
-        ? message.content
-        : message.content.map((part, index) =>
-            part.type === "text" ? (
-              <span key={index}>{part.text}</span>
-            ) : part.type === "image_url" ? (
-              <img key={index} src={part.image_url.url} alt="" />
-            ) : null
-          )}
-    </Box>
+    content.map((part, index) =>
+      part.type === "text" ? (
+        <span key={index}>{part.text}</span>
+      ) : part.type === "image_url" ? (
+        <img key={index} src={part.image_url.url} alt="" />
+      ) : part.type === "function" ? (
+        <AssistantToolCallMessasge key={part.id} tool_call={part} />
+      ) : null
+    )
   );
 }
 

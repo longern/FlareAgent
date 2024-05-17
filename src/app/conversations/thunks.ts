@@ -92,6 +92,7 @@ async function invokeTools(
 
 export type ChatCompletionExecutionOutput = {
   type: "execution_output";
+  name: string;
   tool_call_id: string;
   output: string;
 };
@@ -222,6 +223,7 @@ const fetchAssistantMessage = createAsyncThunk(
     const toolsResult = await invokeTools(tools, choice.message.tool_calls);
     for (const [index, result] of toolsResult.entries()) {
       const toolCallId = choice.message.tool_calls[index].id;
+      const name = choice.message.tool_calls[index].function.name;
       dispatch(
         createMessage({
           id: crypto.randomUUID(),
@@ -229,6 +231,7 @@ const fetchAssistantMessage = createAsyncThunk(
           content: JSON.stringify([
             {
               type: "execution_output",
+              name,
               tool_call_id: toolCallId,
               output:
                 result.status === "fulfilled" ? result.value : result.reason,
