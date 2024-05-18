@@ -26,7 +26,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { useAppDispatch } from "../../app/hooks";
-import { showFiles, showTools } from "../../app/dialogs";
+import { showFiles, showTools, showVoiceCall } from "../../app/dialogs";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -204,7 +204,10 @@ function UserInput({
         justifyContent="space-around"
         sx={{ marginTop: -0.5, marginBottom: 0.5 }}
       >
-        <IconButton aria-label="phone">
+        <IconButton
+          aria-label="phone"
+          onClick={() => dispatch(showVoiceCall())}
+        >
           <PhoneIcon />
         </IconButton>
         <Badge badgeContent={images.length} color="primary" overlap="circular">
