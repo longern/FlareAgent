@@ -1,100 +1,27 @@
 import {
-  ExpandLess as ExpandLessIcon,
-  ExpandMore as ExpandMoreIcon,
-} from "@mui/icons-material";
-import {
   Avatar,
   Box,
-  Collapse,
   Drawer,
   IconButton,
-  List,
   ListItem,
   ListItemButton,
   ListItemText,
   MenuItem,
-  Radio,
   Select,
   Stack,
   Theme,
   useMediaQuery,
 } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import { showSettings, showWorkflow } from "../../app/dialogs";
+import { showSettings } from "../../app/dialogs";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setAvatar } from "../../app/identity";
 import { fetchModels, setModel } from "../../app/models";
-import { Workflow, defaultWorkflow } from "../../workflow";
-import { useWorkflowsState } from "../ActionsProvider";
+import { Workflow } from "../../workflow";
 import { SparseList } from "../global/SettingsDialog";
 import ConversationList from "./ConversationList";
-
-function WorkflowList({
-  currentWorkflow,
-  onWorkflowChange,
-}: {
-  currentWorkflow: Workflow | null;
-  onWorkflowChange: (workflow: Workflow) => void;
-}) {
-  const { workflows, newWorkflow } = useWorkflowsState();
-  const { t } = useTranslation();
-  const dispatch = useAppDispatch();
-  const workflowsWithDefault =
-    workflows === null ? null : [defaultWorkflow, ...workflows];
-
-  useEffect(() => {
-    if (
-      workflows !== null &&
-      currentWorkflow !== null &&
-      currentWorkflow !== defaultWorkflow &&
-      !workflows.includes(currentWorkflow)
-    ) {
-      onWorkflowChange(defaultWorkflow);
-    }
-  }, [workflows, currentWorkflow, onWorkflowChange]);
-
-  return (
-    <List sx={{ pl: 2 }} disablePadding>
-      {workflowsWithDefault === null ? (
-        <ListItem>
-          <ListItemText primary={t("Loading...")} />
-        </ListItem>
-      ) : (
-        workflowsWithDefault.map((workflow) => (
-          <ListItem
-            disablePadding
-            key={workflow.name}
-            secondaryAction={
-              <Radio
-                checked={currentWorkflow?.name === workflow.name}
-                onChange={() => onWorkflowChange(workflow)}
-                value={workflow.name}
-                name="workflow"
-                inputProps={{ "aria-label": workflow.name }}
-              />
-            }
-          >
-            <ListItemButton
-              onClick={() => {
-                if (workflow === defaultWorkflow) return;
-                dispatch(showWorkflow(workflow));
-              }}
-            >
-              <ListItemText>{workflow.name}</ListItemText>
-            </ListItemButton>
-          </ListItem>
-        ))
-      )}
-      <ListItem disablePadding>
-        <ListItemButton onClick={newWorkflow}>
-          <ListItemText>{t("New...")}</ListItemText>
-        </ListItemButton>
-      </ListItem>
-    </List>
-  );
-}
 
 function useUpdateModels() {
   const userId = useAppSelector((state) => state.identity.id);
@@ -141,8 +68,6 @@ function Sidebar({
   open,
   onClose,
   onNewChat,
-  currentWorkflow,
-  onWorkflowChange,
 }: {
   open: boolean;
   onClose: () => void;
@@ -150,8 +75,6 @@ function Sidebar({
   currentWorkflow: Workflow | null;
   onWorkflowChange: (workflow: Workflow) => void;
 }) {
-  const [expanded, setExpanded] = useState<string | null>(null);
-
   const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
   const userId = useAppSelector((state) => state.identity.id);
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -212,34 +135,9 @@ function Sidebar({
         >
           <ListItemText primary={t("New chat")} />
         </ListItemButton>
-        <SparseList
-          sx={{ flexGrow: 1, minHeight: 0, overflowY: "auto" }}
-          disablePadding
-        >
-          <ListItem disablePadding>
-            <ConversationList onClose={onClose} />
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => {
-                setExpanded(expanded === "workflow" ? null : "workflow");
-              }}
-            >
-              <ListItemText primary={t("Workflow")} />
-              {expanded === "workflow" ? (
-                <ExpandLessIcon />
-              ) : (
-                <ExpandMoreIcon />
-              )}
-            </ListItemButton>
-          </ListItem>
-          <Collapse in={expanded === "workflow"}>
-            <WorkflowList
-              currentWorkflow={currentWorkflow}
-              onWorkflowChange={onWorkflowChange}
-            />
-          </Collapse>
-        </SparseList>
+        <Box sx={{ flexGrow: 1, minHeight: 0, overflowY: "auto" }}>
+          <ConversationList onClose={onClose} />
+        </Box>
         <SparseList disablePadding>
           <ListItem disablePadding>
             <ListItemButton onClick={() => dispatch(showSettings())}>

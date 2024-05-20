@@ -10,6 +10,7 @@ export const dialogsSlice = createSlice({
     tools: false,
     voiceCall: false,
     workflow: null as Workflow | null,
+    workflows: false,
   },
   reducers: {
     showFiles(state) {
@@ -33,6 +34,9 @@ export const dialogsSlice = createSlice({
     showWorkflow(state, action: PayloadAction<Workflow>) {
       state.workflow = action.payload;
     },
+    showWorkflows(state) {
+      state.workflows = true;
+    },
     hideFiles(state) {
       state.files = false;
     },
@@ -47,6 +51,9 @@ export const dialogsSlice = createSlice({
     },
     hideWorkflow(state) {
       state.workflow = null;
+    },
+    hideWorkflows(state) {
+      state.workflows = false;
     },
   },
 });
@@ -64,6 +71,8 @@ export const {
   hideVoiceCall,
   showWorkflow,
   hideWorkflow,
+  showWorkflows,
+  hideWorkflows,
 } = dialogsSlice.actions;
 
 export default dialogsSlice.reducer;

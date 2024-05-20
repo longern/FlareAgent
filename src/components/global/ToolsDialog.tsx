@@ -166,7 +166,7 @@ function ToolsDialog({
         {tools === null ? (
           <CircularProgress />
         ) : (
-          <Card>
+          <Card elevation={0}>
             <List disablePadding>
               {parsedTools.map(({ id, enabled, definition: action }) => (
                 <ListItem key={id} disablePadding sx={{ paddingRight: 2 }}>

@@ -4,7 +4,6 @@ import { MoreHoriz as MoreHorizIcon } from "@mui/icons-material";
 import {
   Divider,
   IconButton,
-  List,
   ListItem,
   ListItemButton,
   ListItemText,
@@ -19,6 +18,7 @@ import {
   setCurrentConversation,
   updateConversationTitle,
 } from "../../app/conversations";
+import { SparseList } from "../global/SettingsDialog";
 
 function ConversationList({ onClose }: { onClose: () => void }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -39,7 +39,7 @@ function ConversationList({ onClose }: { onClose: () => void }) {
 
   return (
     <React.Fragment>
-      <List disablePadding sx={{ flexGrow: 1 }}>
+      <SparseList disablePadding sx={{ flexGrow: 1 }}>
         {Object.values(conversations).map((conversation) => (
           <ListItem
             key={conversation.id}
@@ -68,7 +68,7 @@ function ConversationList({ onClose }: { onClose: () => void }) {
             </ListItemButton>
           </ListItem>
         ))}
-      </List>
+      </SparseList>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}

@@ -26,7 +26,12 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { useAppDispatch } from "../../app/hooks";
-import { showFiles, showTools, showVoiceCall } from "../../app/dialogs";
+import {
+  showFiles,
+  showTools,
+  showVoiceCall,
+  showWorkflows,
+} from "../../app/dialogs";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -237,7 +242,10 @@ function UserInput({
             justifyContent: "space-evenly",
           }}
         >
-          <CaptionButton caption={t("Workflow")}>
+          <CaptionButton
+            caption={t("Workflow")}
+            onClick={() => dispatch(showWorkflows())}
+          >
             <TimelineIcon />
           </CaptionButton>
           <CaptionButton

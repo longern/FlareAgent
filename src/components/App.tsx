@@ -21,6 +21,7 @@ import {
 import { showError } from "../app/error";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { Workflow, defaultWorkflow } from "../workflow";
+import WorkflowsDialog from "./global/WorkflowsDialog";
 import Main from "./main/Main";
 import UserInput from "./main/UserInput";
 import MobileToolbar from "./sidebar/MobileToolbar";
@@ -163,6 +164,10 @@ function App() {
           />
         </Container>
       </Stack>
+      <WorkflowsDialog
+        currentWorkflow={currentWorkflow}
+        onWorkflowChange={handleWorkflowChange}
+      />
     </Stack>
   );
 }
