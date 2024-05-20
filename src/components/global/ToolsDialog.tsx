@@ -1,3 +1,4 @@
+import { Add as AddIcon, Save as SaveIcon } from "@mui/icons-material";
 import {
   Box,
   Card,
@@ -10,7 +11,7 @@ import {
   ListItemText,
   Switch,
 } from "@mui/material";
-import { Add as AddIcon, Save as SaveIcon } from "@mui/icons-material";
+import { OpenAPIV3 } from "openapi-types";
 import React, {
   Suspense,
   useCallback,
@@ -20,18 +21,18 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
+import YAML from "yaml";
 
 import { hideTools } from "../../app/dialogs";
-import { AppState } from "../../app/store";
-import { HistoryDialog } from "./HistoryDialog";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { AppState } from "../../app/store";
 import { createTool, toggleTool } from "../../app/tools";
-import { OpenAPIV3 } from "openapi-types";
+import { HistoryDialog } from "./HistoryDialog";
 
-const JsonEditor = React.lazy(async () => {
-  const [{ default: CodeMirror }, { json }] = await Promise.all([
+const YamlEditor = React.lazy(async () => {
+  const [{ default: CodeMirror }, { yaml }] = await Promise.all([
     import("@uiw/react-codemirror"),
-    import("@codemirror/lang-json"),
+    import("@codemirror/lang-yaml"),
   ]);
   return {
     default: ({
@@ -44,7 +45,7 @@ const JsonEditor = React.lazy(async () => {
       <CodeMirror
         value={value}
         height="80vh"
-        extensions={[json()]}
+        extensions={[yaml()]}
         onChange={onChange}
       />
     ),
@@ -68,9 +69,7 @@ function EditToolDialog({
   useEffect(() => {
     if (!open) return;
     setToolDefinition(
-      initialToolId === undefined
-        ? ""
-        : JSON.stringify(JSON.parse(tools[initialToolId].definition), null, 2)
+      initialToolId === undefined ? "" : tools[initialToolId].definition
     );
   }, [open, initialToolId, tools]);
 
@@ -114,7 +113,7 @@ function EditToolDialog({
           </Box>
         }
       >
-        <JsonEditor value={toolDefinition} onChange={setToolDefinition} />
+        <YamlEditor value={toolDefinition} onChange={setToolDefinition} />
       </Suspense>
     </HistoryDialog>
   );
@@ -140,7 +139,7 @@ function ToolsDialog({
     return Object.values(tools).map(({ id, enabled, definition }) => ({
       id,
       enabled,
-      definition: JSON.parse(definition) as OpenAPIV3.Document,
+      definition: YAML.parse(definition) as OpenAPIV3.Document,
     }));
   }, [tools]);
 

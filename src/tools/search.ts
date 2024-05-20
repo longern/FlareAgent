@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { OpenAPIV3 } from "openapi-types";
+import YAML from "yaml";
 
 const app = new Hono();
 
@@ -53,7 +54,7 @@ const DEFINITION: OpenAPIV3.Document = {
 };
 
 app.get("/openapi.json", async () => {
-  return Response.json(DEFINITION);
+  return new Response(YAML.stringify(DEFINITION));
 });
 
 export default app;

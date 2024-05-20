@@ -6,6 +6,7 @@ import {
   ChatCompletionMessageToolCall,
 } from "openai/resources/index.mjs";
 import { OpenAPIV3 } from "openapi-types";
+import YAML from "yaml";
 
 import { createMessage, updatePartialMessage } from ".";
 import { apisToTool } from "../../tools";
@@ -164,7 +165,7 @@ const fetchAssistantMessage = createAsyncThunk(
 
     const enabledTools = Object.values(state.tools.tools)
       .filter((tool) => tool.enabled)
-      .map((tool) => JSON.parse(tool.definition) as OpenAPIV3.Document);
+      .map((tool) => YAML.parse(tool.definition) as OpenAPIV3.Document);
     const tools = apisToTool(enabledTools);
 
     const completion = await openai.chat.completions.create(

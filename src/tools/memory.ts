@@ -1,6 +1,8 @@
 import { Hono } from "hono";
-import { DIRECTORY } from "../fs/hooks";
 import { OpenAPIV3 } from "openapi-types";
+import YAML from "yaml";
+
+import { DIRECTORY } from "../fs/hooks";
 
 const app = new Hono();
 
@@ -134,7 +136,7 @@ const DEFINITION: OpenAPIV3.Document = {
 };
 
 app.get("/openapi.json", async () => {
-  return Response.json(DEFINITION);
+  return new Response(YAML.stringify(DEFINITION));
 });
 
 export default app;
