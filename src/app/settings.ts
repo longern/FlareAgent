@@ -11,6 +11,7 @@ export type Settings = {
   language?: string;
   systemPrompt?: string;
   disableMemory?: boolean;
+  temperature?: number;
 };
 
 type SettingsMapping = {

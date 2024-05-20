@@ -14,6 +14,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Slider,
   Stack,
   Switch,
   TextField,
@@ -301,6 +302,7 @@ function SystemPromptEditor({
 function PersonalizationContent() {
   const memories = useAppSelector((state) => state.memories.memories);
   const systemPrompt = useAppSelector((state) => state.settings.systemPrompt);
+  const temperature = useAppSelector((state) => state.settings.temperature);
   const disableMemory = useAppSelector((state) => state.settings.disableMemory);
   const [showSystemPromptEditor, setShowSystemPromptEditor] = useState(false);
   const dispatch = useAppDispatch();
@@ -318,6 +320,29 @@ function PersonalizationContent() {
               />
               <NavigateNextIcon />
             </ListItemButton>
+          </ListItem>
+          <ListItem>
+            <Box sx={{ width: "100%" }}>
+              <Box component="label" id="temperature-slider-label">
+                {t("Temperature")}
+              </Box>
+              <Slider
+                aria-labelledby="temperature-slider-label"
+                value={temperature ?? 1}
+                onChange={(_, value) => {
+                  dispatch(
+                    setSettings({
+                      key: "temperature",
+                      value: value === 1 ? undefined : (value as number),
+                    })
+                  );
+                }}
+                step={0.1}
+                min={0}
+                max={2}
+                valueLabelDisplay="auto"
+              />
+            </Box>
           </ListItem>
         </SparseList>
       </Card>

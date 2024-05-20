@@ -173,6 +173,8 @@ const fetchAssistantMessage = createAsyncThunk(
         model,
         messages: messages,
         stream: true,
+        stream_options: { include_usage: true },
+        temperature: state.settings.temperature,
         tools: tools.length > 0 ? tools : undefined,
       },
       { signal }
