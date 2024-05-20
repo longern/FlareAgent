@@ -21,25 +21,25 @@ app.post("/", async (context) => {
 
   if (parseResult) {
     const { textContent } = parseResult;
-    return new Response(textContent.slice(0, 4096));
+    return new Response(textContent.slice(0, 65536));
   }
 
-  return new Response((document.body.textContent ?? "").slice(0, 4096));
+  return new Response((document.body.textContent ?? "").slice(0, 65536));
 });
 
 const DEFINITION: OpenAPIV3.Document = {
   openapi: "3.0.1",
   info: {
-    title: "Crawler",
-    description: "Crawl a web page",
+    title: "Browser",
+    description: "Browse a web page",
     version: "v1",
   },
   servers: [{ url: "tool://" }],
   paths: {
-    "/crawl": {
+    "/browse": {
       post: {
-        operationId: "crawl",
-        summary: "Crawl a web page",
+        operationId: "browse",
+        summary: "Browse a web page",
         requestBody: {
           content: {
             "application/json": {
@@ -48,7 +48,7 @@ const DEFINITION: OpenAPIV3.Document = {
                 properties: {
                   url: {
                     type: "string",
-                    description: "The url to crawl (must be https)",
+                    description: "The url to browse (must be https)",
                   },
                 },
               },
@@ -57,7 +57,7 @@ const DEFINITION: OpenAPIV3.Document = {
         },
         responses: {
           "200": {
-            description: "The crawled page",
+            description: "Page content",
           },
         },
       },
