@@ -242,6 +242,17 @@ const fetchAssistantMessage = createAsyncThunk(
       );
     }
 
+    const resultContentLength = toolsResult.reduce(
+      (acc, result) =>
+        acc + (result.status === "fulfilled" ? result.value.length : 0),
+      0
+    );
+    if (
+      resultContentLength >= 8192 ||
+      toolsResult.some((result) => result.status === "rejected")
+    )
+      return;
+
     dispatch(fetchAssistantMessage(model));
   }
 );

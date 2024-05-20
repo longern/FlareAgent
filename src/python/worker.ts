@@ -1,4 +1,5 @@
 import aiohttp from "./aiohttp";
+import matplotlib from "./matplotlib";
 
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js");
 
@@ -23,6 +24,7 @@ async function initPyodide() {
 
 let pyodideReadyPromise = initPyodide();
 let osEnviron: Map<string, string> | undefined;
+let matplotlibLoaded = false;
 
 async function handleCodeMessage({
   id,
@@ -48,13 +50,24 @@ async function handleCodeMessage({
     await pyodide.runPythonAsync(
       [
         "import micropip",
+        "import os",
         "import sys",
         "from pyodide.code import find_imports",
         "imports = find_imports(code)",
+        "os.environ['MPLBACKEND'] = 'AGG'",
         "await micropip.install([name for name in imports if name not in sys.modules])",
       ].join("\n"),
       { globals: pyodide.toPy({ code }) }
     );
+
+    if (
+      Object.keys(pyodide.loadedPackages).includes("matplotlib") &&
+      !matplotlibLoaded
+    ) {
+      pyodide.runPython(matplotlib, { filename: "matplotlib.py" });
+      matplotlibLoaded = true;
+    }
+
     await new Promise((resolve) => pyodide.FS.syncfs(true, resolve));
     const stdoutBuffer: string[] = [];
     pyodide.setStdout({

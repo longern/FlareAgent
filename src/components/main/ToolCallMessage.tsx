@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Collapse,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -147,24 +148,54 @@ export function ToolExecutionOutputMessage({
 }: {
   content: ChatCompletionExecutionOutput;
 }) {
+  const [isOverflowing, setIsOverflowing] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(false);
   const { t } = useTranslation();
+  const ref = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (!ref.current) return;
+    const isOverflowing = ref.current.scrollHeight > ref.current.clientHeight;
+    setIsOverflowing(isOverflowing);
+    setExpanded(!isOverflowing);
+  }, [content]);
 
   return (
     <Box
+      ref={ref}
       sx={{
-        maxHeight: "12rem",
-        overflow: "auto",
+        position: "relative",
+        maxHeight: expanded ? undefined : "12rem",
+        overflow: "hidden",
         fontSize: "0.8rem",
       }}
     >
       {content.name === "search" ? (
         <SearchOutputMessage content={content.output} />
       ) : content.output ? (
-        <MaybeJsonBlock>{content.output}</MaybeJsonBlock>
+        content.output.startsWith("data:image/png;base64,") ? (
+          <img
+            src={content.output}
+            alt={content.name}
+            onContextMenu={(event) => event.stopPropagation()}
+          />
+        ) : (
+          <MaybeJsonBlock>{content.output}</MaybeJsonBlock>
+        )
       ) : (
         <Typography variant="body2" color="text.secondary">
           {t("No output")}
         </Typography>
+      )}
+      {isOverflowing && !expanded && (
+        <IconButton
+          aria-label={t("Expand")}
+          size="small"
+          sx={{ position: "absolute", right: 0, bottom: 0 }}
+          onClick={() => setExpanded(true)}
+        >
+          <ExpandMoreIcon />
+        </IconButton>
       )}
     </Box>
   );
