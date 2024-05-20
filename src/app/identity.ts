@@ -28,10 +28,9 @@ export const fetchIdentity = createAsyncThunk(
   async () => {
     await handleSignParams();
     const response = await fetch("/api/auth/identity");
-    if (!response.ok) {
-      throw new Error("Unauthorized");
-    }
-    return response.json<{ id: number }>();
+    const body = await response.json<{ id: number | null }>();
+    if (body.id === null) throw new Error("Unauthorized");
+    return body;
   }
 );
 
