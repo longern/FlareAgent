@@ -1,6 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
 import {
-  Box,
   Container,
   Divider,
   Stack,
@@ -8,17 +6,11 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import type { ChatCompletionContentPart } from "openai/resources/index.mjs";
 import type { Options as HtmlToImageOptions } from "html-to-image/lib/types";
+import type { ChatCompletionContentPart } from "openai/resources/index.mjs";
+import React, { useCallback, useRef, useState } from "react";
 
-import { ScrollToBottomButton, StopButton } from "./ActionButtons";
-import MessageList from "./main/MessageList";
-import MobileToolbar from "./sidebar/MobileToolbar";
-import Sidebar from "./sidebar/Sidebar";
-import ScrollToBottom from "./main/ScrollToBottom";
-import UserInput from "./main/UserInput";
-import { Workflow, defaultWorkflow } from "../workflow";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { abort, setAbortable } from "../app/abort";
 import {
   createConversation,
   createMessage,
@@ -26,8 +18,13 @@ import {
   fetchDrawings,
   setCurrentConversation,
 } from "../app/conversations";
-import { abort, setAbortable } from "../app/abort";
 import { showError } from "../app/error";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { Workflow, defaultWorkflow } from "../workflow";
+import Main from "./main/Main";
+import UserInput from "./main/UserInput";
+import MobileToolbar from "./sidebar/MobileToolbar";
+import Sidebar from "./sidebar/Sidebar";
 
 async function screenshot(element: HTMLElement, options: HtmlToImageOptions) {
   const { toBlob } = await import("html-to-image");
@@ -93,8 +90,6 @@ function App() {
   const [variables, setVariables] = useState<Map<string, string>>(new Map());
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [scrollToBottom, setScrollToBottom] = useState<boolean>(true);
-  const hasAbortable = useAppSelector((state) => state.abort.hasAbortable);
   const disableMemory = useAppSelector((state) => state.settings.disableMemory);
   const dispatch = useAppDispatch();
 
@@ -154,24 +149,9 @@ function App() {
             onCreateThread={handleNewChat}
           />
         )}
-        <Box sx={{ minHeight: 0, flexGrow: 1 }}>
-          <ScrollToBottom
-            scrollToBottom={scrollToBottom}
-            component={Box}
-            sx={{ height: "100%", overflow: "auto" }}
-            onScrollToBottomChange={setScrollToBottom}
-          >
-            <Container
-              ref={messageContainerRef}
-              maxWidth="md"
-              sx={{ padding: 1 }}
-            >
-              <MessageList />
-            </Container>
-          </ScrollToBottom>
-        </Box>
+        <Main messageContainerRef={messageContainerRef} />
         <Divider />
-        <Container maxWidth="md" sx={{ paddingX: 1 }}>
+        <Container component="footer" maxWidth="md" sx={{ paddingX: 1 }}>
           <UserInput
             onSend={handleSend}
             onScreenshot={() =>
@@ -183,10 +163,6 @@ function App() {
           />
         </Container>
       </Stack>
-      {!scrollToBottom && (
-        <ScrollToBottomButton onClick={() => setScrollToBottom(true)} />
-      )}
-      {hasAbortable && <StopButton onClick={() => dispatch(abort())} />}
     </Stack>
   );
 }

@@ -15,7 +15,7 @@ export function StopButton({
       size="small"
       sx={{
         position: "absolute",
-        bottom: 120,
+        bottom: 16,
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: 1,
@@ -37,7 +37,7 @@ export function ScrollToBottomButton({
       size="small"
       sx={{
         position: "absolute",
-        bottom: 120,
+        bottom: 16,
         right: 16,
         zIndex: 1,
       }}
