@@ -272,6 +272,7 @@ function MessageListItem({
     <Stack
       direction="row"
       spacing={1}
+      className={selected ? "" : "screenshot-hidden"}
       onClickCapture={(event) => {
         if (!multiSelecting) return;
         event.stopPropagation();
@@ -282,6 +283,7 @@ function MessageListItem({
         <Checkbox
           checked={selected}
           onChange={(event) => onSelect(event.target.checked)}
+          className="screenshot-hidden"
           sx={{ alignSelf: "flex-start" }}
         />
       )}
@@ -304,14 +306,69 @@ function MessageListItem({
   );
 }
 
-function MessageList({ messages }: { messages: Message[] | null }) {
+function MessageList({
+  messages,
+  onShare,
+}: {
+  messages: Message[] | null;
+  onShare: () => Promise<void>;
+}) {
   const [multiSelecting, setMultiSelecting] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(
     new Set()
   );
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  const handleShare = useCallback(async () => {
+    await onShare();
+    setMultiSelecting(false);
+    setSelectedMessages(new Set());
+  }, [onShare]);
+
+  const multiSelectToolbar = (
+    <Slide in={multiSelecting} direction="up">
+      <Box
+        className="screenshot-excluded"
+        sx={{
+          position: "absolute",
+          left: 0,
+          bottom: 16,
+          width: "100%",
+          zIndex: 1000,
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <Card component={Stack} direction="row" spacing={1} sx={{ padding: 1 }}>
+          <IconButton
+            onClick={() => {
+              setSelectedMessages(
+                selectedMessages.size === messages.length
+                  ? new Set()
+                  : new Set(messages.map((message) => message.id))
+              );
+            }}
+          >
+            <SelectAll />
+          </IconButton>
+          <IconButton onClick={handleShare}>
+            <ShareIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setMultiSelecting(false);
+              setSelectedMessages(new Set());
+            }}
+          >
+            <CancelOutlinedIcon />
+          </IconButton>
+        </Card>
+      </Box>
+    </Slide>
+  );
 
   return (
-    <Stack spacing={2}>
+    <Stack ref={ref} spacing={2}>
       {messages === null ? (
         <Box
           sx={{
@@ -344,49 +401,7 @@ function MessageList({ messages }: { messages: Message[] | null }) {
           />
         ))
       )}
-      <Slide in={multiSelecting} direction="up">
-        <Box
-          sx={{
-            position: "absolute",
-            left: 0,
-            bottom: 16,
-            width: "100%",
-            zIndex: 1000,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <Card
-            component={Stack}
-            direction="row"
-            spacing={1}
-            sx={{ padding: 1 }}
-          >
-            <IconButton
-              onClick={() => {
-                setSelectedMessages(
-                  selectedMessages.size === messages.length
-                    ? new Set()
-                    : new Set(messages.map((message) => message.id))
-                );
-              }}
-            >
-              <SelectAll />
-            </IconButton>
-            <IconButton>
-              <ShareIcon />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                setMultiSelecting(false);
-                setSelectedMessages(new Set());
-              }}
-            >
-              <CancelOutlinedIcon />
-            </IconButton>
-          </Card>
-        </Box>
-      </Slide>
+      {multiSelectToolbar}
     </Stack>
   );
 }
