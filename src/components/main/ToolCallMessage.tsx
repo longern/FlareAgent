@@ -55,7 +55,7 @@ function PythonToolCallMessage({ content }: { content: any }) {
         {t("Python code")}
         {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </Button>
-      <Collapse in={expanded} mountOnEnter>
+      <Collapse in={expanded} mountOnEnter unmountOnExit>
         <Suspense
           fallback={
             <pre>
@@ -125,7 +125,7 @@ function SearchOutputMessage({ content }: { content: string }) {
         {t("searchResultsWithCount", { count: body.results.length })}
         {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </Button>
-      <Collapse in={expanded} mountOnEnter>
+      <Collapse in={expanded} mountOnEnter unmountOnExit>
         <List>
           {body.results.map((result, index) => (
             <ListItem key={index} disablePadding>

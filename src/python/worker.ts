@@ -26,6 +26,22 @@ let pyodideReadyPromise = initPyodide();
 let osEnviron: Map<string, string> | undefined;
 let matplotlibLoaded = false;
 
+const INSTALL_MODULES = `
+import micropip
+import os
+import sys
+from pyodide.code import find_imports
+imports = find_imports(code)
+os.environ['MPLBACKEND'] = 'AGG'
+modules_to_install = [name for name in imports if name not in sys.modules]
+MODULE_NAME_MAPPING = {
+  "sklearn": "scikit-learn",
+}
+await micropip.install([
+  MODULE_NAME_MAPPING.get(name, name) for name in modules_to_install
+])
+`;
+
 async function handleCodeMessage({
   id,
   code,
@@ -47,18 +63,9 @@ async function handleCodeMessage({
   }
 
   try {
-    await pyodide.runPythonAsync(
-      [
-        "import micropip",
-        "import os",
-        "import sys",
-        "from pyodide.code import find_imports",
-        "imports = find_imports(code)",
-        "os.environ['MPLBACKEND'] = 'AGG'",
-        "await micropip.install([name for name in imports if name not in sys.modules])",
-      ].join("\n"),
-      { globals: pyodide.toPy({ code }) }
-    );
+    await pyodide.runPythonAsync(INSTALL_MODULES, {
+      globals: pyodide.toPy({ code }),
+    });
 
     if (
       Object.keys(pyodide.loadedPackages).includes("matplotlib") &&
