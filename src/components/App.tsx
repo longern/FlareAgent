@@ -143,7 +143,7 @@ function App() {
         currentWorkflow={currentWorkflow}
         onWorkflowChange={handleWorkflowChange}
       />
-      <Stack minWidth={0} flexGrow={1}>
+      <Stack sx={{ flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
         {!matchesLg && (
           <MobileToolbar
             onMenuClick={() => setSidebarOpen(true)}

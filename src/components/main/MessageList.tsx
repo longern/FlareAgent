@@ -1,20 +1,28 @@
 import {
   Build as BuildIcon,
+  CancelOutlined as CancelOutlinedIcon,
+  CheckBoxOutlined as CheckBoxOutlinedIcon,
   ContentCopy as ContentCopyIcon,
   Menu as MenuIcon,
   Person as PersonIcon,
   Replay as ReplayIcon,
+  SelectAll,
+  Share as ShareIcon,
   SmartToy as SmartToyIcon,
   VolumeUp as VolumeUpIcon,
 } from "@mui/icons-material";
 import {
   Avatar,
   Box,
+  Card,
+  Checkbox,
   CircularProgress,
+  IconButton,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
+  Slide,
   Stack,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
@@ -34,6 +42,7 @@ import {
   AssistantToolCallMessasge,
   ToolExecutionOutputMessage,
 } from "./ToolCallMessage";
+import { Message } from "../../app/conversations";
 
 function MessageListItemContent({
   message,
@@ -92,7 +101,19 @@ function MessageAvatar({ role }: { role: string }) {
   );
 }
 
-function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
+function MessageListItem({
+  message,
+  multiSelecting,
+  onMultiSelectingChange,
+  selected,
+  onSelect,
+}: {
+  message: Message;
+  multiSelecting: boolean;
+  onMultiSelectingChange: (multiSelecting: boolean) => void;
+  selected: boolean;
+  onSelect: (selected: boolean) => void;
+}) {
   const [contextMenu, setContextMenu] = React.useState<{
     mouseX: number;
     mouseY: number;
@@ -102,7 +123,11 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
   const { t } = useTranslation();
 
   const content = useMemo(() => {
-    return <MessageListItemContent message={message} />;
+    const messageParam = {
+      role: message.author_role,
+      content: JSON.parse(message.content),
+    } as ChatCompletionMessageParam;
+    return <MessageListItemContent message={messageParam} />;
   }, [message]);
 
   const handleContextMenu = useCallback(
@@ -124,7 +149,7 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
   );
 
   const handleCopyToClipboard = useCallback(async () => {
-    const content: ChatCompletionContent = message.content;
+    const content: ChatCompletionContent = JSON.parse(message.content);
     if (typeof content === "string") {
       await navigator.clipboard.writeText(content);
     } else {
@@ -166,11 +191,11 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
         padding: "0.5em 0.8em",
         borderRadius: "14px",
         backgroundColor: (theme) =>
-          message.role === "user"
+          message.author_role === "user"
             ? theme.palette.primary.main
             : theme.palette.background.paper,
         color: (theme) =>
-          message.role === "user"
+          message.author_role === "user"
             ? theme.palette.primary.contrastText
             : theme.palette.text.primary,
         overflowX: "auto",
@@ -216,6 +241,20 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
       </MenuItem>
       <MenuItem
         onClick={() => {
+          onMultiSelectingChange(true);
+          onSelect(true);
+          setContextMenu(null);
+          const selection = window.getSelection();
+          selection?.removeAllRanges();
+        }}
+      >
+        <ListItemIcon>
+          <CheckBoxOutlinedIcon />
+        </ListItemIcon>
+        <ListItemText>{t("Multi-select")}</ListItemText>
+      </MenuItem>
+      <MenuItem
+        onClick={() => {
           setDisableContextMenu(true);
           setContextMenu(null);
           setTimeout(() => setDisableContextMenu(false), 60000);
@@ -230,16 +269,31 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
   );
 
   return (
-    <Stack direction="row" spacing={1}>
-      {message.role === "user" ? (
+    <Stack
+      direction="row"
+      spacing={1}
+      onClickCapture={(event) => {
+        if (!multiSelecting) return;
+        event.stopPropagation();
+        onSelect(!selected);
+      }}
+    >
+      {multiSelecting && (
+        <Checkbox
+          checked={selected}
+          onChange={(event) => onSelect(event.target.checked)}
+          sx={{ alignSelf: "flex-start" }}
+        />
+      )}
+      {message.author_role === "user" ? (
         <React.Fragment>
           <Box flexShrink={0} minWidth={48} flexGrow={1} />
           {messageBox}
-          <MessageAvatar role={message.role} />
+          <MessageAvatar role={message.author_role} />
         </React.Fragment>
       ) : (
         <React.Fragment>
-          <MessageAvatar role={message.role} />
+          <MessageAvatar role={message.author_role} />
           {messageBox}
           <Box flexShrink={0} minWidth={48} flexGrow={1} />
         </React.Fragment>
@@ -250,11 +304,12 @@ function MessageListItem({ message }: { message: ChatCompletionMessageParam }) {
   );
 }
 
-function MessageList({
-  messages,
-}: {
-  messages: ChatCompletionMessageParam[] | null;
-}) {
+function MessageList({ messages }: { messages: Message[] | null }) {
+  const [multiSelecting, setMultiSelecting] = useState(false);
+  const [selectedMessages, setSelectedMessages] = useState<Set<string>>(
+    new Set()
+  );
+
   return (
     <Stack spacing={2}>
       {messages === null ? (
@@ -268,10 +323,70 @@ function MessageList({
           <CircularProgress />
         </Box>
       ) : (
-        messages.map((message, index) => (
-          <MessageListItem key={index} message={message} />
+        messages.map((message) => (
+          <MessageListItem
+            key={message.id}
+            message={message}
+            multiSelecting={multiSelecting}
+            onMultiSelectingChange={setMultiSelecting}
+            selected={selectedMessages.has(message.id)}
+            onSelect={(selected) => {
+              setSelectedMessages((selectedMessages) => {
+                const newSelectedMessages = new Set(selectedMessages);
+                if (selected) {
+                  newSelectedMessages.add(message.id);
+                } else {
+                  newSelectedMessages.delete(message.id);
+                }
+                return newSelectedMessages;
+              });
+            }}
+          />
         ))
       )}
+      <Slide in={multiSelecting} direction="up">
+        <Box
+          sx={{
+            position: "absolute",
+            left: 0,
+            bottom: 16,
+            width: "100%",
+            zIndex: 1000,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Card
+            component={Stack}
+            direction="row"
+            spacing={1}
+            sx={{ padding: 1 }}
+          >
+            <IconButton
+              onClick={() => {
+                setSelectedMessages(
+                  selectedMessages.size === messages.length
+                    ? new Set()
+                    : new Set(messages.map((message) => message.id))
+                );
+              }}
+            >
+              <SelectAll />
+            </IconButton>
+            <IconButton>
+              <ShareIcon />
+            </IconButton>
+            <IconButton
+              onClick={() => {
+                setMultiSelecting(false);
+                setSelectedMessages(new Set());
+              }}
+            >
+              <CancelOutlinedIcon />
+            </IconButton>
+          </Card>
+        </Box>
+      </Slide>
     </Stack>
   );
 }
@@ -284,11 +399,5 @@ export default connect((state: AppState) => ({
           state.conversations.conversations[
             state.conversations.currentConversationId
           ].messages
-        ).map(
-          (message) =>
-            ({
-              role: message.author_role,
-              content: JSON.parse(message.content),
-            } as ChatCompletionMessageParam)
         ),
 }))(MessageList);
