@@ -1,10 +1,9 @@
 import React from "react";
-import { IconButton, Toolbar } from "@mui/material";
+import { Box, IconButton, Toolbar } from "@mui/material";
 import {
   AddComment as AddCommentIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
-import { Box } from "@mui/system";
 
 import { modelSelector } from "./Sidebar";
 

@@ -11,6 +11,7 @@ import settingsReducer, { settingsMiddleware } from "./settings";
 import toolsReducer from "./tools";
 import conversationsMiddleware from "./conversations/middleware";
 import memoriesMiddleware from "./memoriesMiddleware";
+import toolsMiddleware from "./toolsMiddleware";
 import { initializeApp } from "./init";
 
 const reducers = combineReducers({
@@ -31,7 +32,8 @@ const store = configureStore({
     getDefaultMiddleware().concat(
       conversationsMiddleware,
       memoriesMiddleware,
-      settingsMiddleware
+      settingsMiddleware,
+      toolsMiddleware
     ),
 });
 

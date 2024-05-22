@@ -19,7 +19,6 @@ import { showSettings } from "../../app/dialogs";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setAvatar } from "../../app/identity";
 import { fetchModels, setModel } from "../../app/models";
-import { Workflow } from "../../workflow";
 import { SparseList } from "../global/SettingsDialog";
 import ConversationList from "./ConversationList";
 
@@ -72,8 +71,6 @@ function Sidebar({
   open: boolean;
   onClose: () => void;
   onNewChat: () => void;
-  currentWorkflow: Workflow | null;
-  onWorkflowChange: (workflow: Workflow) => void;
 }) {
   const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
   const userId = useAppSelector((state) => state.identity.id);

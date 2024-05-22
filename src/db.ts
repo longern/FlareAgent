@@ -19,6 +19,13 @@ CREATE TABLE IF NOT EXISTS flare_agent_messages (
   ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS flare_agent_tools (
+  tool_id TEXT PRIMARY KEY NOT NULL,
+  schema TEXT,
+  authentication TEXT,
+  create_time INTEGER DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+);
+
 CREATE TABLE IF NOT EXISTS flare_agent_memories (
   memory_id TEXT PRIMARY KEY NOT NULL,
   content TEXT,

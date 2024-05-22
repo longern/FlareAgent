@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { DB } from "../db";
 
 export interface Tool {
   id: string;
@@ -50,6 +51,13 @@ export const fetchTools = createAsyncThunk(
         return result.status === "fulfilled" ? result.value : null;
       })
       .filter((tool) => tool !== null);
+
+    const db = await DB;
+    const { rows } = await db.exec<[string, string]>(
+      "SELECT tool_id, schema FROM flare_agent_tools"
+    );
+    tools.push(...rows.map(([id, definition]) => ({ id, definition })));
+
     dispatch(setTools(tools));
   }
 );

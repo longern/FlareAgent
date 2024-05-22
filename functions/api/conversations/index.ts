@@ -6,7 +6,7 @@ interface Env {
 }
 
 export const onRequestPost: PagesFunction<Env> = async function (context) {
-  const { request, env, params } = context;
+  const { request, env } = context;
   const isJwtVerified = await verifyJwt(context);
   if (!isJwtVerified) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {

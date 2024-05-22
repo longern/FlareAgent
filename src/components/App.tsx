@@ -140,8 +140,6 @@ function App() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onNewChat={handleNewChat}
-        currentWorkflow={currentWorkflow}
-        onWorkflowChange={handleWorkflowChange}
       />
       <Stack sx={{ flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
         {!matchesLg && (
