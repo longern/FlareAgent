@@ -33,13 +33,20 @@ import sys
 from pyodide.code import find_imports
 imports = find_imports(code)
 os.environ['MPLBACKEND'] = 'AGG'
-modules_to_install = [name for name in imports if name not in sys.modules]
 MODULE_NAME_MAPPING = {
+  "bs4": "beautifulsoup4",
+  "cv2": "opencv-python",
+  "PIL": "pillow",
   "sklearn": "scikit-learn",
+  "skimage": "scikit-image",
+  "yaml": "PyYAML",
 }
-await micropip.install([
-  MODULE_NAME_MAPPING.get(name, name) for name in modules_to_install
-])
+modules_to_install = [
+  MODULE_NAME_MAPPING.get(name, name)
+  for name in imports
+  if name not in sys.modules
+]
+await micropip.install(modules_to_install)
 `;
 
 async function handleCodeMessage({
