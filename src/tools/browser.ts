@@ -36,9 +36,9 @@ const DEFINITION: OpenAPIV3.Document = {
   },
   servers: [{ url: "tool://" }],
   paths: {
-    "/browse": {
+    "/browser": {
       post: {
-        operationId: "browse",
+        operationId: "browser",
         summary: "Browse a web page",
         requestBody: {
           content: {

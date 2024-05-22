@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import otherToolsRoute from "./other-tools";
 import memoryRoute from "./memory";
 
-import crawlRoute from "./crawl";
+import browserRoute from "./browser";
 import dalle3Route from "./dalle-3";
 import pythonRoute from "./python";
 import searchRoute from "./search";
@@ -22,7 +22,7 @@ const TOOL_LIST = [
 
   {
     id: "7eeb5eb8-bbcb-48e5-8f9b-e7b174c37cb0",
-    definition_url: "tool://crawl/openapi.yml",
+    definition_url: "tool://browser/openapi.yml",
   },
   {
     id: "bc9de670-35d2-420b-8e44-009fd236cfc9",
@@ -46,7 +46,7 @@ app.route("/other-tools", otherToolsRoute);
 
 app.route("/memories", memoryRoute);
 
-app.route("/crawl", crawlRoute);
+app.route("/browser", browserRoute);
 
 app.route("/dalle-3", dalle3Route);
 

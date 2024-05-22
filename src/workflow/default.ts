@@ -23,7 +23,7 @@ export const defaultWorkflow: Workflow = {
       data: {
         prompt: "{MEMORIES}",
         label: "Assistant",
-        tools: ["setMemory", "deleteMemory", "search", "crawl", "python"],
+        tools: ["setMemory", "deleteMemory", "search", "browser", "python"],
       },
     },
     {
