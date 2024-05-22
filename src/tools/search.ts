@@ -53,7 +53,7 @@ const DEFINITION: OpenAPIV3.Document = {
   },
 };
 
-app.get("/openapi.json", async () => {
+app.get("/openapi.yml", async () => {
   return new Response(YAML.stringify(DEFINITION));
 });
 
