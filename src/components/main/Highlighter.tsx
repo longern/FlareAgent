@@ -1,23 +1,80 @@
-import { Link } from "@mui/material";
+import { ContentCopy as ContentCopyIcon } from "@mui/icons-material";
+import { Box, IconButton, Link, Stack, Typography } from "@mui/material";
 import React from "react";
+
+function HighlighterBlock({
+  code,
+  language,
+  children,
+  ...props
+}: {
+  code: string;
+  language: string;
+  children: React.ReactNode;
+  [key: string]: any;
+}) {
+  return (
+    <Box
+      sx={{
+        marginTop: 1,
+        backgroundColor: "rgb(122, 102, 82)",
+        color: "white",
+        borderRadius: "0.5em",
+      }}
+    >
+      <Stack
+        direction="row"
+        sx={{ paddingX: 1, marginBottom: -1.5, alignItems: "center" }}
+      >
+        <Typography variant="caption" sx={{ padding: "5px" }}>
+          {language}
+        </Typography>
+        <Box sx={{ flexGrow: 1 }} />
+        <IconButton
+          size="small"
+          sx={{ color: "inherit" }}
+          onClick={() => navigator.clipboard.writeText(code)}
+        >
+          <ContentCopyIcon fontSize="small" />
+        </IconButton>
+      </Stack>
+      <div {...props}>{children}</div>
+    </Box>
+  );
+}
 
 export const Highlighter = React.lazy(async () => {
   const [{ Prism }, { dark }] = await Promise.all([
     import("react-syntax-highlighter"),
     import("react-syntax-highlighter/dist/esm/styles/prism"),
   ]);
+
   return {
     default: ({
-      children,
+      children: code,
       language,
     }: {
       children: string;
       language: string;
     }) => {
+      const PreTag = function ({
+        children,
+        ...props
+      }: {
+        children: React.ReactNode;
+        [key: string]: any;
+      }) {
+        return (
+          <HighlighterBlock code={code} language={language} {...props}>
+            {children}
+          </HighlighterBlock>
+        );
+      };
+
       return (
         <Prism
-          PreTag="div"
-          children={children}
+          PreTag={PreTag}
+          children={code}
           language={language}
           style={dark}
         />
@@ -28,16 +85,17 @@ export const Highlighter = React.lazy(async () => {
 
 const preprocessLaTeX = (content: string) => {
   // Replace block-level LaTeX delimiters \[ \] with $$ $$
-
   const blockProcessedContent = content.replace(
     /\\\[\s(.*?)\s\\\]/gs,
     (_, equation) => `$$\n${equation}\n$$`
   );
+
   // Replace inline LaTeX delimiters \( \) with $ $
   const inlineProcessedContent = blockProcessedContent.replace(
     /\\\((.*?)\\\)/gs,
     (_, equation) => `$${equation}$`
   );
+
   return inlineProcessedContent;
 };
 
