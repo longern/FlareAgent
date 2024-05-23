@@ -1,4 +1,14 @@
 import {
+  AddCircleOutline as AddCircleOutlineIcon,
+  CameraAlt as CameraAltIcon,
+  Extension as ExtensionIcon,
+  Folder as FolderIcon,
+  Image as ImageIcon,
+  Phone as PhoneIcon,
+  Send as SendIcon,
+  Timeline as TimelineIcon,
+} from "@mui/icons-material";
+import {
   Badge,
   Card,
   CardActionArea,
@@ -11,27 +21,25 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import React, { useCallback, useRef, useState } from "react";
 import { ChatCompletionContentPart } from "openai/resources/index.mjs";
-import {
-  AddCircleOutline as AddCircleOutlineIcon,
-  Extension as ExtensionIcon,
-  Folder as FolderIcon,
-  Image as ImageIcon,
-  Phone as PhoneIcon,
-  Screenshot as ScreenshotIcon,
-  Send as SendIcon,
-  Timeline as TimelineIcon,
-} from "@mui/icons-material";
+import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useAppDispatch } from "../../app/hooks";
+import { setAbortable } from "../../app/abort";
+import {
+  createConversation,
+  createMessage,
+  fetchAssistantMessage,
+  fetchDrawings,
+} from "../../app/conversations";
 import {
   showFiles,
   showTools,
   showVoiceCall,
   showWorkflows,
 } from "../../app/dialogs";
+import { showError } from "../../app/error";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -40,6 +48,16 @@ function blobToDataUrl(blob: Blob): Promise<string> {
     reader.onerror = () => reject(reader.error);
     return reader.readAsDataURL(blob);
   });
+}
+
+function extractTitle(userInput: string | ChatCompletionContentPart[]) {
+  return (
+    typeof userInput === "string"
+      ? userInput
+      : userInput
+          .map((part) => (part.type === "text" ? part.text : ""))
+          .join("")
+  ).slice(0, 10);
 }
 
 async function pasteImages(): Promise<string[]> {
@@ -65,6 +83,48 @@ async function pasteImages(): Promise<string[]> {
   }
 }
 
+function useHandleSend() {
+  const model = useAppSelector((state) => state.models.model);
+  const currentConversationId = useAppSelector(
+    (state) => state.conversations.currentConversationId
+  );
+  const dispatch = useAppDispatch();
+
+  return useCallback(
+    (userInput: string | ChatCompletionContentPart[]) => {
+      const messageId = crypto.randomUUID();
+      const timestamp = Date.now();
+      const message = {
+        id: messageId,
+        author_role: "user" as const,
+        content: JSON.stringify(userInput),
+        create_time: timestamp,
+      };
+      dispatch(
+        currentConversationId
+          ? createMessage(message)
+          : createConversation({
+              id: crypto.randomUUID(),
+              title: extractTitle(userInput) || "Untitled",
+              create_time: timestamp,
+              messages: { [messageId]: message },
+            })
+      );
+      const promise = dispatch(
+        model === "dall-e-3"
+          ? fetchDrawings(userInput as string)
+          : fetchAssistantMessage(model)
+      );
+      dispatch(setAbortable(promise));
+      promise
+        .unwrap()
+        .catch((error) => dispatch(showError({ message: error.message })))
+        .finally(() => dispatch(setAbortable(null)));
+    },
+    [dispatch, currentConversationId, model]
+  );
+}
+
 function CaptionButton({
   children,
   caption,
@@ -86,20 +146,11 @@ function CaptionButton({
   );
 }
 
-function UserInput({
-  onSend,
-  onScreenshot,
-}: {
-  onSend: (userInput: string | ChatCompletionContentPart[]) => void;
-  onScreenshot: () => void;
-}) {
-  const [userInput, setUserInput] = useState<string>("");
+function FooterButtons() {
   const [images, setImages] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<boolean>(false);
-  const userInputRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useAppDispatch();
 
-  const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
 
   const handleImportImage = useCallback(() => {
@@ -119,7 +170,7 @@ function UserInput({
     input.click();
   }, []);
 
-  const handleCapturePhoto = useCallback((event: React.MouseEvent) => {
+  const handleTakePhoto = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     const input = document.createElement("input");
     input.type = "file";
@@ -136,6 +187,74 @@ function UserInput({
     };
     input.click();
   }, []);
+
+  return (
+    <React.Fragment>
+      <Stack
+        direction="row"
+        justifyContent="space-around"
+        sx={{ marginTop: -0.5, marginBottom: 0.5 }}
+      >
+        <IconButton
+          aria-label="phone"
+          onClick={() => dispatch(showVoiceCall())}
+        >
+          <PhoneIcon />
+        </IconButton>
+        <Badge badgeContent={images.length} color="primary" overlap="circular">
+          <IconButton
+            aria-label={t("Import image")}
+            onClick={handleImportImage}
+          >
+            <ImageIcon />
+          </IconButton>
+        </Badge>
+        <IconButton aria-label={t("Take photo")} onClick={handleTakePhoto}>
+          <CameraAltIcon />
+        </IconButton>
+        <IconButton aria-label="tools" onClick={() => dispatch(showTools())}>
+          <ExtensionIcon />
+        </IconButton>
+        <IconButton aria-label="expand" onClick={() => setExpanded(!expanded)}>
+          <AddCircleOutlineIcon />
+        </IconButton>
+      </Stack>
+      <Collapse in={expanded}>
+        <Stack
+          sx={{
+            padding: 4,
+            flexDirection: "row",
+            justifyContent: "space-evenly",
+          }}
+        >
+          <CaptionButton
+            caption={t("Workflow")}
+            onClick={() => dispatch(showWorkflows())}
+          >
+            <TimelineIcon />
+          </CaptionButton>
+          <CaptionButton
+            caption={t("Files")}
+            onClick={() => dispatch(showFiles())}
+          >
+            <FolderIcon />
+          </CaptionButton>
+        </Stack>
+      </Collapse>
+    </React.Fragment>
+  );
+}
+
+const footerButtons = <FooterButtons />;
+
+function UserInput() {
+  const [userInput, setUserInput] = useState<string>("");
+  const [images, setImages] = useState<string[]>([]);
+  const userInputRef = useRef<HTMLDivElement | null>(null);
+
+  const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
+  const { t } = useTranslation();
+  const onSend = useHandleSend();
 
   const handleSend = useCallback(() => {
     if (userInput === "" && !images.length) return;
@@ -178,7 +297,7 @@ function UserInput({
   );
 
   return (
-    <>
+    <React.Fragment>
       <Stack
         direction="row"
         alignItems="flex-center"
@@ -204,59 +323,8 @@ function UserInput({
           }}
         />
       </Stack>
-      <Stack
-        direction="row"
-        justifyContent="space-around"
-        sx={{ marginTop: -0.5, marginBottom: 0.5 }}
-      >
-        <IconButton
-          aria-label="phone"
-          onClick={() => dispatch(showVoiceCall())}
-        >
-          <PhoneIcon />
-        </IconButton>
-        <Badge badgeContent={images.length} color="primary" overlap="circular">
-          <IconButton
-            aria-label="image"
-            onClick={handleImportImage}
-            onContextMenu={handleCapturePhoto}
-          >
-            <ImageIcon />
-          </IconButton>
-        </Badge>
-        <IconButton aria-label="screenshot" onClick={onScreenshot}>
-          <ScreenshotIcon />
-        </IconButton>
-        <IconButton aria-label="tools" onClick={() => dispatch(showTools())}>
-          <ExtensionIcon />
-        </IconButton>
-        <IconButton aria-label="expand" onClick={() => setExpanded(!expanded)}>
-          <AddCircleOutlineIcon />
-        </IconButton>
-      </Stack>
-      <Collapse in={expanded}>
-        <Stack
-          sx={{
-            padding: 4,
-            flexDirection: "row",
-            justifyContent: "space-evenly",
-          }}
-        >
-          <CaptionButton
-            caption={t("Workflow")}
-            onClick={() => dispatch(showWorkflows())}
-          >
-            <TimelineIcon />
-          </CaptionButton>
-          <CaptionButton
-            caption={t("Files")}
-            onClick={() => dispatch(showFiles())}
-          >
-            <FolderIcon />
-          </CaptionButton>
-        </Stack>
-      </Collapse>
-    </>
+      {footerButtons}
+    </React.Fragment>
   );
 }
 

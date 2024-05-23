@@ -1,24 +1,8 @@
-import {
-  Container,
-  Divider,
-  Stack,
-  Theme,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import type { Options as HtmlToImageOptions } from "html-to-image/lib/types";
-import type { ChatCompletionContentPart } from "openai/resources/index.mjs";
+import { Container, Divider, Stack, Theme, useMediaQuery } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
 
-import { abort, setAbortable } from "../app/abort";
-import {
-  createConversation,
-  createMessage,
-  fetchAssistantMessage,
-  fetchDrawings,
-  setCurrentConversation,
-} from "../app/conversations";
-import { showError } from "../app/error";
+import { abort } from "../app/abort";
+import { setCurrentConversation } from "../app/conversations";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { Workflow, defaultWorkflow } from "../workflow";
 import WorkflowsDialog from "./global/WorkflowsDialog";
@@ -26,65 +10,6 @@ import Main from "./main/Main";
 import UserInput from "./main/UserInput";
 import MobileToolbar from "./sidebar/MobileToolbar";
 import Sidebar from "./sidebar/Sidebar";
-
-async function screenshot(element: HTMLElement, options: HtmlToImageOptions) {
-  const { toBlob } = await import("html-to-image");
-  const blob = await toBlob(element, options);
-  const clipboardItem = new ClipboardItem({ [blob.type]: blob });
-  navigator.clipboard.write([clipboardItem]);
-}
-
-function extractTitle(userInput: string | ChatCompletionContentPart[]) {
-  return (
-    typeof userInput === "string"
-      ? userInput
-      : userInput
-          .map((part) => (part.type === "text" ? part.text : ""))
-          .join("")
-  ).slice(0, 10);
-}
-
-function useHandleSend() {
-  const model = useAppSelector((state) => state.models.model);
-  const currentConversationId = useAppSelector(
-    (state) => state.conversations.currentConversationId
-  );
-  const dispatch = useAppDispatch();
-
-  return useCallback(
-    (userInput: string | ChatCompletionContentPart[]) => {
-      const messageId = crypto.randomUUID();
-      const timestamp = Date.now();
-      const message = {
-        id: messageId,
-        author_role: "user" as const,
-        content: JSON.stringify(userInput),
-        create_time: timestamp,
-      };
-      dispatch(
-        currentConversationId
-          ? createMessage(message)
-          : createConversation({
-              id: crypto.randomUUID(),
-              title: extractTitle(userInput) || "Untitled",
-              create_time: timestamp,
-              messages: { [messageId]: message },
-            })
-      );
-      const promise = dispatch(
-        model === "dall-e-3"
-          ? fetchDrawings(userInput as string)
-          : fetchAssistantMessage(model)
-      );
-      dispatch(setAbortable(promise));
-      promise
-        .unwrap()
-        .catch((error) => dispatch(showError({ message: error.message })))
-        .finally(() => dispatch(setAbortable(null)));
-    },
-    [dispatch, currentConversationId, model]
-  );
-}
 
 function App() {
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
@@ -95,7 +20,6 @@ function App() {
   const dispatch = useAppDispatch();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
-  const theme = useTheme();
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const executeWorkflowStepCallback = async () => {
@@ -132,8 +56,6 @@ function App() {
     [handleNewChat]
   );
 
-  const handleSend = useHandleSend();
-
   return (
     <Stack direction="row" height="100%">
       <Sidebar
@@ -151,15 +73,7 @@ function App() {
         <Main messageContainerRef={messageContainerRef} />
         <Divider />
         <Container component="footer" maxWidth="md" sx={{ paddingX: 1 }}>
-          <UserInput
-            onSend={handleSend}
-            onScreenshot={() =>
-              screenshot(messageContainerRef.current!, {
-                backgroundColor: theme.palette.background.default,
-                style: { margin: "0" },
-              })
-            }
-          />
+          <UserInput />
         </Container>
       </Stack>
       <WorkflowsDialog
