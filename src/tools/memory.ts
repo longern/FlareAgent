@@ -1,76 +1,34 @@
 import { Hono } from "hono";
 import { OpenAPIV3 } from "openapi-types";
 import YAML from "yaml";
-
-import { DIRECTORY } from "../fs/hooks";
+import store from "../app/store";
+import { createMemory, deleteMemory } from "../app/memories";
 
 const app = new Hono();
 
 app.post("/", async (context) => {
-  const root = await DIRECTORY;
-
-  const directory = await root.getDirectoryHandle(".flareagent");
-  const fileHandle = await directory.getFileHandle("memory.json", {
-    create: true,
-  });
-
-  const file = await fileHandle.getFile();
-  const text = await file.text();
-  const memory = text ? (JSON.parse(text) as Array<string>) : [];
-  const body = (await context.req.json()) as { value: string };
-  memory.push(body.value);
-  const writer = await fileHandle.createWritable();
-  await writer.write(JSON.stringify(memory));
-  await writer.close();
+  const body = await context.req.json<{ value: string }>();
+  store.dispatch(
+    createMemory({
+      id: crypto.randomUUID(),
+      content: body.value,
+      create_time: Date.now(),
+    })
+  );
 
   return Response.json({ success: true });
 });
 
 app.get("/", async () => {
-  try {
-    const root = await DIRECTORY;
-
-    const directory = await root.getDirectoryHandle(".flareagent");
-    const fileHandle = await directory.getFileHandle("memory.json");
-
-    const file = await fileHandle.getFile();
-    const text = await file.text();
-    if (!text) throw new Error("No memory found");
-    return new Response(text);
-  } catch (e) {
-    return Response.json(null, { status: 404 });
-  }
+  const memories = store.getState().memories.memories;
+  return Response.json(memories);
 });
 
 app.delete("/", async (context) => {
-  try {
-    const root = await DIRECTORY;
+  const body = await context.req.json<{ id: string }>();
+  store.dispatch(deleteMemory(body.id));
 
-    const directory = await root.getDirectoryHandle(".flareagent");
-    const fileHandle = await directory.getFileHandle("memory.json");
-
-    const file = await fileHandle.getFile();
-    const text = await file.text();
-    const memory = JSON.parse(text) as Array<string>;
-    const body = await context.req.text();
-    if (!body) {
-      memory.splice(0, memory.length);
-    } else {
-      const { index } = JSON.parse(body);
-      memory.splice(index, 1);
-    }
-    if (memory.length === 0) {
-      await directory.removeEntry("memory.json");
-      return Response.json({ success: true });
-    }
-    const writer = await fileHandle.createWritable();
-    await writer.write(JSON.stringify(memory));
-    await writer.close();
-
-    return Response.json({ success: true });
-  } catch (e) {
-    return Response.json({ success: false }, { status: 400 });
-  }
+  return Response.json({ success: true });
 });
 
 const DEFINITION: OpenAPIV3.Document = {
