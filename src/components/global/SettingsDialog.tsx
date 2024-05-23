@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import {
   Box,
-  Button,
   Card,
   Container,
   DialogContent,
@@ -299,12 +298,64 @@ function SystemPromptEditor({
   );
 }
 
+function MemoryListDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const memories = useAppSelector((state) => state.memories.memories);
+  const dispatch = useAppDispatch();
+  const { t } = useTranslation();
+
+  const memoryList = Object.values(memories);
+
+  return (
+    <HistoryDialog
+      hash="memory-list"
+      title="Memory List"
+      open={open}
+      onClose={onClose}
+    >
+      <DialogContent>
+        {memoryList.length === 0 ? (
+          <Box
+            sx={{
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {t("No memories")}
+          </Box>
+        ) : (
+          <Card variant="outlined" sx={{ flexGrow: 1, overflow: "auto" }}>
+            <SparseList>
+              {memoryList.map((memory) => (
+                <ListItem key={memory.id}>
+                  <ListItemText primary={memory.content} />
+                  <IconButton onClick={() => dispatch(deleteMemory(memory.id))}>
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItem>
+              ))}
+            </SparseList>
+          </Card>
+        )}
+      </DialogContent>
+    </HistoryDialog>
+  );
+}
+
 function PersonalizationContent() {
   const memories = useAppSelector((state) => state.memories.memories);
   const systemPrompt = useAppSelector((state) => state.settings.systemPrompt);
   const temperature = useAppSelector((state) => state.settings.temperature);
-  const disableMemory = useAppSelector((state) => state.settings.disableMemory);
+  const enableMemory = useAppSelector((state) => state.settings.enableMemory);
   const [showSystemPromptEditor, setShowSystemPromptEditor] = useState(false);
+  const [showMemoryList, setShowMemoryList] = useState(false);
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
@@ -346,49 +397,62 @@ function PersonalizationContent() {
           </ListItem>
         </SparseList>
       </Card>
-      <SparseList>
-        <ListItem disablePadding>
-          <ListItemButton component="label" disableRipple>
-            <ListItemText primary={t("Memory")} />
-            <Switch
-              color="primary"
-              checked={!disableMemory}
-              onChange={(event) => {
-                dispatch(
-                  setSettings({
-                    key: "disableMemory",
-                    value: !event.target.checked || undefined,
-                  })
-                );
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-      </SparseList>
-      <Card variant="outlined" sx={{ flexGrow: 1, overflow: "auto" }}>
+      <Card elevation={0}>
         <SparseList>
-          {Object.values(memories).map((memory) => (
-            <ListItem key={memory.id}>
-              <ListItemText primary={memory.content} />
-              <IconButton onClick={() => deleteMemory(memory.id)}>
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
+          <ListItem disablePadding>
+            <ListItemButton component="label" disableRipple>
+              <ListItemText primary={t("Memory")} />
+              <Switch
+                color="primary"
+                checked={enableMemory ?? false}
+                onChange={(event) => {
+                  dispatch(
+                    setSettings({
+                      key: "enableMemory",
+                      value: event.target.checked || undefined,
+                    })
+                  );
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              disableRipple
+              onClick={() => setShowMemoryList(true)}
+            >
+              <ListItemText
+                primary={t("Memory list")}
+                secondary={t("{{count}} memory(ies)", {
+                  count: Object.values(memories).length,
+                })}
+              />
+              <NavigateNextIcon />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => {
+                const confirmed = window.confirm(t("Clear all memories?"));
+                if (!confirmed) return;
+                dispatch(clearMemories());
+              }}
+            >
+              <ListItemText
+                primary={t("Clear memory")}
+                sx={{ color: (theme) => theme.palette.error.main }}
+              />
+            </ListItemButton>
+          </ListItem>
         </SparseList>
       </Card>
-      <Box>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={() => dispatch(clearMemories())}
-        >
-          {t("Clear memory")}
-        </Button>
-      </Box>
       <SystemPromptEditor
         open={showSystemPromptEditor}
         onClose={() => setShowSystemPromptEditor(false)}
+      />
+      <MemoryListDialog
+        open={showMemoryList}
+        onClose={() => setShowMemoryList(false)}
       />
     </Stack>
   );

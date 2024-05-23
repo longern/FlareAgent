@@ -156,10 +156,22 @@ const fetchAssistantMessage = createAsyncThunk(
       }
     );
 
+    const systemPromptSegments: string[] = [];
     if (state.settings.systemPrompt) {
+      systemPromptSegments.push(state.settings.systemPrompt);
+    }
+
+    if (state.settings.enableMemory) {
+      const memories = Object.values(state.memories.memories);
+      for (const memory of memories) {
+        systemPromptSegments.push(memory.content);
+      }
+    }
+
+    if (systemPromptSegments.length > 0) {
       messages.unshift({
         role: "system",
-        content: state.settings.systemPrompt,
+        content: systemPromptSegments.join("\n"),
       });
     }
 

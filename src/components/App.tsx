@@ -91,7 +91,7 @@ function App() {
   const [variables, setVariables] = useState<Map<string, string>>(new Map());
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const disableMemory = useAppSelector((state) => state.settings.disableMemory);
+  const enableMemory = useAppSelector((state) => state.settings.enableMemory);
   const dispatch = useAppDispatch();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -100,7 +100,7 @@ function App() {
 
   const executeWorkflowStepCallback = async () => {
     variables.set("MEMORIES", "");
-    if (!disableMemory) {
+    if (enableMemory) {
       await import("../tools/scheme");
       await fetch("tool://memories")
         .then(async (response) => {

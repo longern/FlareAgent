@@ -10,7 +10,7 @@ export type Settings = {
   darkMode?: "dark" | "light";
   language?: string;
   systemPrompt?: string;
-  disableMemory?: boolean;
+  enableMemory?: boolean;
   temperature?: number;
 };
 
