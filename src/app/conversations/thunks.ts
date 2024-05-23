@@ -163,6 +163,7 @@ const fetchAssistantMessage = createAsyncThunk(
 
     if (state.settings.enableMemory) {
       const memories = Object.values(state.memories.memories);
+      systemPromptSegments.push("Memories:");
       for (const memory of memories) {
         systemPromptSegments.push(memory.content);
       }
