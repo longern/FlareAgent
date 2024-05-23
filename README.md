@@ -5,21 +5,20 @@ Another ChatGPT front-end. Focus on tool calls and workflow management.
 ## Features
 
 - [x] Chat with GPT-3.5 and GPT-4
-- [x] Image input
+- [x] Image input (take photo or upload)
 - [x] Markdown support
 - [x] LaTeX support
-- [x] Code Highlighting
+- [x] Code highlighting
+- [x] Unlimited local chat history storage (OPFS)
 - [x] Local tools
-  - [x] Current time
-  - [x] Run python code (with pyodide)
-  - [x] Origin Private File System
+  - [x] Run python code (with pyodide and OPFS)
 - [x] Remote tools
-  - [x] DuckDuckGo search (Need Cloudflare Workers)
-  - [x] Crawl a web page (Need Cloudflare Workers)
+  - [x] DuckDuckGo search (need Cloudflare Workers)
+  - [x] Browser (need Cloudflare Workers)
   - [x] Dalle-3 image generation
 - [x] Proxy OpenAI requests
-- [x] Workflow management
 - [x] Memory management
+- [x] Workflow management
 
 ## Usage
 
