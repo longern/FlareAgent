@@ -3,78 +3,51 @@ import React, { useCallback, useRef, useState } from "react";
 
 import { abort } from "../app/abort";
 import { setCurrentConversation } from "../app/conversations";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { useAppDispatch } from "../app/hooks";
 import { Workflow, defaultWorkflow } from "../workflow";
 import WorkflowsDialog from "./global/WorkflowsDialog";
 import Main from "./main/Main";
 import UserInput from "./main/UserInput";
 import MobileToolbar from "./sidebar/MobileToolbar";
 import Sidebar from "./sidebar/Sidebar";
+import FooterButtons from "./main/FooterButtons";
+
+const footer = (
+  <Container component="footer" maxWidth="md" sx={{ paddingX: 1 }}>
+    <UserInput />
+    <FooterButtons />
+  </Container>
+);
 
 function App() {
   const [currentWorkflow, setCurrentWorkflow] = useState(defaultWorkflow);
-  const [variables, setVariables] = useState<Map<string, string>>(new Map());
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const enableMemory = useAppSelector((state) => state.settings.enableMemory);
   const dispatch = useAppDispatch();
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  const executeWorkflowStepCallback = async () => {
-    variables.set("MEMORIES", "");
-    if (enableMemory) {
-      await import("../tools/scheme");
-      await fetch("tool://memories")
-        .then(async (response) => {
-          if (!response.ok) throw new Error("Failed to fetch memories");
-          const memories = (await response.json()) as string[];
-          variables.set(
-            "MEMORIES",
-            memories.map((memory, index) => `[${index}] ${memory}\n`).join("")
-          );
-        })
-        .catch(() => {});
-    }
-  };
-  const executeWorkflowStepRef = useRef(executeWorkflowStepCallback);
-  executeWorkflowStepRef.current = executeWorkflowStepCallback;
-
-  const handleNewChat = useCallback(() => {
-    setVariables(new Map());
-    setSidebarOpen(false);
-    dispatch(setCurrentConversation(null));
-    dispatch(abort());
-  }, [dispatch]);
-
   const handleWorkflowChange = useCallback(
     (workflow: Workflow) => {
       setCurrentWorkflow(workflow);
-      handleNewChat();
+      setSidebarOpen(false);
+      dispatch(setCurrentConversation(null));
+      dispatch(abort());
     },
-    [handleNewChat]
+    [dispatch]
   );
 
   return (
     <Stack direction="row" height="100%">
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onNewChat={handleNewChat}
-      />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Stack sx={{ flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
         {!matchesLg && (
-          <MobileToolbar
-            onMenuClick={() => setSidebarOpen(true)}
-            onCreateThread={handleNewChat}
-          />
+          <MobileToolbar onMenuClick={() => setSidebarOpen(true)} />
         )}
         <Main messageContainerRef={messageContainerRef} />
         <Divider />
-        <Container component="footer" maxWidth="md" sx={{ paddingX: 1 }}>
-          <UserInput />
-        </Container>
+        {footer}
       </Stack>
       <WorkflowsDialog
         currentWorkflow={currentWorkflow}

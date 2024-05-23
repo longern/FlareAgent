@@ -15,6 +15,8 @@ import {
 import React, { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+import { abort } from "../../app/abort";
+import { setCurrentConversation } from "../../app/conversations";
 import { showSettings } from "../../app/dialogs";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setAvatar } from "../../app/identity";
@@ -63,15 +65,7 @@ export function ModelSelector() {
 
 export const modelSelector = <ModelSelector />;
 
-function Sidebar({
-  open,
-  onClose,
-  onNewChat,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onNewChat: () => void;
-}) {
+function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const avatarUrl = useAppSelector((state) => state.identity.avatarUrl);
   const userId = useAppSelector((state) => state.identity.id);
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
@@ -79,9 +73,10 @@ function Sidebar({
   const dispatch = useAppDispatch();
 
   const handleNewChat = useCallback(() => {
-    onNewChat();
+    dispatch(setCurrentConversation(null));
+    dispatch(abort());
     onClose();
-  }, [onNewChat, onClose]);
+  }, [dispatch, onClose]);
 
   return (
     <Drawer

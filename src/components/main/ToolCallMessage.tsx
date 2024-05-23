@@ -90,7 +90,7 @@ export function AssistantToolCallMessasge({
       {tool_call.function.name === "search" ? (
         <Stack direction="row" sx={{ alignItems: "center" }}>
           <SearchIcon />
-          {callArguments?.keyword}
+          <p>{callArguments?.keyword}</p>
         </Stack>
       ) : tool_call.function.name === "python" ? (
         <PythonToolCallMessage content={callArguments} />
