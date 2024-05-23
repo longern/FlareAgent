@@ -33,6 +33,7 @@ import {
   Save as SaveIcon,
   Tune as TuneIcon,
   Psychology as PsychologyIcon,
+  Storage as StorageIcon,
 } from "@mui/icons-material";
 
 import AccountDialogContent from "./AccountDialogContent";
@@ -42,6 +43,8 @@ import { hideSettings } from "../../app/dialogs";
 import { setSettings } from "../../app/settings";
 import { AppState } from "../../app/store";
 import { clearMemories, deleteMemory } from "../../app/memories";
+import { humanFileSize } from "./FilesDialog";
+import { pathToFileHandle } from "../../fs/hooks";
 
 export const SparseList = styled(List)(() => ({
   padding: 0,
@@ -273,7 +276,7 @@ function SystemPromptEditor({
           aria-label={t("Save")}
           onClick={() => {
             dispatch(
-              setSettings({ key: "systemPrompt", value: value ?? undefined })
+              setSettings({ key: "systemPrompt", value: value || undefined })
             );
             onClose();
           }}
@@ -563,8 +566,92 @@ function PermissionsContent() {
   );
 }
 
+function StorageContent() {
+  const { t } = useTranslation();
+  const [storage, setStorage] = useState<StorageEstimate | null>(null);
+
+  const handleImportData = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".sqlite3";
+    input.onchange = async () => {
+      if (!input.files) return;
+      const file = input.files[0];
+      const handle = await pathToFileHandle(".flareagent/db.sqlite3", {
+        create: true,
+      });
+      const writable = await handle.createWritable();
+      await writable.write(file);
+      await writable.close();
+    };
+    input.click();
+  }, []);
+
+  const handleExportData = useCallback(() => {
+    pathToFileHandle(".flareagent/db.sqlite3")
+      .then(async (handle) => {
+        const file = await handle.getFile();
+        const url = URL.createObjectURL(file);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "db.sqlite3";
+        a.click();
+        URL.revokeObjectURL(url);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!("storage" in navigator)) return;
+    navigator.storage.estimate().then((storage) => {
+      setStorage(storage);
+    });
+  }, []);
+
+  return (
+    <Card elevation={0}>
+      <SparseList>
+        <ListItem disablePadding>
+          <ListItemButton>
+            <ListItemText
+              primary={t("Usage")}
+              secondary={storage ? humanFileSize(storage.usage) : t("Unknown")}
+            />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleImportData}>
+            <ListItemText primary={t("Import data")} />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleExportData}>
+            <ListItemText primary={t("Export data")} />
+          </ListItemButton>
+        </ListItem>
+      </SparseList>
+    </Card>
+  );
+}
+
+const SETTINGS_TABS = [
+  "Account",
+  "General",
+  "Personalization",
+  "Permissions",
+  "Storage",
+] as const;
+
+const SETTINGS_TAB_ICONS = {
+  Account: <AccountCircleIcon fontSize="large" />,
+  General: <TuneIcon fontSize="large" />,
+  Personalization: <PsychologyIcon fontSize="large" />,
+  Permissions: <LockIcon fontSize="large" />,
+  Storage: <StorageIcon fontSize="large" />,
+};
+
 function SettingsForm() {
-  type TabName = "Account" | "General" | "Personalization" | "Permissions";
+  type TabName = (typeof SETTINGS_TABS)[number];
   const [activeTab, setActiveTab] = useState<TabName | null>(null);
 
   const { t } = useTranslation();
@@ -583,57 +670,21 @@ function SettingsForm() {
   const tabs = (
     <Card elevation={0}>
       <SparseList>
-        <ListItem disablePadding>
-          <ListItemButton
-            selected={activeTab === "Account"}
-            onClick={() => setActiveTab("Account")}
-          >
-            <ListItemIcon>
-              <AccountCircleIcon fontSize="large" />
-            </ListItemIcon>
-            <ListItemText primary={t("Account")} />
-            <NavigateNextIcon />
-          </ListItemButton>
-        </ListItem>
-        <Divider variant="inset" component="li" />
-        <ListItem disablePadding>
-          <ListItemButton
-            selected={activeTab === "General"}
-            onClick={() => setActiveTab("General")}
-          >
-            <ListItemIcon>
-              <TuneIcon fontSize="large" />
-            </ListItemIcon>
-            <ListItemText primary={t("General")} />
-            <NavigateNextIcon />
-          </ListItemButton>
-        </ListItem>
-        <Divider variant="inset" component="li" />
-        <ListItem disablePadding>
-          <ListItemButton
-            selected={activeTab === "Personalization"}
-            onClick={() => setActiveTab("Personalization")}
-          >
-            <ListItemIcon>
-              <PsychologyIcon fontSize="large" />
-            </ListItemIcon>
-            <ListItemText primary={t("Personalization")} />
-            <NavigateNextIcon />
-          </ListItemButton>
-        </ListItem>
-        <Divider variant="inset" component="li" />
-        <ListItem disablePadding>
-          <ListItemButton
-            selected={activeTab === "Permissions"}
-            onClick={() => setActiveTab("Permissions")}
-          >
-            <ListItemIcon>
-              <LockIcon fontSize="large" />
-            </ListItemIcon>
-            <ListItemText primary={t("Permissions")} />
-            <NavigateNextIcon />
-          </ListItemButton>
-        </ListItem>
+        {SETTINGS_TABS.map((tab, index) => (
+          <React.Fragment key={tab}>
+            {index > 0 && <Divider variant="inset" component="li" />}
+            <ListItem disablePadding>
+              <ListItemButton
+                selected={activeTab === tab}
+                onClick={() => setActiveTab(tab)}
+              >
+                <ListItemIcon>{SETTINGS_TAB_ICONS[tab]}</ListItemIcon>
+                <ListItemText primary={t(tab)} />
+                <NavigateNextIcon />
+              </ListItemButton>
+            </ListItem>
+          </React.Fragment>
+        ))}
       </SparseList>
     </Card>
   );
@@ -647,6 +698,8 @@ function SettingsForm() {
       <PersonalizationContent />
     ) : activeTab === "Permissions" ? (
       <PermissionsContent />
+    ) : activeTab === "Storage" ? (
+      <StorageContent />
     ) : null;
 
   return matchesLg ? (
