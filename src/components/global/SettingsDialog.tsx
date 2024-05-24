@@ -16,7 +16,6 @@ import {
   Slider,
   Stack,
   Switch,
-  TextField,
   Theme,
   styled,
   useMediaQuery,
@@ -285,16 +284,25 @@ function SystemPromptEditor({
         </IconButton>
       )}
     >
-      <Card elevation={0} sx={{ height: "100%" }}>
-        <TextField
-          variant="standard"
-          fullWidth
-          multiline
-          minRows={20}
-          maxRows={20}
+      <Card
+        elevation={0}
+        sx={{
+          height: "100%",
+          borderRadius: 0,
+          "&>textarea": {
+            width: "100%",
+            height: "100%",
+            border: "none",
+            resize: "none",
+            padding: 2,
+            fontFamily: "inherit",
+            fontSize: "inherit",
+          },
+        }}
+      >
+        <textarea
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          inputProps={{ sx: { padding: 2 } }}
         />
       </Card>
     </HistoryDialog>
@@ -611,13 +619,11 @@ function StorageContent() {
   return (
     <Card elevation={0}>
       <SparseList>
-        <ListItem disablePadding>
-          <ListItemButton>
-            <ListItemText
-              primary={t("Usage")}
-              secondary={storage ? humanFileSize(storage.usage) : t("Unknown")}
-            />
-          </ListItemButton>
+        <ListItem>
+          <ListItemText
+            primary={t("Usage")}
+            secondary={storage ? humanFileSize(storage.usage) : t("Unknown")}
+          />
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton onClick={handleImportData}>

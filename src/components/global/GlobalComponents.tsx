@@ -44,6 +44,11 @@ const globalStyles = (
       code: {
         fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
       },
+
+      "div.MuiDialog-root": {
+        bottom: "env(keyboard-inset-height, 0px)",
+        transition: "bottom 0.25s",
+      },
     }}
   />
 );
