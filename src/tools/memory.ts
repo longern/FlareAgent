@@ -26,8 +26,10 @@ app.get("/", async () => {
 });
 
 app.delete("/", async (context) => {
-  const body = await context.req.json<{ id: string }>();
-  store.dispatch(deleteMemory(body.id));
+  const body = await context.req.json<{ index: number }>();
+  const memories = store.getState().memories.memories;
+  const memoryId = Object.keys(memories)[body.index];
+  store.dispatch(deleteMemory(memoryId));
 
   return Response.json({ success: true });
 });
