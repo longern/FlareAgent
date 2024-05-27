@@ -8,7 +8,7 @@ import {
 import { OpenAPIV3 } from "openapi-types";
 import YAML from "yaml";
 
-import { createMessage, updatePartialMessage } from ".";
+import { Message, createMessage, updatePartialMessage } from ".";
 import { apisToTool } from "../../tools";
 import { AppState } from "../store";
 import { setAbortable } from "../abort";
@@ -108,6 +108,37 @@ export type ChatCompletionContent =
       | ChatCompletionExecutionOutput
     >;
 
+export function messageToChat(message: Message): ChatCompletionMessageParam {
+  const content = JSON.parse(message.content) as ChatCompletionContent;
+  if (
+    typeof content === "object" &&
+    Array.isArray(content) &&
+    content.length > 0 &&
+    content[0].type === "function"
+  ) {
+    return {
+      role: "assistant",
+      content: null,
+      tool_calls: content as ChatCompletionMessageToolCall[],
+    };
+  } else if (
+    typeof content === "object" &&
+    Array.isArray(content) &&
+    content.length > 0 &&
+    content[0].type === "execution_output"
+  ) {
+    return {
+      role: "tool",
+      tool_call_id: content[0].tool_call_id,
+      content: content[0].output,
+    };
+  }
+  return {
+    role: message.author_role,
+    content,
+  } as ChatCompletionMessageParam;
+}
+
 const fetchAssistantMessage = createAsyncThunk(
   "conversations/fetchAssistantMessage",
   async (model: string, { getState, dispatch, signal }) => {
@@ -125,38 +156,7 @@ const fetchAssistantMessage = createAsyncThunk(
       dangerouslyAllowBrowser: true,
     });
 
-    const messages = Object.values(conversation.messages).map(
-      (message): ChatCompletionMessageParam => {
-        const content = JSON.parse(message.content) as ChatCompletionContent;
-        if (
-          typeof content === "object" &&
-          Array.isArray(content) &&
-          content.length > 0 &&
-          content[0].type === "function"
-        ) {
-          return {
-            role: "assistant",
-            content: null,
-            tool_calls: content as ChatCompletionMessageToolCall[],
-          };
-        } else if (
-          typeof content === "object" &&
-          Array.isArray(content) &&
-          content.length > 0 &&
-          content[0].type === "execution_output"
-        ) {
-          return {
-            role: "tool",
-            tool_call_id: content[0].tool_call_id,
-            content: content[0].output,
-          };
-        }
-        return {
-          role: message.author_role,
-          content,
-        } as ChatCompletionMessageParam;
-      }
-    );
+    const messages = Object.values(conversation.messages).map(messageToChat);
 
     const systemPromptSegments: string[] = [];
     if (state.settings.systemPrompt) {

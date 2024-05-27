@@ -44,6 +44,9 @@ import { AppState } from "../../app/store";
 import { clearMemories, deleteMemory } from "../../app/memories";
 import { humanFileSize } from "./FilesDialog";
 import { pathToFileHandle } from "../../fs/hooks";
+import { messageToChat } from "../../app/conversations/thunks";
+import { DB } from "../../db";
+import { Message } from "../../app/conversations";
 
 export const SparseList = styled(List)(() => ({
   padding: 0,
@@ -574,6 +577,49 @@ function PermissionsContent() {
   );
 }
 
+function useExportAsJSONL() {
+  return useCallback(async () => {
+    const db = await DB;
+    const { rows } = await db.exec<
+      [string, string, Message["author_role"], string, number]
+    >(
+      "SELECT conversation_id, message_id, author_role, content, create_time FROM flare_agent_messages ORDER BY create_time"
+    );
+
+    const conversations: Record<string, Message[]> = {};
+    for (const [
+      conversation_id,
+      message_id,
+      author_role,
+      content,
+      create_time,
+    ] of rows) {
+      if (!(conversation_id in conversations))
+        conversations[conversation_id] = [];
+      conversations[conversation_id].push({
+        id: message_id,
+        author_role,
+        content,
+        create_time,
+      });
+    }
+    const jsonl = Object.values(conversations)
+      .map(
+        (conversation) =>
+          JSON.stringify({
+            messages: conversation.map(messageToChat),
+          }) + "\n"
+      )
+      .join("");
+    const blob = new Blob([jsonl], { type: "text/jsonl" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "messages.jsonl";
+    a.click();
+  }, []);
+}
+
 function StorageContent() {
   const { t } = useTranslation();
   const [storage, setStorage] = useState<StorageEstimate | null>(null);
@@ -609,6 +655,8 @@ function StorageContent() {
       .catch(() => {});
   }, []);
 
+  const handleExportAsJSONL = useExportAsJSONL();
+
   useEffect(() => {
     if (!("storage" in navigator)) return;
     navigator.storage.estimate().then((storage) => {
@@ -633,6 +681,11 @@ function StorageContent() {
         <ListItem disablePadding>
           <ListItemButton onClick={handleExportData}>
             <ListItemText primary={t("Export data")} />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleExportAsJSONL}>
+            <ListItemText primary={t("Export as JSONL")} />
           </ListItemButton>
         </ListItem>
       </SparseList>
