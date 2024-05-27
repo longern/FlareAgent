@@ -26,7 +26,7 @@ import YAML from "yaml";
 import { hideTools } from "../../app/dialogs";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { AppState } from "../../app/store";
-import { createTool, toggleTool } from "../../app/tools";
+import { createTool, toggleTool, updateTool } from "../../app/tools";
 import { HistoryDialog } from "./HistoryDialog";
 
 const YamlEditor = React.lazy(async () => {
@@ -75,13 +75,18 @@ function EditToolDialog({
 
   const handleCreate = useCallback(() => {
     dispatch(
-      createTool({
-        id: crypto.randomUUID(),
-        definition: toolDefinition,
-      })
+      initialToolId === undefined
+        ? createTool({
+            id: crypto.randomUUID(),
+            definition: toolDefinition,
+          })
+        : updateTool({
+            id: initialToolId,
+            definition: toolDefinition,
+          })
     );
     onClose();
-  }, [dispatch, toolDefinition, onClose]);
+  }, [dispatch, initialToolId, toolDefinition, onClose]);
 
   return (
     <HistoryDialog

@@ -21,6 +21,12 @@ export const toolsSlice = createSlice({
     createTool(state, action: PayloadAction<Tool>) {
       state.tools[action.payload.id] = action.payload;
     },
+    updateTool(
+      state,
+      action: PayloadAction<{ id: string; definition: string }>
+    ) {
+      state.tools[action.payload.id].definition = action.payload.definition;
+    },
     deleteTool(state, action: PayloadAction<string>) {
       delete state.tools[action.payload];
     },
@@ -62,7 +68,7 @@ export const fetchTools = createAsyncThunk(
   }
 );
 
-export const { setTools, createTool, deleteTool, toggleTool } =
+export const { setTools, createTool, updateTool, deleteTool, toggleTool } =
   toolsSlice.actions;
 
 export default toolsSlice.reducer;

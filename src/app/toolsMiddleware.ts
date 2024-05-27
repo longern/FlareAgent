@@ -37,6 +37,15 @@ const toolsMiddleware: Middleware<{}, AppState> = (store) => {
         break;
       }
 
+      case toolsSlice.actions.updateTool.type: {
+        const { id, definition } = action.payload;
+        await db.exec(
+          "UPDATE flare_agent_tools SET schema = ? WHERE tool_id = ?",
+          [definition, id]
+        );
+        break;
+      }
+
       case toolsSlice.actions.deleteTool.type: {
         await db.exec("DELETE FROM flare_agent_tools WHERE tool_id = ?", [
           action.payload,
