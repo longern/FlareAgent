@@ -40,34 +40,40 @@ function ConversationList({ onClose }: { onClose: () => void }) {
   return (
     <React.Fragment>
       <SparseList disablePadding sx={{ flexGrow: 1 }}>
-        {Object.values(conversations).map((conversation) => (
-          <ListItem
-            key={conversation.id}
-            disablePadding
-            disableGutters
-            secondaryAction={
-              <IconButton
-                aria-label="More"
-                onClick={(event) => {
-                  setAnchorEl(event.currentTarget);
-                  setMenuId(conversation.id);
+        {conversations === null ? (
+          <ListItem>
+            <ListItemText primary={t("Loading...")} />
+          </ListItem>
+        ) : (
+          Object.values(conversations).map((conversation) => (
+            <ListItem
+              key={conversation.id}
+              disablePadding
+              disableGutters
+              secondaryAction={
+                <IconButton
+                  aria-label="More"
+                  onClick={(event) => {
+                    setAnchorEl(event.currentTarget);
+                    setMenuId(conversation.id);
+                  }}
+                >
+                  <MoreHorizIcon />
+                </IconButton>
+              }
+            >
+              <ListItemButton
+                selected={conversation.id === currentConversationId}
+                onClick={() => {
+                  dispatch(setCurrentConversation(conversation.id));
+                  onClose();
                 }}
               >
-                <MoreHorizIcon />
-              </IconButton>
-            }
-          >
-            <ListItemButton
-              selected={conversation.id === currentConversationId}
-              onClick={() => {
-                dispatch(setCurrentConversation(conversation.id));
-                onClose();
-              }}
-            >
-              <ListItemText primary={conversation.title} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+                <ListItemText primary={conversation.title} />
+              </ListItemButton>
+            </ListItem>
+          ))
+        )}
       </SparseList>
       <Menu
         anchorEl={anchorEl}

@@ -19,7 +19,7 @@ export type Conversation = {
 export const conversationsSlice = createSlice({
   name: "conversations",
   initialState: {
-    conversations: {} as Record<string, Conversation>,
+    conversations: null as Record<string, Conversation> | null,
     currentConversationId: null as string | null,
   },
   reducers: {
