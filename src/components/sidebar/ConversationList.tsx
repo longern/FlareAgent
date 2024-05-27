@@ -18,7 +18,7 @@ import {
   setCurrentConversation,
   updateConversationTitle,
 } from "../../app/conversations";
-import { SparseList } from "../global/SettingsDialog";
+import { SparseList } from "../global/SparseList";
 
 function ConversationList({ onClose }: { onClose: () => void }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

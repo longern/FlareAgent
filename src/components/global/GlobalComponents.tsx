@@ -15,7 +15,7 @@ import { hideError } from "../../app/error";
 
 const FilesDialog = React.lazy(() => import("./FilesDialog"));
 const SignInDialog = React.lazy(() => import("./SignInDialog"));
-const SettingsDialog = React.lazy(() => import("./SettingsDialog"));
+const SettingsDialog = React.lazy(() => import("./settings/SettingsDialog"));
 const ToolsDialog = React.lazy(() => import("./ToolsDialog"));
 const VoiceCallDialog = React.lazy(() => import("./VoiceCallDialog"));
 const WorkflowDialog = React.lazy(() => import("./WorkflowDialog"));

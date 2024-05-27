@@ -16,7 +16,7 @@ import { AppState } from "../../app/store";
 import { Workflow, defaultWorkflow } from "../../workflow";
 import { useWorkflowsState } from "../ActionsProvider";
 import { HistoryDialog } from "./HistoryDialog";
-import { SparseList } from "./SettingsDialog";
+import { SparseList } from "./SparseList";
 
 function WorkflowList({
   currentWorkflow,

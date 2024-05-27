@@ -35,18 +35,18 @@ import {
   Storage as StorageIcon,
 } from "@mui/icons-material";
 
-import AccountDialogContent from "./AccountDialogContent";
-import { HistoryDialog } from "./HistoryDialog";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { hideSettings } from "../../app/dialogs";
-import { setSettings } from "../../app/settings";
-import { AppState } from "../../app/store";
-import { clearMemories, deleteMemory } from "../../app/memories";
-import { humanFileSize } from "./FilesDialog";
-import { pathToFileHandle } from "../../fs/hooks";
-import { messageToChat } from "../../app/conversations/thunks";
-import { DB } from "../../db";
-import { Message } from "../../app/conversations";
+import AccountDialogContent from "../AccountDialogContent";
+import { HistoryDialog } from "../HistoryDialog";
+import { useAppDispatch, useAppSelector } from "../../../app/hooks";
+import { hideSettings } from "../../../app/dialogs";
+import { setSettings } from "../../../app/settings";
+import { AppState } from "../../../app/store";
+import { clearMemories, deleteMemory } from "../../../app/memories";
+import { humanFileSize } from "../FilesDialog";
+import { pathToFileHandle } from "../../../fs/hooks";
+import { messageToChat } from "../../../app/conversations/thunks";
+import { DB } from "../../../db";
+import { Message } from "../../../app/conversations";
 
 export const SparseList = styled(List)(() => ({
   padding: 0,

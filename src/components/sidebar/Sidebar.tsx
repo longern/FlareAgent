@@ -21,7 +21,7 @@ import { showSettings } from "../../app/dialogs";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setAvatar } from "../../app/identity";
 import { fetchModels, setModel } from "../../app/models";
-import { SparseList } from "../global/SettingsDialog";
+import { SparseList } from "../global/SparseList";
 import ConversationList from "./ConversationList";
 
 function useUpdateModels() {
