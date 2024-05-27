@@ -57,7 +57,7 @@ function MessageListItemContent({
     />
   ) : typeof content === "string" ? (
     message.role === "assistant" ? (
-      <Suspense fallback={content}>
+      <Suspense fallback={<Box sx={{ whiteSpace: "pre-wrap" }}>{content}</Box>}>
         <MarkdownHighlighter>{content}</MarkdownHighlighter>
       </Suspense>
     ) : (

@@ -26,7 +26,10 @@ function HighlighterBlock({
         direction="row"
         sx={{ paddingX: 1, marginBottom: -1.5, alignItems: "center" }}
       >
-        <Typography variant="caption" sx={{ padding: "5px" }}>
+        <Typography
+          variant="caption"
+          sx={{ padding: "5px", userSelect: "none" }}
+        >
           {language}
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
