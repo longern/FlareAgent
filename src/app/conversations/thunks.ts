@@ -11,6 +11,7 @@ import YAML from "yaml";
 import { createMessage, updatePartialMessage } from ".";
 import { apisToTool } from "../../tools";
 import { AppState } from "../store";
+import { setAbortable } from "../abort";
 
 function patchDelta(obj: any, delta: any) {
   if (Array.isArray(delta)) {
@@ -73,7 +74,8 @@ const fetchDrawings = createAsyncThunk(
 
 async function invokeTools(
   tools: ReturnType<typeof apisToTool>,
-  toolCalls: ChatCompletionMessageToolCall[]
+  toolCalls: ChatCompletionMessageToolCall[],
+  signal?: AbortSignal
 ) {
   const results = Promise.allSettled(
     toolCalls.map(async (toolCall) => {
@@ -84,7 +86,7 @@ async function invokeTools(
       const url = tool.endpoint;
       const method = tool.method;
       const body = toolCall.function.arguments;
-      const response = await fetch(url, { method, body });
+      const response = await fetch(url, { method, body, signal });
       return response.text();
     })
   );
@@ -269,7 +271,10 @@ const fetchAssistantMessage = createAsyncThunk(
     )
       return;
 
-    dispatch(fetchAssistantMessage(model));
+    setTimeout(() => {
+      const promise = dispatch(fetchAssistantMessage(model));
+      dispatch(setAbortable(promise));
+    }, 4);
   }
 );
 
