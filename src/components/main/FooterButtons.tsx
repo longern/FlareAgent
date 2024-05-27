@@ -15,6 +15,7 @@ import {
   Collapse,
   IconButton,
   Stack,
+  Theme,
   Typography,
 } from "@mui/material";
 import React, { useCallback, useState } from "react";
@@ -41,19 +42,26 @@ function CaptionButton({
   children,
   caption,
   onClick,
+  disabled,
 }: {
   children: React.ReactNode;
   caption: React.ReactNode;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
+  const colorFunction = disabled
+    ? (theme: Theme) => theme.palette.text.disabled
+    : undefined;
   return (
     <Stack sx={{ alignItems: "center", gap: "4px" }}>
-      <Card elevation={0}>
-        <CardActionArea onClick={onClick}>
+      <Card elevation={0} sx={{ color: colorFunction }}>
+        <CardActionArea onClick={onClick} disabled={disabled}>
           <CardContent>{children}</CardContent>
         </CardActionArea>
       </Card>
-      <Typography variant="caption">{caption}</Typography>
+      <Typography variant="caption" sx={{ color: colorFunction }}>
+        {caption}
+      </Typography>
     </Stack>
   );
 }
