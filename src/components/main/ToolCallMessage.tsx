@@ -3,6 +3,7 @@ import {
   Button,
   Collapse,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemButton,
@@ -15,12 +16,13 @@ import { ChatCompletionMessageToolCall } from "openai/resources/index";
 import React, { Suspense, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { ChatCompletionExecutionOutput } from "../../app/conversations/thunks";
+import { ChatCompletionExecutionOutput } from "../../app/conversations/textGeneration";
 import { Highlighter } from "./Highlighter";
 import {
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
   Search as SearchIcon,
+  Web as WebIcon,
 } from "@mui/icons-material";
 
 function MaybeJsonBlock({ children }: { children: string }) {
@@ -88,9 +90,16 @@ export function AssistantToolCallMessasge({
   return (
     <div style={{ overflow: "auto", fontSize: "0.8rem" }}>
       {tool_call.function.name === "search" ? (
-        <Stack direction="row" sx={{ alignItems: "center" }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <SearchIcon />
           <p>{callArguments?.keyword}</p>
+        </Stack>
+      ) : tool_call.function.name === "browser" ? (
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <WebIcon />
+          <Link href={callArguments?.url} target="_blank">
+            {callArguments?.url}
+          </Link>
         </Stack>
       ) : tool_call.function.name === "python" ? (
         <PythonToolCallMessage content={callArguments} />
