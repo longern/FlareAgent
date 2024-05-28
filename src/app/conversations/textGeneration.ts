@@ -2,16 +2,16 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   ChatCompletion,
   ChatCompletionContentPart,
-  ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
 } from "openai/resources/index.mjs";
 import { OpenAPIV3 } from "openapi-types";
 import YAML from "yaml";
 
-import { Message, createMessage, updatePartialMessage } from ".";
+import { createMessage, updatePartialMessage } from ".";
 import { apisToTool } from "../../tools";
 import { AppState } from "../store";
 import { setAbortable } from "../abort";
+import { messageToChat } from "./utils";
 
 function patchDelta(obj: any, delta: any) {
   if (Array.isArray(delta)) {
@@ -34,43 +34,6 @@ function patchDelta(obj: any, delta: any) {
   }
   return delta;
 }
-
-const fetchDrawings = createAsyncThunk(
-  "conversations/fetchDrawings",
-  async (prompt: string, { dispatch, signal }) => {
-    const { OpenAI } = await import("openai");
-    const openaiApiKey = localStorage.getItem("OPENAI_API_KEY") ?? "";
-    const baseURL = localStorage.getItem("OPENAI_BASE_URL");
-    const openai = new OpenAI({
-      apiKey: openaiApiKey,
-      baseURL,
-      dangerouslyAllowBrowser: true,
-    });
-    const completion = await openai.images.generate(
-      {
-        model: "dall-e-3",
-        prompt,
-        response_format: "b64_json",
-      },
-      { signal }
-    );
-    const messageId = crypto.randomUUID();
-    const imageUrl = "data:image/png;base64," + completion.data[0].b64_json;
-    dispatch(
-      createMessage({
-        id: messageId,
-        author_role: "assistant",
-        content: JSON.stringify([
-          {
-            type: "image_url",
-            image_url: { url: imageUrl },
-          } as ChatCompletionContentPart,
-        ]),
-        create_time: Date.now(),
-      })
-    );
-  }
-);
 
 async function invokeTools(
   tools: ReturnType<typeof apisToTool>,
@@ -100,44 +63,19 @@ export type ChatCompletionExecutionOutput = {
   output: string;
 };
 
+export type ChatCompletionContentPartAudio = {
+  type: "audio_url";
+  audio_url: { url: string };
+};
+
 export type ChatCompletionContent =
   | string
   | Array<
       | ChatCompletionContentPart
+      | ChatCompletionContentPartAudio
       | ChatCompletionMessageToolCall
       | ChatCompletionExecutionOutput
     >;
-
-export function messageToChat(message: Message): ChatCompletionMessageParam {
-  const content = JSON.parse(message.content) as ChatCompletionContent;
-  if (
-    typeof content === "object" &&
-    Array.isArray(content) &&
-    content.length > 0 &&
-    content[0].type === "function"
-  ) {
-    return {
-      role: "assistant",
-      content: null,
-      tool_calls: content as ChatCompletionMessageToolCall[],
-    };
-  } else if (
-    typeof content === "object" &&
-    Array.isArray(content) &&
-    content.length > 0 &&
-    content[0].type === "execution_output"
-  ) {
-    return {
-      role: "tool",
-      tool_call_id: content[0].tool_call_id,
-      content: content[0].output,
-    };
-  }
-  return {
-    role: message.author_role,
-    content,
-  } as ChatCompletionMessageParam;
-}
 
 const fetchAssistantMessage = createAsyncThunk(
   "conversations/fetchAssistantMessage",
@@ -279,7 +217,6 @@ const fetchAssistantMessage = createAsyncThunk(
 );
 
 const thunks = {
-  fetchDrawings,
   fetchAssistantMessage,
 };
 

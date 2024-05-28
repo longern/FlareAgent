@@ -16,6 +16,7 @@ import {
   createMessage,
   fetchAssistantMessage,
   fetchDrawings,
+  fetchSpeech,
 } from "../../app/conversations";
 import { showError } from "../../app/error";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -92,6 +93,8 @@ function useHandleSend() {
       const promise = dispatch(
         model === "dall-e-3"
           ? fetchDrawings(userInput as string)
+          : model.startsWith("tts-")
+          ? fetchSpeech(userInput as string)
           : fetchAssistantMessage(model)
       );
       dispatch(setAbortable(promise));

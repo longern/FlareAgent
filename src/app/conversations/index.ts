@@ -1,6 +1,8 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
-import conversationThunks from "./thunks";
+import conversationThunks from "./textGeneration";
+export { default as fetchDrawings } from "./imageGeneration";
+export { default as fetchSpeech } from "./textToSpeech";
 
 export type Message = {
   id: string;
@@ -92,6 +94,6 @@ export const {
   updatePartialMessage,
 } = conversationsSlice.actions;
 
-export const { fetchAssistantMessage, fetchDrawings } = conversationThunks;
+export const { fetchAssistantMessage } = conversationThunks;
 
 export default conversationsSlice.reducer;

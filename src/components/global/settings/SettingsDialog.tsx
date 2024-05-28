@@ -44,7 +44,7 @@ import { AppState } from "../../../app/store";
 import { clearMemories, deleteMemory } from "../../../app/memories";
 import { humanFileSize } from "../FilesDialog";
 import { pathToFileHandle } from "../../../fs/hooks";
-import { messageToChat } from "../../../app/conversations/thunks";
+import { messageToChat } from "../../../app/conversations/utils";
 import { DB } from "../../../db";
 import { Message } from "../../../app/conversations";
 

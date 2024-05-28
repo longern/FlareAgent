@@ -31,18 +31,18 @@ import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 
+import { Message } from "../../app/conversations";
+import {
+  ChatCompletionContent,
+  ChatCompletionExecutionOutput,
+} from "../../app/conversations/textGeneration";
 import { useAppSelector } from "../../app/hooks";
 import { AppState } from "../../app/store";
 import { MarkdownHighlighter } from "./Highlighter";
 import {
-  ChatCompletionContent,
-  ChatCompletionExecutionOutput,
-} from "../../app/conversations/thunks";
-import {
   AssistantToolCallMessasge,
   ToolExecutionOutputMessage,
 } from "./ToolCallMessage";
-import { Message } from "../../app/conversations";
 
 function MessageListItemContent({
   message,
@@ -69,6 +69,8 @@ function MessageListItemContent({
         <span key={index}>{part.text}</span>
       ) : part.type === "image_url" ? (
         <img key={index} src={part.image_url.url} alt="" />
+      ) : part.type === "audio_url" ? (
+        <audio key={index} src={part.audio_url.url} controls />
       ) : part.type === "function" ? (
         <AssistantToolCallMessasge key={part.id} tool_call={part} />
       ) : null
