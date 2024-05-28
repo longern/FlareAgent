@@ -40,8 +40,8 @@ export const toolsSlice = createSlice({
 export const fetchTools = createAsyncThunk(
   "tools/fetchTools",
   async (_, { dispatch }) => {
-    await import("../tools/scheme");
-    const response = await fetch("tool://");
+    await import("../tools/hostname");
+    const response = await fetch("http://localhost-tools/");
     const data = await response.json<{
       tools: { id: string; definition_url: string }[];
     }>();

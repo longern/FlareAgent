@@ -1,8 +1,6 @@
 import { ChatCompletionTool } from "openai/resources/index";
 import type { OpenAPIV3 } from "openapi-types";
 
-export const TOOL_SCHEME = "tool";
-
 export type Tool = ChatCompletionTool & {
   endpoint: string;
   method: string;

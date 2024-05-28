@@ -34,7 +34,7 @@ const DEFINITION: OpenAPIV3.Document = {
     description: "Browse a web page",
     version: "v1",
   },
-  servers: [{ url: "tool://" }],
+  servers: [{ url: "http://localhost-tools/" }],
   paths: {
     "/browser": {
       post: {

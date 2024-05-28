@@ -34,7 +34,7 @@ const DEFINITION: OpenAPIV3.Document = {
     description: "Run python code",
     version: "v1",
   },
-  servers: [{ url: "tool://" }],
+  servers: [{ url: "http://localhost-tools/" }],
   paths: {
     "/python": {
       post: {

@@ -41,7 +41,7 @@ const DEFINITION: OpenAPIV3.Document = {
     description: "Manage memory",
     version: "v1",
   },
-  servers: [{ url: "tool://" }],
+  servers: [{ url: "http://localhost-tools/" }],
   paths: {
     "/memories": {
       post: {

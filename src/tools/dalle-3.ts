@@ -30,7 +30,7 @@ const DEFINITION: OpenAPIV3.Document = {
     description: "Generate an image given a prompt",
     version: "v1",
   },
-  servers: [{ url: "tool://" }],
+  servers: [{ url: "http://localhost-tools/" }],
   paths: {
     "/dalle-3": {
       post: {

@@ -1,27 +1,36 @@
 "use client";
 
-export type SchemeHandler = (
+export type HostnameHandler = (
   url: RequestInfo | URL,
   options?: RequestInit
-) => Promise<Response>;
+) => Response | Promise<Response>;
 
-const schemeHandlers: {
-  [key: string]: SchemeHandler;
+const hostnameHandlers: {
+  [key: string]: HostnameHandler;
 } = {};
 
 function hijackFetch() {
   const oldFetch = window.fetch;
   window.fetch = async (url: RequestInfo | URL, options?: RequestInit) => {
-    const scheme = typeof url === "string" ? url.split(":")[0] : "";
-    if (schemeHandlers[scheme]) {
-      return await schemeHandlers[scheme](url, options);
+    const normalizedUrl =
+      url instanceof URL
+        ? url
+        : url instanceof Request
+        ? new URL(url.url)
+        : new URL(url, window.location.href);
+    const hostname = normalizedUrl.hostname;
+    if (hostnameHandlers[hostname]) {
+      return await hostnameHandlers[hostname](url, options);
     }
     return await oldFetch(url, options);
   };
 }
 
-export function registerSchemeHandler(scheme: string, handler: SchemeHandler) {
-  schemeHandlers[scheme] = handler;
+export function registerHostnameHandler(
+  hostname: string,
+  handler: HostnameHandler
+) {
+  hostnameHandlers[hostname] = handler;
 }
 
 hijackFetch();
