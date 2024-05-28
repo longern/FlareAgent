@@ -16,16 +16,24 @@ function authenticate(challenge: string, providerOrigin: string) {
   window.open(providerUrl);
 }
 
+declare const process: {
+  env: {
+    REACT_APP_IDENTITY_PROVIDER_URL?: string;
+    REACT_APP_QUOTA_RESELLER_URL?: string;
+  };
+};
+
 async function challengeAuthenticate() {
   const challengeResponse = await fetch("/api/auth/challenge", {
     method: "POST",
   });
   const challengeJson = await challengeResponse.json();
   const { challenge } = challengeJson as { challenge: string };
-  authenticate(challenge, "https://auth.longern.com");
+  authenticate(
+    challenge,
+    process.env.REACT_APP_IDENTITY_PROVIDER_URL ?? "https://auth.longern.com"
+  );
 }
-
-declare const process: { env: { REACT_APP_QUOTA_RESELLER_URL?: string } };
 
 function SignInDialog({ open }: { open: boolean }) {
   const dispatch = useAppDispatch();
