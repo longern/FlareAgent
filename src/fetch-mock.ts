@@ -9,7 +9,9 @@ const hostnameHandlers: {
   [key: string]: HostnameHandler;
 } = {};
 
-function hijackFetch() {
+let fetchMocked = false;
+
+function mockFetch() {
   const oldFetch = window.fetch;
   window.fetch = async (url: RequestInfo | URL, options?: RequestInit) => {
     const normalizedUrl =
@@ -30,7 +32,9 @@ export function registerHostnameHandler(
   hostname: string,
   handler: HostnameHandler
 ) {
+  if (!fetchMocked) {
+    fetchMocked = true;
+    mockFetch();
+  }
   hostnameHandlers[hostname] = handler;
 }
-
-hijackFetch();

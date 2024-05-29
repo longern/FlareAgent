@@ -1,4 +1,4 @@
-import { registerHostnameHandler } from "../scheme";
+import { registerHostnameHandler } from "../fetch-mock";
 import app from "./route";
 
 export const TOOL_HOSTNAME = "localhost-tools";

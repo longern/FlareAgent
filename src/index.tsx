@@ -6,7 +6,6 @@ import store from "./app/store";
 import { ActionsProvider } from "./components/ActionsProvider";
 import App from "./components/App";
 import "./i18n";
-import "./scheme";
 
 const root = ReactDOM.createRoot(document.getElementById("root")!);
 root.render(
