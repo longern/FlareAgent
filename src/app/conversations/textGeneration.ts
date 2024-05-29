@@ -12,6 +12,7 @@ import { apisToTool } from "../../tools";
 import { AppState } from "../store";
 import { setAbortable } from "../abort";
 import { messageToChat } from "./utils";
+import { showError } from "../error";
 
 function patchDelta(obj: any, delta: any) {
   if (Array.isArray(delta)) {
@@ -211,7 +212,10 @@ const fetchAssistantMessage = createAsyncThunk(
 
     setTimeout(() => {
       const promise = dispatch(fetchAssistantMessage(model));
-      dispatch(setAbortable(promise));
+      promise
+        .unwrap()
+        .catch((error) => dispatch(showError({ message: error.message })))
+        .finally(() => dispatch(setAbortable(null)));
     }, 4);
   }
 );

@@ -8,7 +8,6 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Stack,
   Typography,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
@@ -90,17 +89,19 @@ export function AssistantToolCallMessasge({
   return (
     <div style={{ overflow: "auto", fontSize: "0.8rem" }}>
       {tool_call.function.name === "search" ? (
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <SearchIcon />
           <p>{callArguments?.keyword}</p>
-        </Stack>
+        </Box>
       ) : tool_call.function.name === "browser" ? (
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <WebIcon />
-          <Link href={callArguments?.url} target="_blank">
-            {callArguments?.url}
-          </Link>
-        </Stack>
+          <p>
+            <Link href={callArguments?.url} target="_blank">
+              {callArguments?.url}
+            </Link>
+          </p>
+        </Box>
       ) : tool_call.function.name === "python" ? (
         <PythonToolCallMessage content={callArguments} />
       ) : (

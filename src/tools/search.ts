@@ -12,6 +12,7 @@ app.post("/", async (context) => {
     headers: {
       "Content-Type": "application/json",
     },
+    signal: context.req.raw.signal,
   });
 });
 

@@ -7,7 +7,9 @@ const app = new Hono();
 app.post("/", async (context) => {
   const body: { url: string } = await context.req.json();
   const url = new URL(body.url);
-  const response = await fetch(`/crawl/${url.hostname}${url.pathname}`);
+  const response = await fetch(`/crawl/${url.hostname}${url.pathname}`, {
+    signal: context.req.raw.signal,
+  });
   if (!response.ok) {
     return new Response(response.statusText, { status: response.status });
   }
