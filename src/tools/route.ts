@@ -5,6 +5,7 @@ import memoryRoute from "./memory";
 
 import browserRoute from "./browser";
 import dalle3Route from "./dalle-3";
+import geolocationRoute from "./geolocation";
 import pythonRoute from "./python";
 import searchRoute from "./search";
 
@@ -29,6 +30,10 @@ const TOOL_LIST = [
     definition_url: "http://localhost-tools/dalle-3/openapi.yml",
   },
   {
+    id: "b38c3394-1bbd-42fb-b78a-2717741be14c",
+    definition_url: "http://localhost-tools/geolocation/openapi.yml",
+  },
+  {
     id: "8d67c00d-b819-4117-b8e0-7c1c19b8f061",
     definition_url: "http://localhost-tools/python/openapi.yml",
   },
@@ -49,6 +54,8 @@ app.route("/memories", memoryRoute);
 app.route("/browser", browserRoute);
 
 app.route("/dalle-3", dalle3Route);
+
+app.route("/geolocation", geolocationRoute);
 
 app.route("/python", pythonRoute);
 
