@@ -3,6 +3,7 @@ import {
   Box,
   Drawer,
   IconButton,
+  List,
   ListItem,
   ListItemButton,
   ListItemText,
@@ -21,7 +22,6 @@ import { showSettings } from "../../app/dialogs";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setAvatar } from "../../app/identity";
 import { fetchModels, setModel } from "../../app/models";
-import { SparseList } from "../global/SparseList";
 import ConversationList from "./ConversationList";
 
 function useUpdateModels() {
@@ -121,22 +121,19 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
             {userId}
           </Box>
         </Stack>
-        <ListItemButton
-          onClick={handleNewChat}
-          sx={{ flexGrow: 0, minHeight: 60 }}
-        >
+        <ListItemButton onClick={handleNewChat} sx={{ flexGrow: 0 }}>
           <ListItemText primary={t("New chat")} />
         </ListItemButton>
         <Box sx={{ flexGrow: 1, minHeight: 0, overflowY: "auto" }}>
           <ConversationList onClose={onClose} />
         </Box>
-        <SparseList disablePadding>
+        <List disablePadding>
           <ListItem disablePadding>
             <ListItemButton onClick={() => dispatch(showSettings())}>
               <ListItemText primary={t("Settings")} />
             </ListItemButton>
           </ListItem>
-        </SparseList>
+        </List>
       </Stack>
     </Drawer>
   );

@@ -4,9 +4,11 @@ import { MoreHoriz as MoreHorizIcon } from "@mui/icons-material";
 import {
   Divider,
   IconButton,
+  List,
   ListItem,
   ListItemButton,
   ListItemText,
+  ListSubheader,
   Menu,
   MenuItem,
 } from "@mui/material";
@@ -18,7 +20,6 @@ import {
   setCurrentConversation,
   updateConversationTitle,
 } from "../../app/conversations";
-import { SparseList } from "../global/SparseList";
 
 function ConversationList({ onClose }: { onClose: () => void }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -39,7 +40,10 @@ function ConversationList({ onClose }: { onClose: () => void }) {
 
   return (
     <React.Fragment>
-      <SparseList disablePadding sx={{ flexGrow: 1 }}>
+      <List disablePadding sx={{ flexGrow: 1 }}>
+        <ListSubheader sx={{ marginTop: 1, lineHeight: "32px" }}>
+          {t("Chat history")}
+        </ListSubheader>
         {conversations === null ? (
           <ListItem>
             <ListItemText primary={t("Loading...")} />
@@ -74,7 +78,7 @@ function ConversationList({ onClose }: { onClose: () => void }) {
             </ListItem>
           ))
         )}
-      </SparseList>
+      </List>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
