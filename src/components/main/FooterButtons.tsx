@@ -27,7 +27,9 @@ import {
   showVoiceCall,
   showWorkflows,
 } from "../../app/dialogs";
-import { useAppDispatch } from "../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { AppState } from "../../app/store";
+import { setInputImages } from "../../app/inputImages";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -67,7 +69,7 @@ function CaptionButton({
 }
 
 function FooterButtons() {
-  const [images, setImages] = useState<string[]>([]);
+  const images = useAppSelector((state: AppState) => state.inputImages.images);
   const [expanded, setExpanded] = useState<boolean>(false);
   const dispatch = useAppDispatch();
 
@@ -84,29 +86,32 @@ function FooterButtons() {
         const images = await Promise.all(
           files.map((file) => blobToDataUrl(file))
         );
-        setImages(images);
+        dispatch(setInputImages(images));
       }
     };
     input.click();
-  }, []);
+  }, [dispatch]);
 
-  const handleTakePhoto = useCallback((event: React.MouseEvent) => {
-    event.preventDefault();
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.capture = "environment";
-    input.onchange = async () => {
-      if (input.files) {
-        const files = Array.from(input.files);
-        const images = await Promise.all(
-          files.map((file) => blobToDataUrl(file))
-        );
-        setImages(images);
-      }
-    };
-    input.click();
-  }, []);
+  const handleTakePhoto = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.capture = "environment";
+      input.onchange = async () => {
+        if (input.files) {
+          const files = Array.from(input.files);
+          const images = await Promise.all(
+            files.map((file) => blobToDataUrl(file))
+          );
+          dispatch(setInputImages(images));
+        }
+      };
+      input.click();
+    },
+    [dispatch]
+  );
 
   return (
     <React.Fragment>

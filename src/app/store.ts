@@ -5,6 +5,7 @@ import conversationsReducer from "./conversations";
 import dialogsReducer from "./dialogs";
 import errorReducer from "./error";
 import identityReducer from "./identity";
+import inputImagesReducer from "./inputImages";
 import memoriesReducer from "./memories";
 import modelsReducer from "./models";
 import settingsReducer, { settingsMiddleware } from "./settings";
@@ -20,6 +21,7 @@ const reducers = combineReducers({
   dialogs: dialogsReducer,
   error: errorReducer,
   identity: identityReducer,
+  inputImages: inputImagesReducer,
   memories: memoriesReducer,
   models: modelsReducer,
   settings: settingsReducer,

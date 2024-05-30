@@ -20,6 +20,7 @@ import {
 } from "../../app/conversations";
 import { showError } from "../../app/error";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setInputImages } from "../../app/inputImages";
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -109,12 +110,13 @@ function useHandleSend() {
 
 function UserInput() {
   const [userInput, setUserInput] = useState<string>("");
-  const [images, setImages] = useState<string[]>([]);
+  const images = useAppSelector((state) => state.inputImages.images);
   const userInputRef = useRef<HTMLDivElement | null>(null);
 
   const matchesLg = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const { t } = useTranslation();
   const onSend = useHandleSend();
+  const dispatch = useAppDispatch();
 
   const handleSend = useCallback(() => {
     if (userInput === "" && !images.length) return;
@@ -129,13 +131,13 @@ function UserInput() {
             } as ChatCompletionContentPart)
         ),
       ]);
-      setImages([]);
+      dispatch(setInputImages([]));
     } else {
       onSend(userInput);
     }
     setUserInput("");
     userInputRef.current!.blur();
-  }, [userInput, images, onSend]);
+  }, [dispatch, userInput, images, onSend]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (matchesLg && e.key === "Enter" && !e.shiftKey && !e.ctrlKey) {
@@ -173,7 +175,7 @@ function UserInput() {
         onKeyDown={handleKeyDown}
         onPaste={async () => {
           const pastedImages = await pasteImages();
-          setImages((images) => [...images, ...pastedImages]);
+          dispatch(setInputImages([...images, ...pastedImages]));
         }}
         inputProps={{ "aria-label": t("User input") }}
         InputProps={{
