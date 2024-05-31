@@ -762,26 +762,28 @@ function SettingsForm() {
     ) : null;
 
   return matchesLg ? (
-    <Stack direction="row" spacing={2} sx={{ height: "100%" }}>
-      <Box width={300}>{tabs}</Box>
-      <Box flexGrow={1}>
+    <DialogContent sx={{ padding: 2, position: "relative" }}>
+      <Box sx={{ position: "absolute" }}>
+        <Box sx={{ position: "fixed", width: "300px" }}>{tabs}</Box>
+      </Box>
+      <Box sx={{ marginLeft: "300px" }}>
         <Container maxWidth="md" sx={{ height: "100%" }}>
           {content}
         </Container>
       </Box>
-    </Stack>
+    </DialogContent>
   ) : (
-    <>
-      {tabs}
+    <React.Fragment>
+      <DialogContent sx={{ padding: 2 }}>{tabs}</DialogContent>
       <HistoryDialog
         hash={activeTab || ""}
         title={t(activeTab || "Settings")}
         open={activeTab !== null}
         onClose={handleTabClose}
       >
-        <DialogContent sx={{ p: 2 }}>{content}</DialogContent>
+        <DialogContent sx={{ padding: 2 }}>{content}</DialogContent>
       </HistoryDialog>
-    </>
+    </React.Fragment>
   );
 }
 
@@ -801,9 +803,7 @@ function SettingsDialog({
       open={open}
       onClose={onClose}
     >
-      <DialogContent sx={{ p: 2 }}>
-        <SettingsForm />
-      </DialogContent>
+      <SettingsForm />
     </HistoryDialog>
   );
 }

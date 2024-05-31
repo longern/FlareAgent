@@ -1,6 +1,7 @@
 import {
   Card,
   Container,
+  DialogContent,
   ListItem,
   ListItemButton,
   ListItemText,
@@ -103,14 +104,16 @@ function WorkflowsDialog({
       open={open}
       onClose={onClose}
     >
-      <Container maxWidth="md" sx={{ padding: 2 }}>
-        <Card elevation={0}>
-          <WorkflowList
-            currentWorkflow={currentWorkflow}
-            onWorkflowChange={onWorkflowChange}
-          />
-        </Card>
-      </Container>
+      <DialogContent sx={{ padding: 2 }}>
+        <Container maxWidth="md" sx={{ padding: 0 }}>
+          <Card elevation={0}>
+            <WorkflowList
+              currentWorkflow={currentWorkflow}
+              onWorkflowChange={onWorkflowChange}
+            />
+          </Card>
+        </Container>
+      </DialogContent>
     </HistoryDialog>
   );
 }

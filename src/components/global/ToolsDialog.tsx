@@ -3,6 +3,7 @@ import {
   Box,
   Card,
   CircularProgress,
+  Container,
   DialogContent,
   IconButton,
   List,
@@ -168,36 +169,38 @@ function ToolsDialog({
       }
     >
       <DialogContent sx={{ padding: 2 }}>
-        {tools === null ? (
-          <CircularProgress />
-        ) : (
-          <Card elevation={0}>
-            <List disablePadding>
-              {parsedTools.map(({ id, enabled, definition: action }) => (
-                <ListItem key={id} disablePadding sx={{ paddingRight: 2 }}>
-                  <ListItemButton
-                    onClick={() => {
-                      setInitialToolId(id);
-                      setShowEditTool(true);
-                    }}
-                  >
-                    <ListItemText
-                      primary={action.info.title}
-                      secondary={action.info.description}
+        <Container maxWidth="md" sx={{ padding: 0 }}>
+          {tools === null ? (
+            <CircularProgress />
+          ) : (
+            <Card elevation={0}>
+              <List disablePadding>
+                {parsedTools.map(({ id, enabled, definition: action }) => (
+                  <ListItem key={id} disablePadding sx={{ paddingRight: 2 }}>
+                    <ListItemButton
+                      onClick={() => {
+                        setInitialToolId(id);
+                        setShowEditTool(true);
+                      }}
+                    >
+                      <ListItemText
+                        primary={action.info.title}
+                        secondary={action.info.description}
+                      />
+                    </ListItemButton>
+                    <Switch
+                      edge="end"
+                      checked={enabled ?? false}
+                      onChange={() => {
+                        dispatch(toggleTool({ id, enabled: !enabled }));
+                      }}
                     />
-                  </ListItemButton>
-                  <Switch
-                    edge="end"
-                    checked={enabled ?? false}
-                    onChange={() => {
-                      dispatch(toggleTool({ id, enabled: !enabled }));
-                    }}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Card>
-        )}
+                  </ListItem>
+                ))}
+              </List>
+            </Card>
+          )}
+        </Container>
       </DialogContent>
       <EditToolDialog
         initialToolId={initialToolId}
