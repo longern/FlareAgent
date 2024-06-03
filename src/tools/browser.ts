@@ -21,12 +21,23 @@ app.post("/", async (context) => {
   const document = parser.parseFromString(html, "text/html");
   const parseResult = new Readability(document).parse();
 
-  if (parseResult) {
-    const { textContent } = parseResult;
-    return new Response(textContent.slice(0, 65536));
+  function cleanText(text: string) {
+    return text
+      .trim()
+      .split("\n")
+      .map((line) => line.trim())
+      .join("\n")
+      .replace(/\n{2,}/g, "\n");
   }
 
-  return new Response((document.body.textContent ?? "").slice(0, 65536));
+  if (parseResult) {
+    const { textContent } = parseResult;
+    return new Response(cleanText(textContent).slice(0, 65536));
+  }
+
+  return new Response(
+    cleanText(document.body.textContent ?? "").slice(0, 65536)
+  );
 });
 
 const DEFINITION: OpenAPIV3.Document = {
