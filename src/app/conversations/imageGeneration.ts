@@ -29,7 +29,7 @@ const imageGenerationThunk = createAsyncThunk(
       createMessage({
         id: messageId,
         author_role: "assistant",
-        content: JSON.stringify(contentParts),
+        content: contentParts,
         create_time: Date.now(),
       })
     );

@@ -15,7 +15,7 @@ import { ChatCompletionMessageToolCall } from "openai/resources/index";
 import React, { Suspense, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { ChatCompletionExecutionOutput } from "../../app/conversations/textGeneration";
+import { ChatCompletionExecutionOutput } from "../../app/conversations";
 import { Highlighter } from "./Highlighter";
 import {
   ExpandLess as ExpandLessIcon,

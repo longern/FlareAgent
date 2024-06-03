@@ -599,9 +599,9 @@ function useExportAsJSONL() {
       conversations[conversation_id].push({
         id: message_id,
         author_role,
-        content,
+        content: JSON.parse(content) as Message["content"],
         create_time,
-      });
+      } as Message);
     }
     const jsonl = Object.values(conversations)
       .map(

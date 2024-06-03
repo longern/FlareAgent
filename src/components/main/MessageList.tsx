@@ -26,16 +26,11 @@ import {
   Stack,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
-import { ChatCompletionMessageParam } from "openai/resources/index";
 import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 
 import { Message } from "../../app/conversations";
-import {
-  ChatCompletionContent,
-  ChatCompletionExecutionOutput,
-} from "../../app/conversations/textGeneration";
 import { useAppSelector } from "../../app/hooks";
 import { AppState } from "../../app/store";
 import { MarkdownHighlighter } from "./Highlighter";
@@ -44,29 +39,28 @@ import {
   ToolExecutionOutputMessage,
 } from "./ToolCallMessage";
 
-function MessageListItemContent({
-  message,
-}: {
-  message: ChatCompletionMessageParam;
-}) {
-  const content: ChatCompletionContent = message.content;
-
-  return message.role === "tool" ? (
-    <ToolExecutionOutputMessage
-      content={content[0] as ChatCompletionExecutionOutput}
-    />
-  ) : typeof content === "string" ? (
-    message.role === "assistant" ? (
-      <Suspense fallback={<Box sx={{ whiteSpace: "pre-wrap" }}>{content}</Box>}>
-        <MarkdownHighlighter>{content}</MarkdownHighlighter>
+function MessageListItemContent({ message }: { message: Message }) {
+  return message.author_role === "tool" ? (
+    <ToolExecutionOutputMessage content={message.content[0]} />
+  ) : typeof message.content === "string" ? (
+    message.author_role === "assistant" ? (
+      <Suspense
+        fallback={<Box sx={{ whiteSpace: "pre-wrap" }}>{message.content}</Box>}
+      >
+        <MarkdownHighlighter>{message.content}</MarkdownHighlighter>
       </Suspense>
     ) : (
-      <p>{content}</p>
+      <p>{message.content}</p>
     )
   ) : (
-    content.map((part, index) =>
+    message.content.map((part, index) =>
       part.type === "text" ? (
-        <span key={index}>{part.text}</span>
+        <Suspense
+          key={index}
+          fallback={<Box sx={{ whiteSpace: "pre-wrap" }}>{part.text}</Box>}
+        >
+          <MarkdownHighlighter>{part.text}</MarkdownHighlighter>
+        </Suspense>
       ) : part.type === "image_url" ? (
         <img key={index} src={part.image_url.url} alt="" />
       ) : part.type === "audio_url" ? (
@@ -125,11 +119,7 @@ function MessageListItem({
   const { t } = useTranslation();
 
   const content = useMemo(() => {
-    const messageParam = {
-      role: message.author_role,
-      content: JSON.parse(message.content),
-    } as ChatCompletionMessageParam;
-    return <MessageListItemContent message={messageParam} />;
+    return <MessageListItemContent message={message} />;
   }, [message]);
 
   const handleContextMenu = useCallback(
@@ -151,7 +141,7 @@ function MessageListItem({
   );
 
   const handleCopyToClipboard = useCallback(async () => {
-    const content: ChatCompletionContent = JSON.parse(message.content);
+    const content = message.content;
     if (typeof content === "string") {
       await navigator.clipboard.writeText(content);
     } else {

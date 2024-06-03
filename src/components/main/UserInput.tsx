@@ -72,13 +72,13 @@ function useHandleSend() {
   const dispatch = useAppDispatch();
 
   return useCallback(
-    (userInput: string | ChatCompletionContentPart[]) => {
+    (userInput: ChatCompletionContentPart[]) => {
       const messageId = crypto.randomUUID();
       const timestamp = Date.now();
       const message = {
         id: messageId,
         author_role: "user" as const,
-        content: JSON.stringify(userInput),
+        content: userInput,
         create_time: timestamp,
       };
       dispatch(
@@ -91,11 +91,14 @@ function useHandleSend() {
               messages: { [messageId]: message },
             })
       );
+      const textContent = userInput
+        .map((part) => (part.type === "text" ? part.text : ""))
+        .join("");
       const promise = dispatch(
         model === "dall-e-3"
-          ? fetchDrawings(userInput as string)
+          ? fetchDrawings(textContent)
           : model.startsWith("tts-")
-          ? fetchSpeech(userInput as string)
+          ? fetchSpeech(textContent)
           : fetchAssistantMessage(model)
       );
       dispatch(setAbortable(promise));
@@ -133,7 +136,7 @@ function UserInput() {
       ]);
       dispatch(setInputImages([]));
     } else {
-      onSend(userInput);
+      onSend([{ type: "text", text: userInput }]);
     }
     setUserInput("");
     userInputRef.current!.blur();

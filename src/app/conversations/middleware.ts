@@ -43,7 +43,7 @@ const conversationsMiddleware: Middleware<{}, AppState> = (store) => {
             [
               message.id,
               id,
-              message.content,
+              JSON.stringify(message.content),
               message.author_role,
               message.create_time,
             ]
@@ -78,7 +78,7 @@ const conversationsMiddleware: Middleware<{}, AppState> = (store) => {
           [
             message.id,
             conversation_id,
-            message.content,
+            JSON.stringify(message.content),
             message.author_role,
             message.create_time,
           ]
@@ -88,7 +88,9 @@ const conversationsMiddleware: Middleware<{}, AppState> = (store) => {
 
       case conversationsSlice.actions.setCurrentConversation.type: {
         if (action.payload === null) return;
-        const { rows } = await db.exec<[string, string, string, number]>(
+        const { rows } = await db.exec<
+          [string, Message["author_role"], string, number]
+        >(
           "SELECT message_id, author_role, content, create_time FROM flare_agent_messages WHERE conversation_id = ? ORDER BY create_time DESC",
           [action.payload]
         );
@@ -98,8 +100,8 @@ const conversationsMiddleware: Middleware<{}, AppState> = (store) => {
               message_id,
               {
                 id: message_id,
-                author_role: author_role as Message["author_role"],
-                content,
+                author_role: author_role,
+                content: JSON.parse(content) as Message["content"],
                 create_time,
               },
             ])

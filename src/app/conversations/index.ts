@@ -1,15 +1,42 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  ChatCompletionContentPart,
+  ChatCompletionMessageToolCall,
+} from "openai/resources/index.mjs";
 
 import conversationThunks from "./textGeneration";
 export { default as fetchDrawings } from "./imageGeneration";
 export { default as fetchSpeech } from "./textToSpeech";
 
+export type ChatCompletionExecutionOutput = {
+  type: "execution_output";
+  name: string;
+  tool_call_id: string;
+  output: string;
+};
+
+export type ChatCompletionContentPartAudio = {
+  type: "audio_url";
+  audio_url: { url: string };
+};
+
 export type Message = {
   id: string;
-  author_role: "user" | "assistant" | "system" | "tool" | "function";
-  content: string;
   create_time: number;
-};
+} & (
+  | {
+      author_role: "tool";
+      content: Array<ChatCompletionExecutionOutput>;
+    }
+  | {
+      author_role: "user" | "assistant" | "system" | "function";
+      content: Array<
+        | ChatCompletionContentPart
+        | ChatCompletionContentPartAudio
+        | ChatCompletionMessageToolCall
+      >;
+    }
+);
 
 export type Conversation = {
   id: string;

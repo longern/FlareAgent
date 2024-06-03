@@ -107,10 +107,12 @@ export const MarkdownHighlighter = React.lazy(async () => {
     { default: Markdown },
     { default: rehypeKatex },
     { default: remarkMath },
+    { default: remarkGfm },
   ] = await Promise.all([
     import("react-markdown"),
     import("rehype-katex"),
     import("remark-math"),
+    import("remark-gfm"),
   ]);
   return {
     default: ({ children }: { children: string }) => {
@@ -149,7 +151,7 @@ export const MarkdownHighlighter = React.lazy(async () => {
               );
             },
           }}
-          remarkPlugins={[remarkMath]}
+          remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeKatex]}
         >
           {preprocessLaTeX(children)}

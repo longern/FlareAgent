@@ -1,13 +1,16 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   ChatCompletion,
-  ChatCompletionContentPart,
   ChatCompletionMessageToolCall,
 } from "openai/resources/index.mjs";
 import { OpenAPIV3 } from "openapi-types";
 import YAML from "yaml";
 
-import { createMessage, updatePartialMessage } from ".";
+import {
+  ChatCompletionExecutionOutput,
+  createMessage,
+  updatePartialMessage,
+} from ".";
 import { apisToTool } from "../../tools";
 import { AppState } from "../store";
 import { setAbortable } from "../abort";
@@ -56,27 +59,6 @@ async function invokeTools(
   );
   return results;
 }
-
-export type ChatCompletionExecutionOutput = {
-  type: "execution_output";
-  name: string;
-  tool_call_id: string;
-  output: string;
-};
-
-export type ChatCompletionContentPartAudio = {
-  type: "audio_url";
-  audio_url: { url: string };
-};
-
-export type ChatCompletionContent =
-  | string
-  | Array<
-      | ChatCompletionContentPart
-      | ChatCompletionContentPartAudio
-      | ChatCompletionMessageToolCall
-      | ChatCompletionExecutionOutput
-    >;
 
 const fetchAssistantMessage = createAsyncThunk(
   "conversations/fetchAssistantMessage",
@@ -141,7 +123,7 @@ const fetchAssistantMessage = createAsyncThunk(
         updatePartialMessage({
           id: messageId,
           author_role: "assistant",
-          content: JSON.stringify(content),
+          content: [{ type: "text", text: content }],
           create_time: timestamp,
         })
       );
@@ -169,9 +151,9 @@ const fetchAssistantMessage = createAsyncThunk(
       createMessage({
         id: messageId,
         author_role: "assistant",
-        content: choice.message.tool_calls
-          ? JSON.stringify(choice.message.tool_calls)
-          : JSON.stringify(choice.message.content ?? ""),
+        content: choice.message.tool_calls ?? [
+          { type: "text", text: choice.message.content },
+        ],
         create_time: timestamp,
       })
     );
@@ -185,15 +167,15 @@ const fetchAssistantMessage = createAsyncThunk(
         createMessage({
           id: crypto.randomUUID(),
           author_role: "tool",
-          content: JSON.stringify([
+          content: [
             {
               type: "execution_output",
               name,
               tool_call_id: toolCallId,
               output:
                 result.status === "fulfilled" ? result.value : result.reason,
-            },
-          ] as ChatCompletionContent),
+            } as ChatCompletionExecutionOutput,
+          ],
           create_time: Date.now(),
         })
       );

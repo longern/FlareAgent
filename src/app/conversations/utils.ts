@@ -3,11 +3,10 @@ import {
   ChatCompletionMessageToolCall,
 } from "openai/resources/index.mjs";
 
-import { ChatCompletionContent } from "./textGeneration";
 import { Message } from ".";
 
 export function messageToChat(message: Message): ChatCompletionMessageParam {
-  const content = JSON.parse(message.content) as ChatCompletionContent;
+  const content = message.content;
   if (
     typeof content === "object" &&
     Array.isArray(content) &&
