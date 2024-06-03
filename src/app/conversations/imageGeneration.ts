@@ -15,25 +15,21 @@ const imageGenerationThunk = createAsyncThunk(
       dangerouslyAllowBrowser: true,
     });
     const completion = await openai.images.generate(
-      {
-        model: "dall-e-3",
-        prompt,
-        response_format: "b64_json",
-      },
+      { model: "dall-e-3", prompt, response_format: "b64_json" },
       { signal }
     );
     const messageId = crypto.randomUUID();
-    const imageUrl = "data:image/png;base64," + completion.data[0].b64_json;
+    const contentParts = completion.data.map((data) => {
+      return {
+        type: "image_url",
+        image_url: { url: "data:image/png;base64," + data.b64_json },
+      } as ChatCompletionContentPart;
+    });
     dispatch(
       createMessage({
         id: messageId,
         author_role: "assistant",
-        content: JSON.stringify([
-          {
-            type: "image_url",
-            image_url: { url: imageUrl },
-          } as ChatCompletionContentPart,
-        ]),
+        content: JSON.stringify(contentParts),
         create_time: Date.now(),
       })
     );
