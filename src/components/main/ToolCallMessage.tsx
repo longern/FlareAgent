@@ -21,6 +21,7 @@ import {
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
   Search as SearchIcon,
+  Place as PlaceIcon,
   Web as WebIcon,
 } from "@mui/icons-material";
 
@@ -78,6 +79,8 @@ export function AssistantToolCallMessasge({
 }: {
   tool_call: ChatCompletionMessageToolCall;
 }) {
+  const { t } = useTranslation();
+
   const callArguments = useMemo(() => {
     try {
       return JSON.parse(tool_call.function.arguments);
@@ -104,6 +107,11 @@ export function AssistantToolCallMessasge({
         </Box>
       ) : tool_call.function.name === "python" ? (
         <PythonToolCallMessage content={callArguments} />
+      ) : tool_call.function.name === "geolocation" ? (
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <PlaceIcon />
+          <p>{t("Requesting geolocation")}</p>
+        </Box>
       ) : (
         <code>
           <div>{tool_call.function.name}</div>
