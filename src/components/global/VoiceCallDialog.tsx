@@ -1,6 +1,5 @@
 import { DialogContent, Fade } from "@mui/material";
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 
 import { hideVoiceCall } from "../../app/dialogs";
@@ -14,12 +13,9 @@ function VoiceCallDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
-
   return (
     <HistoryDialog
       hash="voice-call"
-      title={t("Voice Call")}
       open={open}
       onClose={onClose}
       TransitionComponent={Fade}

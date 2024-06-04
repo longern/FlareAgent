@@ -26,7 +26,13 @@ import {
   Stack,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
-import React, { Suspense, useCallback, useMemo, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { connect } from "react-redux";
 
@@ -316,6 +322,12 @@ function MessageList({
     setMultiSelecting(false);
     setSelectedMessages(new Set());
   }, [onShare]);
+
+  useEffect(() => {
+    if (!multiSelecting) return;
+    // Preload html-to-image
+    import("html-to-image");
+  }, [multiSelecting]);
 
   const multiSelectToolbar = (
     <Slide in={multiSelecting} direction="up">
