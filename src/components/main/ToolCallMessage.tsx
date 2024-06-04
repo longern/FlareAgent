@@ -100,7 +100,12 @@ export function AssistantToolCallMessasge({
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <WebIcon />
           <p>
-            <Link href={callArguments?.url} target="_blank">
+            <Link
+              href={callArguments?.url}
+              target="_blank"
+              underline="hover"
+              onContextMenu={(event) => event.stopPropagation()}
+            >
               {callArguments?.url}
             </Link>
           </p>

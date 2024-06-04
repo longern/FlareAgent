@@ -25,7 +25,7 @@ app.post("/", async (context) => {
     return text
       .trim()
       .split("\n")
-      .map((line) => line.trim())
+      .map((line) => line.trim().replace(/\s+/g, " "))
       .join("\n")
       .replace(/\n{2,}/g, "\n");
   }

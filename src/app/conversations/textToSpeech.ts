@@ -33,9 +33,7 @@ const textToSpeechThunk = createAsyncThunk(
       createMessage({
         id: messageId,
         author_role: "assistant",
-        content: JSON.stringify([
-          { type: "audio_url", audio_url: { url: audioUrl } },
-        ]),
+        content: [{ type: "audio_url", audio_url: { url: audioUrl } }],
         create_time: Date.now(),
       })
     );
