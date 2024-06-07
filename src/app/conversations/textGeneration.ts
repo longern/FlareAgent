@@ -152,7 +152,7 @@ const fetchAssistantMessage = createAsyncThunk(
         id: messageId,
         author_role: "assistant",
         content: choice.message.tool_calls ?? [
-          { type: "text", text: choice.message.content },
+          { type: "text", text: choice.message.content ?? "" },
         ],
         create_time: timestamp,
       })

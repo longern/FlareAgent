@@ -110,6 +110,7 @@ function AccountContent() {
               >
                 <MenuItem value={""}>{t("Custom model")}</MenuItem>
                 <MenuItem value="openai">openai</MenuItem>
+                <MenuItem value="gemini">gemini</MenuItem>
                 <MenuItem value="meta">meta</MenuItem>
                 <MenuItem value="qwen">qwen</MenuItem>
               </Select>

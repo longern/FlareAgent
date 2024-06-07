@@ -45,6 +45,7 @@ export const fetchModels = createAsyncThunk(
             "dall-e-3",
             "tts-1-hd",
           ].includes(model.id) ||
+          model.id.startsWith("gemini-") ||
           model.id.startsWith("llama-") ||
           model.id.startsWith("qwen")
       )
