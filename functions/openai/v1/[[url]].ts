@@ -29,6 +29,7 @@ export const onRequest: PagesFunction<Env> = async function (context) {
       Authorization: authorization,
       "Content-Type": request.headers.get("Content-Type"),
     },
+    signal: request.signal,
   });
 
   const response = await fetch(targetRequest);

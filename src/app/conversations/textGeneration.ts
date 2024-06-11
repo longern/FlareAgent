@@ -159,7 +159,8 @@ const fetchAssistantMessage = createAsyncThunk(
     if (!choice.message.tool_calls) return;
     const toolsResult = await invokeTools(
       enabledTools,
-      choice.message.tool_calls
+      choice.message.tool_calls,
+      signal
     );
     for (const [index, result] of toolsResult.entries()) {
       const toolCallId = choice.message.tool_calls[index].id;
@@ -189,12 +190,14 @@ const fetchAssistantMessage = createAsyncThunk(
     );
     if (
       resultContentLength >= 8192 ||
-      toolsResult.some((result) => result.status === "rejected")
+      toolsResult.some((result) => result.status === "rejected") ||
+      signal?.aborted
     )
       return;
 
     setTimeout(() => {
       const promise = dispatch(fetchAssistantMessage(model));
+      dispatch(setAbortable(promise));
       promise
         .unwrap()
         .catch((error) => dispatch(showError({ message: error.message })))

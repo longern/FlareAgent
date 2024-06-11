@@ -4,7 +4,7 @@ import YAML from "yaml";
 
 const app = new Hono();
 
-app.post("/", async () => {
+app.post("/", async (context) => {
   const position = await new Promise<GeolocationPosition>((resolve) =>
     navigator.geolocation.getCurrentPosition((position) => resolve(position))
   );
@@ -14,7 +14,8 @@ app.post("/", async () => {
     format: "jsonv2",
   });
   const response = await fetch(
-    `/crawl/nominatim.openstreetmap.org/reverse?${params}`
+    `/crawl/nominatim.openstreetmap.org/reverse?${params}`,
+    { signal: context.req.raw.signal }
   );
   const data = await response.json();
   return Response.json(data);

@@ -194,6 +194,7 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(convertMessages(messages, tools)),
+      signal: request.signal,
     }
   );
   const responseStream = stream
