@@ -61,12 +61,17 @@ function MessageListItemContent({ message }: { message: Message }) {
   ) : (
     message.content.map((part, index) =>
       part.type === "text" ? (
-        <Suspense
-          key={index}
-          fallback={<Box sx={{ whiteSpace: "pre-wrap" }}>{part.text}</Box>}
-        >
-          <MarkdownHighlighter>{part.text}</MarkdownHighlighter>
-        </Suspense>
+        <React.Fragment key={index}>
+          {message.author_role === "assistant" ? (
+            <Suspense
+              fallback={<Box sx={{ whiteSpace: "pre-wrap" }}>{part.text}</Box>}
+            >
+              <MarkdownHighlighter>{part.text}</MarkdownHighlighter>
+            </Suspense>
+          ) : (
+            <Box sx={{ whiteSpace: "pre-wrap", marginY: 0.5 }}>{part.text}</Box>
+          )}
+        </React.Fragment>
       ) : part.type === "image_url" ? (
         <img key={index} src={part.image_url.url} alt="" />
       ) : part.type === "audio_url" ? (
@@ -86,7 +91,10 @@ function MessageAvatar({ role }: { role: string }) {
   ) : role === "user" ? (
     <Avatar
       src={avatarUrl}
-      sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
+      sx={{
+        backgroundColor: (theme) => theme.palette.background.paper,
+        color: (theme) => theme.palette.text.primary,
+      }}
     >
       <PersonIcon />
     </Avatar>
