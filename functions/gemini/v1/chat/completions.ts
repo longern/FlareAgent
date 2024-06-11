@@ -154,13 +154,17 @@ function convertMessages(
   }>,
   tools?: ChatCompletionTool[]
 ) {
-  const contents = messages.map(convertMessage);
+  const systemPrompt = messages.find((message) => message.role === "system");
+  const contents = messages
+    .filter((message) => message.role !== "system")
+    .map(convertMessage);
 
   return {
     contents,
     tools: Array.isArray(tools)
       ? { functionDeclarations: tools.map((tool) => tool.function) }
       : undefined,
+    systemInstruction: systemPrompt ? convertMessage(systemPrompt) : undefined,
   };
 }
 
