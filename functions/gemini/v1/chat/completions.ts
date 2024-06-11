@@ -1,4 +1,10 @@
-import { ChatCompletionContentPart } from "openai/resources/index.mjs";
+import {
+  ChatCompletionAssistantMessageParam,
+  ChatCompletionContentPart,
+  ChatCompletionMessageToolCall,
+  ChatCompletionTool,
+} from "openai/resources/index.mjs";
+
 import { verifyJwt } from "../../../api/auth/utils";
 
 interface Env {
@@ -10,19 +16,19 @@ function openaiResponseStream() {
   const textEncoder = new TextEncoder();
   const textDecoder = new TextDecoder();
   let buffer = "";
+  let initialized = false;
   return new TransformStream<ArrayBuffer, ArrayBuffer>({
-    start(controller: TransformStreamDefaultController<ArrayBuffer>) {
-      const choices = {
-        choices: [{ index: 0, delta: { role: "assistant" } }],
-      };
-      controller.enqueue(
-        textEncoder.encode(`data: ${JSON.stringify(choices)}\n\n`)
-      );
-    },
     transform(
       chunk: ArrayBuffer,
       controller: TransformStreamDefaultController<ArrayBuffer>
     ) {
+      try {
+        const error = JSON.parse(textDecoder.decode(chunk)).error;
+        controller.enqueue(
+          textEncoder.encode(`event: error\ndata: ${JSON.stringify(error)}\n\n`)
+        );
+        return;
+      } catch {}
       buffer += textDecoder.decode(chunk);
       const delimiterIndex = buffer.search(/\n\s*\n/);
       if (delimiterIndex === -1) return;
@@ -38,8 +44,39 @@ function openaiResponseStream() {
 
       const object = JSON.parse(text);
       if (object.candidates) {
-        const content: string = object.candidates[0].content.parts[0].text;
-        const choices = { choices: [{ index: 0, delta: { content } }] };
+        const part = object.candidates[0].content.parts[0] as
+          | { text: string }
+          | { functionCall: { name: string; args: any } };
+        const delta: Partial<ChatCompletionAssistantMessageParam> | null =
+          "text" in part
+            ? { content: part.text }
+            : "functionCall" in part
+            ? {
+                tool_calls: [
+                  {
+                    index: 0,
+                    type: "function",
+                    id: crypto.randomUUID(),
+                    function: {
+                      name: part.functionCall.name,
+                      arguments: JSON.stringify(part.functionCall.args),
+                    },
+                  } as ChatCompletionMessageToolCall,
+                ],
+              }
+            : null;
+
+        if (!initialized) {
+          const choices = {
+            choices: [{ index: 0, delta: { role: "assistant" } }],
+          };
+          controller.enqueue(
+            textEncoder.encode(`data: ${JSON.stringify(choices)}\n\n`)
+          );
+          initialized = true;
+        }
+
+        const choices = { choices: [{ index: 0, delta }] };
         controller.enqueue(
           textEncoder.encode(`data: ${JSON.stringify(choices)}\n\n`)
         );
@@ -62,6 +99,71 @@ export const onRequestOptions: PagesFunction = async function () {
   });
 };
 
+function convertMessage(message: {
+  role: string;
+  content: string | ChatCompletionContentPart[] | null;
+  tool_calls?: ChatCompletionMessageToolCall[];
+}) {
+  if (message.content === null) {
+    return {
+      role: "model",
+      parts: (message.tool_calls ?? []).map((call) => ({
+        functionCall: {
+          name: call.function.name,
+          args: JSON.parse(call.function.arguments),
+        },
+      })),
+    };
+  }
+
+  if (message.role === "tool") {
+    return {
+      role: "function",
+      parts: [
+        {
+          functionResponse: {
+            name: "tool",
+            response: JSON.parse(message.content as string),
+          },
+        },
+      ],
+    };
+  }
+
+  const parts =
+    typeof message.content === "string"
+      ? [{ text: message.content }]
+      : message.content.map((part) =>
+          part.type === "text"
+            ? { text: part.text }
+            : part.type === "image_url"
+            ? { inline_data: { mime_type: "image/png", data: part.image_url } }
+            : null
+        );
+
+  return {
+    role: message.role === "assistant" ? "model" : "user",
+    parts,
+  };
+}
+
+function convertMessages(
+  messages: Array<{
+    role: string;
+    content: string | ChatCompletionContentPart[] | null;
+  }>,
+  tools?: ChatCompletionTool[]
+) {
+  const contents = messages.map(convertMessage);
+
+  return {
+    contents,
+    tools: Array.isArray(tools)
+      ? { functionDeclarations: tools.map((tool) => tool.function) }
+      : undefined,
+  };
+}
+
 export const onRequestPost: PagesFunction<Env> = async function (context) {
   const { request, env } = context;
 
@@ -75,39 +177,10 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
   const body = await request.json<{
     model: string;
     messages: any[];
+    tools?: ChatCompletionTool[];
     stream: boolean;
   }>();
-  const { model, messages, stream } = body;
-
-  function convertMessages(
-    messages: Array<{
-      role: string;
-      content: string | ChatCompletionContentPart[];
-    }>
-  ) {
-    return {
-      contents: messages.map((message) => {
-        return {
-          role: message.role === "assistant" ? "model" : "user",
-          parts:
-            typeof message.content === "string"
-              ? [{ text: message.content }]
-              : message.content.map((part) =>
-                  part.type === "text"
-                    ? { text: part.text }
-                    : part.type === "image_url"
-                    ? {
-                        inline_data: {
-                          mime_type: "image/png",
-                          data: part.image_url,
-                        },
-                      }
-                    : null
-                ),
-        };
-      }),
-    };
-  }
+  const { model, messages, tools, stream } = body;
 
   const answer = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:${
@@ -116,7 +189,7 @@ export const onRequestPost: PagesFunction<Env> = async function (context) {
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(convertMessages(messages)),
+      body: JSON.stringify(convertMessages(messages, tools)),
     }
   );
   const responseStream = stream

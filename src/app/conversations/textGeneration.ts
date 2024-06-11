@@ -11,7 +11,7 @@ import {
   createMessage,
   updatePartialMessage,
 } from ".";
-import { apisToTool } from "../../tools";
+import { apisToTool, findToolMetadata } from "../../tools";
 import { AppState } from "../store";
 import { setAbortable } from "../abort";
 import { messageToChat } from "./utils";
@@ -40,20 +40,18 @@ function patchDelta(obj: any, delta: any) {
 }
 
 async function invokeTools(
-  tools: ReturnType<typeof apisToTool>,
+  tools: OpenAPIV3.Document[],
   toolCalls: ChatCompletionMessageToolCall[],
   signal?: AbortSignal
 ) {
   const results = Promise.allSettled(
     toolCalls.map(async (toolCall) => {
-      const tool = tools.find(
-        (tool) => tool.function.name === toolCall.function.name
-      );
-      if (!tool) throw new Error(`Tool not found: ${toolCall.function.name}`);
-      const url = tool.endpoint;
-      const method = tool.method;
+      const toolMetadata = findToolMetadata(tools, toolCall.function.name);
+      if (!toolMetadata)
+        throw new Error(`Tool not found: ${toolCall.function.name}`);
+      const { endpoint, method } = toolMetadata;
       const body = toolCall.function.arguments;
-      const response = await fetch(url, { method, body, signal });
+      const response = await fetch(endpoint, { method, body, signal });
       return response.text();
     })
   );
@@ -159,7 +157,10 @@ const fetchAssistantMessage = createAsyncThunk(
     );
 
     if (!choice.message.tool_calls) return;
-    const toolsResult = await invokeTools(tools, choice.message.tool_calls);
+    const toolsResult = await invokeTools(
+      enabledTools,
+      choice.message.tool_calls
+    );
     for (const [index, result] of toolsResult.entries()) {
       const toolCallId = choice.message.tool_calls[index].id;
       const name = choice.message.tool_calls[index].function.name;

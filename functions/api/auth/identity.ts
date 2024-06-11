@@ -1,5 +1,3 @@
-import jwt from "@tsndr/cloudflare-worker-jwt";
-
 import { decodeJwt, verifyJwt } from "../auth/utils";
 
 interface Env {
